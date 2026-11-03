@@ -41,7 +41,7 @@
   const LOGO = `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z" fill="#FF5A36"/><path d="M10 44C17 44 19 47 24 47C30 47 31 34 37 34C43 34 44 55 50 55C56 55 57 36 63 36C68 36 70 46 76 46C82 46 84 44 90 44" fill="none" stroke="#FFF4E6" stroke-width="6" stroke-linecap="round"/></svg>`;
 
   const css = `
-.kb-launch{position:fixed;right:18px;bottom:18px;z-index:60;width:64px;height:64px;border-radius:50%;border:0;padding:0;background:var(--navy,#14112B);display:grid;place-items:center;cursor:pointer;box-shadow:0 14px 34px -10px rgba(20,17,43,.7);transform:scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.kb-launch{position:fixed;right:18px;bottom:18px;z-index:60;width:64px;height:64px;border-radius:50%;border:0;padding:0;background:var(--navy,#14112B);display:grid;place-items:center;cursor:pointer;box-shadow:0 0 0 3px var(--cream,#FFF4E6),0 14px 34px -10px rgba(20,17,43,.7);transform:scale(0);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
 .kb-launch.show{transform:scale(1)}
 .kb-launch svg{width:40px;height:40px;transition:transform .3s}
 .kb-launch:hover svg{transform:rotate(-8deg) scale(1.08)}
