@@ -1,7 +1,7 @@
 /* kionda IA — asistente virtual de la web */
 (() => {
-  const API = "__SUPABASE_URL__/functions/v1/kionda-bot";
-  const KEY = "__SUPABASE_KEY__";
+  const API = "https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/kionda-bot";
+  const KEY = "sb_publishable_jJ7O9A5iqqLoeyWF1SYZZQ_LQpd4vLK";
   const SS = "k-bot";
 
   const TX = {
@@ -168,7 +168,7 @@
     try {
       const r = await fetch(API, {
         method: "POST",
-        headers: { "content-type": "application/json", apikey: KEY, authorization: "Bearer " + KEY },
+        headers: { "content-type": "application/json", apikey: KEY },
         body: JSON.stringify({ action: "chat", id: state.id, message: text, lang: lang() }),
       });
       const j = await r.json();
@@ -223,7 +223,7 @@
   async function sendForm(data) {
     const r = await fetch(API, {
       method: "POST",
-      headers: { "content-type": "application/json", apikey: KEY, authorization: "Bearer " + KEY },
+      headers: { "content-type": "application/json", apikey: KEY },
       body: JSON.stringify({ action: "form", lang: lang(), ...data }),
     });
     if (!r.ok) throw new Error("form " + r.status);

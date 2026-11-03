@@ -27,9 +27,9 @@ alter table public.leads enable row level security;
 -- Solo el admin (mail de Lucas) puede ver y actualizar. El bot escribe con la clave de servicio.
 create policy "admin lee leads" on public.leads
   for select to authenticated
-  using ((auth.jwt() ->> 'email') = 'kionda043@gmail.com');
+  using ((select auth.jwt() ->> 'email') = 'kionda043@gmail.com');
 
 create policy "admin actualiza leads" on public.leads
   for update to authenticated
-  using ((auth.jwt() ->> 'email') = 'kionda043@gmail.com')
-  with check ((auth.jwt() ->> 'email') = 'kionda043@gmail.com');
+  using ((select auth.jwt() ->> 'email') = 'kionda043@gmail.com')
+  with check ((select auth.jwt() ->> 'email') = 'kionda043@gmail.com');
