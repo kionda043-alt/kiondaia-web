@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin · kionda IA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z' fill='%23FF5A36'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--cream:#FFF4E6;--cream2:#FBE9D3;--navy:#14112B;--navy2:#1E1A3D;--coral:#FF5A36;--lime:#C6FF3D;--muted:#5B5670;--muted-d:#B9B4CC}
+*{box-sizing:border-box;margin:0}
+body{background:var(--cream);color:var(--navy);font:400 15px/1.45 'DM Sans',sans-serif;min-height:100vh}
+button,select,input{font:inherit}
+header{background:var(--navy);color:var(--cream);padding:16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5}
+header svg{width:34px;height:34px}
+header b{font:700 19px 'Space Grotesk';letter-spacing:-.04em}
+header b i{font-style:normal;color:var(--lime)}
+header small{color:var(--muted-d);margin-left:6px}
+header .sp{flex:1}
+.ib{background:rgba(255,244,230,.1);color:var(--cream);border:0;border-radius:999px;padding:8px 12px;cursor:pointer}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+.login{max-width:380px;margin:12vh auto 0;background:#fff;border-radius:24px;padding:28px;box-shadow:0 20px 50px -25px rgba(20,17,43,.4)}
+.login h1{font:700 24px 'Space Grotesk';letter-spacing:-.03em;margin-bottom:6px}
+.login p{color:var(--muted);margin-bottom:18px}
+.login input{width:100%;padding:13px 15px;border-radius:14px;border:1.5px solid rgba(20,17,43,.15);font-size:16px;margin-bottom:12px;outline:none}
+.login input:focus{border-color:var(--coral)}
+.btn{background:var(--coral);color:#fff;border:0;border-radius:999px;padding:13px 20px;font-weight:500;cursor:pointer;width:100%}
+.btn:disabled{opacity:.5}
+.msg{margin-top:12px;font-size:14px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:#fff;border-radius:16px;padding:12px;text-align:center}
+.stat b{display:block;font:700 24px 'Space Grotesk'}
+.stat span{font-size:12px;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters select{padding:9px 12px;border-radius:999px;border:1.5px solid rgba(20,17,43,.15);background:#fff;color:var(--navy)}
+.filters label{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.card{background:#fff;border-radius:20px;padding:16px;margin-bottom:10px;box-shadow:0 6px 20px -14px rgba(20,17,43,.4)}
+.top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+.caliente{background:var(--coral);color:#fff}
+.tibio{background:#FFD8A8;color:#7A3B00}
+.frio{background:#E6E3EE;color:var(--muted)}
+.src{font-size:12px;color:var(--muted);background:var(--cream);padding:4px 8px;border-radius:999px}
+.q{font-size:12px;font-weight:700;color:var(--navy);background:var(--lime);padding:4px 8px;border-radius:999px}
+.date{margin-left:auto;font-size:12px;color:var(--muted)}
+.card h3{font:700 18px 'Space Grotesk';letter-spacing:-.02em;margin:10px 0 2px}
+.who{color:var(--muted);font-size:14px}
+.who a{color:var(--coral);font-weight:500;text-decoration:none}
+.sum{margin:10px 0;line-height:1.5}
+.kv{font-size:14px;margin:4px 0}
+.kv b{color:var(--muted);font-weight:500}
+.row{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.row select{padding:8px 12px;border-radius:999px;border:1.5px solid rgba(20,17,43,.15);background:#fff}
+.tog{background:var(--navy);color:var(--cream);border:0;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+.chat{margin-top:12px;background:var(--cream);border-radius:16px;padding:12px;display:none;flex-direction:column;gap:8px}
+.chat.on{display:flex}
+.chat div{max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;white-space:pre-wrap}
+.chat .user{background:var(--coral);color:#fff;align-self:flex-end}
+.chat .model{background:#fff;align-self:flex-start}
+.empty{text-align:center;color:var(--muted);padding:40px 0}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <svg viewBox="0 0 100 100"><path d="M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z" fill="#FF5A36"/><path d="M10 44C17 44 19 47 24 47C30 47 31 34 37 34C43 34 44 55 50 55C56 55 57 36 63 36C68 36 70 46 76 46C82 46 84 44 90 44" fill="none" stroke="#FFF4E6" stroke-width="6" stroke-linecap="round"/></svg>
+  <b>kionda <i>IA</i></b><small>admin</small>
+  <span class="sp"></span>
+  <button class="ib" id="reload" hidden>Actualizar</button>
+  <button class="ib" id="logout" hidden>Salir</button>
+</header>
+
+<div id="loginBox" class="login" hidden>
+  <h1>Entrar al admin</h1>
+  <p>Te mandamos un link a tu mail para entrar, sin contraseña.</p>
+  <input id="email" type="email" placeholder="tu mail" autocomplete="email">
+  <button class="btn" id="sendLink">Enviarme el link</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<main class="wrap" id="app" hidden>
+  <div class="stats" id="stats"></div>
+  <div class="filters">
+    <select id="fScore"><option value="">Todos los puntajes</option><option value="caliente">Calientes</option><option value="tibio">Tibios</option><option value="frio">Fríos</option></select>
+    <select id="fStatus"><option value="">Todos los estados</option><option value="nuevo">Nuevos</option><option value="contactado">Contactados</option><option value="descartado">Descartados</option></select>
+    <select id="fSrc"><option value="">Bot y formulario</option><option value="bot">Solo bot</option><option value="form">Solo formulario</option></select>
+    <label><input type="checkbox" id="fContact"> Solo con contacto</label>
+  </div>
+  <div id="list"></div>
+</main>
+
+<script>
+const sb = supabase.createClient("__SUPABASE_URL__", "__SUPABASE_KEY__");
+const $ = id => document.getElementById(id);
+let leads = [];
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const when = d => new Date(d).toLocaleString("es-AR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+function contactLink(c){
+  if(!c) return "";
+  if(/@/.test(c)) return `<a href="mailto:${esc(c)}">${esc(c)}</a>`;
+  const n = c.replace(/\D/g,"");
+  if(n.length >= 8) return `<a href="https://wa.me/${n}" target="_blank" rel="noopener">${esc(c)}</a>`;
+  return esc(c);
+}
+
+async function load(){
+  const { data, error } = await sb.from("leads")
+    .select("id,created_at,updated_at,source,lang,name,contact,business,need,ideas,summary,score,wants_quote,status,messages,user_turns")
+    .order("updated_at",{ascending:false}).limit(300);
+  if(error){ $("list").innerHTML = `<p class="empty">No se pudieron cargar los datos (${esc(error.message)}).</p>`; return; }
+  leads = (data||[]).filter(l => l.source==="form" || l.user_turns>0);
+  draw();
+}
+
+function draw(){
+  const s=$("fScore").value, st=$("fStatus").value, src=$("fSrc").value, onlyC=$("fContact").checked;
+  const k = x => leads.filter(x).length;
+  $("stats").innerHTML = [
+    [k(l=>l.status==="nuevo"),"Nuevos"],[k(l=>l.score==="caliente"),"Calientes"],
+    [k(l=>!!l.contact),"Con contacto"],[leads.length,"Total"]
+  ].map(([n,t])=>`<div class="stat"><b>${n}</b><span>${t}</span></div>`).join("");
+  const rows = leads.filter(l => (!s||l.score===s) && (!st||l.status===st) && (!src||l.source===src) && (!onlyC||l.contact));
+  if(!rows.length){ $("list").innerHTML = `<p class="empty">Todavía no hay consultas con estos filtros.</p>`; return; }
+  $("list").innerHTML = rows.map(l => `
+    <article class="card" data-id="${l.id}">
+      <div class="top">
+        <span class="pill ${l.score}">${l.score==="frio"?"frío":l.score}</span>
+        <span class="src">${l.source==="bot"?"Bot":"Formulario"} · ${l.lang.toUpperCase()}</span>
+        ${l.wants_quote?'<span class="q">Quiere presupuesto</span>':""}
+        <span class="date">${when(l.updated_at)}</span>
+      </div>
+      <h3>${esc(l.name || "Sin nombre")}</h3>
+      <div class="who">${l.contact ? contactLink(l.contact) : "Sin contacto"}${l.business ? " · " + esc(l.business) : ""}</div>
+      ${l.summary ? `<p class="sum">${esc(l.summary)}</p>` : ""}
+      ${l.need ? `<p class="kv"><b>Necesita:</b> ${esc(l.need)}</p>` : ""}
+      ${l.ideas ? `<p class="kv"><b>Ideas sugeridas:</b> ${esc(l.ideas)}</p>` : ""}
+      <div class="row">
+        <select data-act="status">
+          ${["nuevo","contactado","descartado"].map(o=>`<option value="${o}" ${o===l.status?"selected":""}>${o[0].toUpperCase()+o.slice(1)}</option>`).join("")}
+        </select>
+        ${l.messages && l.messages.length ? `<button class="tog" data-act="chat">Ver charla (${l.user_turns})</button>` : ""}
+      </div>
+      <div class="chat">${(l.messages||[]).map(m=>`<div class="${m.role==="user"?"user":"model"}">${esc(m.text)}</div>`).join("")}</div>
+    </article>`).join("");
+}
+
+$("list").addEventListener("click", e => {
+  if(e.target.dataset.act==="chat"){
+    const c = e.target.closest(".card").querySelector(".chat");
+    c.classList.toggle("on");
+    e.target.textContent = c.classList.contains("on") ? "Ocultar charla" : e.target.textContent.replace("Ocultar charla","Ver charla");
+  }
+});
+$("list").addEventListener("change", async e => {
+  if(e.target.dataset.act!=="status") return;
+  const id = e.target.closest(".card").dataset.id, v = e.target.value;
+  const { error } = await sb.from("leads").update({ status: v }).eq("id", id);
+  if(error){ alert("No se pudo guardar el estado."); return; }
+  leads.find(l=>l.id===id).status = v; draw();
+});
+["fScore","fStatus","fSrc","fContact"].forEach(id => $(id).addEventListener("change", draw));
+$("reload").onclick = load;
+$("logout").onclick = async () => { await sb.auth.signOut(); show(null); };
+
+$("sendLink").onclick = async () => {
+  const email = $("email").value.trim();
+  if(!email){ $("loginMsg").textContent = "Escribí tu mail."; return; }
+  $("sendLink").disabled = true;
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+  $("sendLink").disabled = false;
+  $("loginMsg").textContent = error ? "No se pudo enviar el link: " + error.message : "Listo. Revisá tu mail y tocá el link para entrar.";
+};
+
+function show(session){
+  const on = !!session;
+  $("loginBox").hidden = on; $("app").hidden = !on; $("reload").hidden = !on; $("logout").hidden = !on;
+  if(on) load();
+}
+sb.auth.getSession().then(({data}) => show(data.session));
+sb.auth.onAuthStateChange((_e, session) => show(session));
+</script>
+</body>
+</html>
