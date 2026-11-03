@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Demo de asistente virtual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#1f2937;--s:#2563eb;--bg:#f6f5f2;--card:#fff;--ink:#16161a;--mute:#62626b;--line:#e6e4df;--k-navy:#14112B;--k-coral:#FF5A36;--k-cream:#FFF4E6}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+a{color:inherit}
+.hide{display:none!important}
+
+/* franja kionda */
+.kband{background:var(--k-navy);color:var(--k-cream);font:500 13px/1.35 'Space Grotesk',sans-serif;padding:9px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center;position:sticky;top:0;z-index:30}
+.kband b{color:var(--k-coral);font-weight:700}
+.kband .pill{border:1px solid rgba(255,244,230,.35);border-radius:99px;padding:2px 9px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+
+/* cabecera inmobiliaria */
+header.site{background:var(--p);color:#fff}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+.nav{display:flex;align-items:center;gap:12px;padding:16px 0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand img{height:44px;width:auto;max-width:150px;object-fit:contain;background:#fff;border-radius:10px;padding:4px}
+.mono{width:44px;height:44px;border-radius:12px;background:var(--s);display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+.brand-name{font-weight:700;font-size:18px;line-height:1.15;overflow:hidden;text-overflow:ellipsis}
+.brand-zone{font-size:13px;opacity:.75}
+.nav .panel-btn{margin-left:auto;flex:none;border:1px solid rgba(255,255,255,.4);border-radius:99px;padding:8px 14px;font-size:14px;font-weight:600}
+.hero{padding:34px 0 46px}
+.hero h1{font-size:clamp(28px,6vw,44px);line-height:1.08;font-weight:700;letter-spacing:-.02em;max-width:640px}
+.hero p{margin-top:12px;opacity:.85;max-width:560px}
+.hero .cta{margin-top:22px;display:inline-flex;align-items:center;gap:10px;background:var(--s);color:#fff;padding:13px 20px;border-radius:99px;font-weight:600}
+
+/* propiedades */
+main{padding:30px 0 120px}
+.sec-t{font-size:22px;font-weight:700;margin-bottom:4px}
+.sec-s{color:var(--mute);font-size:15px;margin-bottom:18px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.prop{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.ph{height:118px;background:linear-gradient(135deg,var(--p),var(--s));position:relative;display:grid;place-items:center;color:rgba(255,255,255,.55)}
+.ph svg{width:46px;height:46px}
+.op{position:absolute;left:12px;top:12px;background:#fff;color:var(--ink);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:99px}
+.pb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.pb h3{font-size:16px;line-height:1.3}
+.meta{color:var(--mute);font-size:14px}
+.price{font-weight:700;font-size:17px;color:var(--p);margin-top:auto;padding-top:6px}
+.ask{align-self:flex-start;color:var(--s);font-weight:600;font-size:14px;padding:4px 0}
+.info{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:6px;font-size:15px}
+.info b{font-weight:600}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:22px;color:var(--mute)}
+
+/* globo + chat */
+.launch{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:10px}
+.tip{background:#fff;border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.3);padding:9px 14px;border-radius:14px;font-size:14px;font-weight:500;max-width:210px}
+.bubble{width:62px;height:62px;border-radius:50%;background:var(--s);color:#fff;display:grid;place-items:center;box-shadow:0 14px 30px -10px rgba(0,0,0,.45);position:relative}
+.bubble svg{width:28px;height:28px}
+.bubble .dot{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #fff}
+.chat{position:fixed;z-index:50;right:16px;bottom:16px;width:380px;max-width:calc(100vw - 32px);height:min(620px,calc(100vh - 32px));background:#fff;border-radius:20px;box-shadow:0 30px 70px -20px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden}
+@media (max-width:560px){.chat{inset:0;width:100%;max-width:none;height:100%;border-radius:0}}
+.ch{background:var(--p);color:#fff;padding:14px 14px;display:flex;align-items:center;gap:10px}
+.ch .mono{width:38px;height:38px;font-size:15px;border-radius:10px}
+.ch img{height:38px;width:38px;object-fit:contain;background:#fff;border-radius:10px;padding:3px}
+.ch-t{min-width:0;flex:1}
+.ch-t b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-t small{font-size:12px;opacity:.8}
+.ch button{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+.ch button:hover{background:rgba(255,255,255,.12)}
+.cdemo{background:#fff8e6;color:#7a5b00;font-size:12px;padding:6px 14px;text-align:center;border-bottom:1px solid #f1e3b5}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#fafaf8}
+.m{max-width:85%;padding:10px 13px;border-radius:16px;font-size:15px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+.m.b{background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px;align-self:flex-start}
+.m.u{background:var(--s);color:#fff;border-bottom-right-radius:5px;align-self:flex-end}
+.m.sys{align-self:center;background:none;color:var(--mute);font-size:13px;text-align:center}
+.typing{display:inline-flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:#b5b5bd;animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px;background:#fafaf8}
+.chips button{border:1px solid var(--s);color:var(--s);background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:500}
+form.in{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+form.in textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:14px;padding:10px 12px;font:inherit;font-size:16px;max-height:110px;outline:none}
+form.in textarea:focus{border-color:var(--s)}
+form.in button{width:44px;height:44px;border-radius:50%;background:var(--s);color:#fff;display:grid;place-items:center;align-self:flex-end}
+form.in button:disabled{opacity:.45}
+.note{font-size:11px;color:var(--mute);text-align:center;padding:0 12px 8px}
+
+/* panel */
+.panel{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto}
+.ptop{position:sticky;top:0;background:var(--p);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;z-index:2}
+.ptop b{font-size:17px;flex:1}
+.ptop button{border:1px solid rgba(255,255,255,.4);border-radius:99px;padding:7px 13px;font-size:14px;font-weight:600}
+.pin{max-width:760px;margin:0 auto;padding:16px 16px 60px}
+.pintro{color:var(--mute);font-size:14px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.stat b{display:block;font-size:22px}
+.stat small{font-size:12px;color:var(--mute)}
+.lead{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.lh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em}
+.caliente{background:#fee2e2;color:#b91c1c}.tibio{background:#fef3c7;color:#92400e}.frio{background:#e0f2fe;color:#075985}
+.lh time{font-size:13px;color:var(--mute);margin-left:auto}
+.lead p{font-size:15px}
+.kv{font-size:14px;color:var(--mute);margin-top:6px}
+.kv b{color:var(--ink);font-weight:600}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
+.conv{margin-top:8px;display:flex;flex-direction:column;gap:6px;background:#fafaf8;border-radius:12px;padding:10px}
+.conv .m{font-size:14px}
+
+/* estados */
+.state{min-height:calc(100vh - 40px);display:grid;place-items:center;padding:24px 16px}
+.state .box{max-width:440px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 22px}
+.state h1{font-size:24px;margin-bottom:10px}
+.state p{color:var(--mute);margin-bottom:18px}
+.kbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:99px;font-weight:600;text-decoration:none;margin-top:8px}
+.kbtn.wa{background:#25D366;color:#fff}.kbtn.ml{border:1.5px solid var(--k-navy);color:var(--k-navy)}
+.loading{min-height:70vh;display:grid;place-items:center;color:var(--mute)}
+footer{text-align:center;font-size:13px;color:var(--mute);padding:24px 16px 100px}
+footer a{color:var(--k-coral);font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="kband" id="kband"></div>
+<div id="app"><div class="loading">Cargando demo…</div></div>
+
+<script>
+(() => {
+  const SB = "https://pekqdgyxrqqjhmxtjovp.supabase.co";
+  const KEY = "sb_publishable_f-knrak9HDgsY49k-0oYvg_gIqIYQbS";
+  const BOT = SB + "/functions/v1/demo-bot";
+  const NEUTRA = "inmobiliaria-demo";
+  const WA = "https://wa.me/5491162604647";
+  const MAIL = "hola@kiondaia.com";
+
+  const qs = new URLSearchParams(location.search);
+  const slug = (qs.get("i") || NEUTRA).trim().toLowerCase();
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+    del(k) { try { localStorage.removeItem(k); } catch {} },
+  };
+  const app = $("#app"), band = $("#kband");
+
+  const ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
+  const ICON_HOUSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>';
+  const ICON_SEND = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+  async function rpc(fn, args) {
+    const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: { apikey: KEY, "content-type": "application/json" },
+      body: JSON.stringify(args),
+    });
+    if (!r.ok) throw new Error(fn + " " + r.status);
+    return r.json();
+  }
+
+  const fmtDate = (d) => {
+    const [y, m, day] = String(d).split("-");
+    return `${day}/${m}/${y}`;
+  };
+  const initials = (n) => n.replace(/\(.*?\)/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  const safeColor = (c, def) => (/^#[0-9a-f]{6}$/i.test(c || "") ? c : def);
+  const safeUrl = (u) => (/^https:\/\//i.test(u || "") ? u : "");
+
+  function contactBlock() {
+    return `<a class="kbtn wa" href="${WA}" target="_blank" rel="noopener">WhatsApp +54 9 11 6260-4647</a>
+            <a class="kbtn ml" href="mailto:${MAIL}">${MAIL}</a>`;
+  }
+
+  function showState(title, text) {
+    band.innerHTML = `<span class="pill">Demo</span><span>Asistente virtual por <b>kionda IA</b></span>`;
+    app.innerHTML = `<div class="state"><div class="box"><h1>${esc(title)}</h1><p>${esc(text)}</p>${contactBlock()}</div></div>`;
+  }
+
+  // ---------- arranque ----------
+  rpc("get_demo", { p_slug: slug }).then((res) => {
+    if (res.estado === "activa") return render(res.demo);
+    if (res.estado === "finalizada")
+      return showState("Esta demo ya finalizó", `La demo del asistente virtual para ${res.nombre} ya no está disponible. Si querés verla de nuevo o tener el asistente en tu web, escribinos.`);
+    return showState("Demo no encontrada", "El link no corresponde a ninguna demo activa. Si te lo pasaron, escribinos y te mandamos uno nuevo.");
+  }).catch(() => showState("No pudimos cargar la demo", "Revisá tu conexión e intentá de nuevo en un rato."));
+
+  function render(d) {
+    const neutra = d.tipo === "neutra";
+    document.documentElement.style.setProperty("--p", safeColor(d.color_principal, "#1f2937"));
+    document.documentElement.style.setProperty("--s", safeColor(d.color_secundario, "#2563eb"));
+    document.title = `${d.nombre} · Demo de asistente virtual`;
+    const logo = safeUrl(d.logo_url);
+    const mark = logo ? `<img src="${esc(logo)}" alt="${esc(d.nombre)}" onerror="this.outerHTML='<div class=mono>${esc(initials(d.nombre))}</div>'">` : `<div class="mono">${esc(initials(d.nombre))}</div>`;
+    const props = Array.isArray(d.propiedades) ? d.propiedades : [];
+
+    band.innerHTML = neutra
+      ? `<span class="pill">Demo</span><span>Inmobiliaria ficticia · Asistente virtual por <b>kionda IA</b></span>`
+      : `<span class="pill">Demo</span><span>Preparada por <b>kionda IA</b> para ${esc(d.nombre)} · disponible hasta el ${fmtDate(d.vence)}</span>`;
+
+    app.innerHTML = `
+      <header class="site"><div class="wrap">
+        <div class="nav">
+          <div class="brand">${mark}<div style="min-width:0"><div class="brand-name">${esc(d.nombre)}</div>${d.zona ? `<div class="brand-zone">${esc(d.zona)}</div>` : ""}</div></div>
+          <button class="panel-btn" id="openPanel">Ver panel</button>
+        </div>
+        <div class="hero">
+          <h1>Encontrá tu próxima propiedad${d.zona ? ` en ${esc(d.zona)}` : ""}</h1>
+          <p>Consultá por cualquier propiedad, a cualquier hora. Nuestro asistente te responde al instante y le pasa tu consulta al equipo.</p>
+          <button class="cta" id="heroCta">${ICON_CHAT.replace("<svg", '<svg width="20" height="20"')} Consultar ahora</button>
+        </div>
+      </div></header>
+      <main><div class="wrap">
+        <h2 class="sec-t">Propiedades destacadas</h2>
+        <p class="sec-s">Preguntale al asistente por cualquiera de estas.</p>
+        ${props.length ? `<div class="grid">${props.map((p, i) => `
+          <article class="prop">
+            <div class="ph">${ICON_HOUSE}${p.operacion ? `<span class="op">${esc(p.operacion)}</span>` : ""}</div>
+            <div class="pb">
+              <h3>${esc(p.titulo || "Propiedad")}</h3>
+              <div class="meta">${[p.barrio, p.ambientes ? p.ambientes + " amb." : ""].filter(Boolean).map(esc).join(" · ")}</div>
+              ${p.detalle ? `<div class="meta">${esc(p.detalle)}</div>` : ""}
+              <div class="price">${esc(p.precio || "Consultar precio")}</div>
+              <button class="ask" data-i="${i}">Consultar por esta →</button>
+            </div>
+          </article>`).join("")}</div>` : `<div class="empty">Consultale al asistente qué estás buscando y el equipo te acerca opciones.</div>`}
+        ${d.horarios ? `<div class="info"><div><b>Horarios de atención:</b> ${esc(d.horarios)}</div><div>El asistente responde las 24 horas.</div></div>` : ""}
+      </div></main>
+      <footer>Demo de asistente virtual con IA · <a href="https://kiondaia.com" target="_blank" rel="noopener">kionda IA</a></footer>
+
+      <div class="launch" id="launch">
+        <div class="tip" id="tip">¿Buscás algo? Te ayudo 👋</div>
+        <button class="bubble" id="bubble" aria-label="Abrir el asistente">${ICON_CHAT}<span class="dot"></span></button>
+      </div>
+
+      <section class="chat hide" id="chat" aria-label="Asistente virtual">
+        <div class="ch">${mark}<div class="ch-t"><b>Asistente de ${esc(d.nombre)}</b><small>En línea · responde al instante</small></div>
+          <button id="reset" title="Nueva charla" aria-label="Nueva charla">↻</button>
+          <button id="close" title="Cerrar" aria-label="Cerrar">✕</button></div>
+        <div class="cdemo">Versión demo · asistente con IA</div>
+        <div class="msgs" id="msgs"></div>
+        <div class="chips" id="chips"></div>
+        <form class="in" id="form"><textarea id="txt" rows="1" placeholder="Escribí tu consulta…" maxlength="1200"></textarea><button id="send" aria-label="Enviar">${ICON_SEND}</button></form>
+        <div class="note">Asistente con IA. Puede cometer errores.</div>
+      </section>
+
+      <section class="panel hide" id="panel"></section>`;
+
+    setupChat(d, props);
+    setupPanel(d);
+    setTimeout(() => { const t = $("#tip"); if (t) t.classList.add("hide"); }, 9000);
+  }
+
+  // ---------- chat ----------
+  function setupChat(d, props) {
+    const K = "demo-chat:" + d.slug;
+    const chat = $("#chat"), msgs = $("#msgs"), txt = $("#txt"), form = $("#form"), send = $("#send"), chips = $("#chips"), launch = $("#launch");
+    let state = { id: null, log: [], done: false };
+    try { state = Object.assign(state, JSON.parse(store.get(K) || "{}")); } catch {}
+    const save = () => store.set(K, JSON.stringify(state));
+    const saludo = d.saludo || `Hola, soy el asistente de ${d.nombre}. ¿Buscás comprar, alquilar o tasar?`;
+    let busy = false;
+
+    function add(role, text) {
+      const el = document.createElement("div");
+      el.className = "m " + role;
+      el.textContent = text;
+      msgs.appendChild(el);
+      msgs.scrollTop = msgs.scrollHeight;
+      return el;
+    }
+    function draw() {
+      msgs.innerHTML = "";
+      add("b", saludo);
+      state.log.forEach((m) => add(m.r, m.t));
+      if (state.done) add("sys", "Charla finalizada · tocá ↻ para empezar otra");
+      chips.innerHTML = state.log.length ? "" : ["Quiero comprar", "Busco alquilar", "Quiero tasar mi propiedad"].map((c) => `<button type="button">${c}</button>`).join("");
+      txt.disabled = send.disabled = state.done;
+    }
+    function open(prefill) {
+      chat.classList.remove("hide"); launch.classList.add("hide");
+      draw();
+      if (prefill && !state.done) { txt.value = prefill; }
+      setTimeout(() => txt.focus(), 50);
+    }
+    function close() { chat.classList.add("hide"); launch.classList.remove("hide"); }
+
+    async function ask(text) {
+      text = text.trim();
+      if (!text || busy || state.done) return;
+      busy = true; send.disabled = true; chips.innerHTML = "";
+      state.log.push({ r: "u", t: text }); add("u", text); save();
+      txt.value = ""; txt.style.height = "";
+      const t = add("b", ""); t.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+      try {
+        const r = await fetch(BOT, {
+          method: "POST",
+          headers: { "content-type": "application/json", apikey: KEY },
+          body: JSON.stringify({ slug: d.slug, message: text, id: state.id }),
+        });
+        const j = await r.json();
+        if (j.id) state.id = j.id;
+        const reply = j.reply || "Tuve un problema para responder. ¿Probás de nuevo?";
+        t.textContent = reply;
+        state.log.push({ r: "b", t: reply });
+        if (j.done) { state.done = true; add("sys", "Charla finalizada · tocá ↻ para empezar otra"); }
+        if (j.finalizada) setTimeout(() => location.reload(), 2500);
+      } catch {
+        t.textContent = "No pude conectarme. Revisá tu conexión e intentá de nuevo.";
+        state.log.pop();
+      }
+      save();
+      busy = false; send.disabled = state.done; txt.disabled = state.done;
+      if (!state.done) txt.focus();
+    }
+
+    $("#bubble").onclick = () => open();
+    $("#heroCta").onclick = () => open();
+    $("#close").onclick = close;
+    $("#reset").onclick = () => { state = { id: null, log: [], done: false }; save(); draw(); txt.focus(); };
+    document.querySelectorAll(".ask").forEach((b) => b.onclick = () => {
+      const p = props[+b.dataset.i];
+      open(`Hola, quiero consultar por: ${p.titulo}${p.barrio ? " en " + p.barrio : ""}`);
+    });
+    chips.onclick = (e) => { if (e.target.tagName === "BUTTON") ask(e.target.textContent); };
+    form.onsubmit = (e) => { e.preventDefault(); ask(txt.value); };
+    txt.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 560) { e.preventDefault(); ask(txt.value); } });
+    txt.addEventListener("input", () => { txt.style.height = "auto"; txt.style.height = Math.min(txt.scrollHeight, 110) + "px"; });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
+  }
+
+  // ---------- panel ----------
+  function setupPanel(d) {
+    const panel = $("#panel");
+    const neutra = d.tipo === "neutra";
+    const lbl = { caliente: "Caliente", tibio: "Tibio", frio: "Frío" };
+    const when = (s) => new Date(s).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+    async function load() {
+      panel.innerHTML = `<div class="ptop"><b>Panel de consultas</b><button id="pRef">Actualizar</button><button id="pClose">Volver</button></div><div class="pin"><div class="loading" style="min-height:40vh">Cargando…</div></div>`;
+      $("#pClose").onclick = () => panel.classList.add("hide");
+      $("#pRef").onclick = load;
+      let rows = [];
+      try { rows = await rpc("get_demo_panel", { p_slug: d.slug }); } catch { $(".pin", panel).innerHTML = `<div class="empty">No pudimos cargar el panel. Probá de nuevo.</div>`; return; }
+      const c = { caliente: 0, tibio: 0, frio: 0 };
+      rows.forEach((r) => { c[r.calificacion] = (c[r.calificacion] || 0) + 1; });
+      $(".pin", panel).innerHTML = `
+        <p class="pintro">${neutra
+          ? "Así le llegan las consultas a la inmobiliaria: cada charla con su resumen y una calificación. En esta demo pública los contactos se muestran ocultos."
+          : `Acá ves cada charla que tuvo el asistente de ${esc(d.nombre)}: un resumen, qué busca la persona, sus datos y qué tan lista está para avanzar. Probalo: escribile al asistente y tocá "Actualizar".`}</p>
+        <div class="stats">
+          <div class="stat"><b>${rows.length}</b><small>Charlas</small></div>
+          <div class="stat"><b>${c.caliente}</b><small>Calientes</small></div>
+          <div class="stat"><b>${c.tibio}</b><small>Tibios</small></div>
+          <div class="stat"><b>${c.frio}</b><small>Fríos</small></div>
+        </div>
+        ${rows.length ? rows.map((r) => `
+          <article class="lead">
+            <div class="lh"><span class="badge ${esc(r.calificacion)}">${lbl[r.calificacion] || esc(r.calificacion)}</span><b>${esc(r.nombre || "Sin nombre")}</b><time>${when(r.fecha)}</time></div>
+            <p>${esc(r.resumen || "Charla en curso.")}</p>
+            ${r.busca ? `<div class="kv"><b>Busca:</b> ${esc(r.busca)}</div>` : ""}
+            ${r.contacto ? `<div class="kv"><b>Contacto:</b> ${esc(r.contacto)}</div>` : ""}
+            <details><summary>Ver charla completa (${(r.mensajes || []).length} mensajes)</summary>
+              <div class="conv">${(r.mensajes || []).map((m) => `<div class="m ${m.role === "user" ? "u" : "b"}">${esc(m.text)}</div>`).join("")}</div>
+            </details>
+          </article>`).join("") : `<div class="empty">Todavía no hay charlas. Abrí el asistente, hacé una consulta y volvé acá.</div>`}`;
+    }
+    $("#openPanel").onclick = () => { panel.classList.remove("hide"); load(); };
+  }
+})();
+</script>
+</body>
+</html>
