@@ -22,47 +22,35 @@ a{color:inherit}
 .kband b{color:var(--k-coral);font-weight:700}
 .kband .pill{border:1px solid rgba(255,244,230,.35);border-radius:99px;padding:2px 9px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
 
-/* cabecera inmobiliaria */
-header.site{background:var(--p);color:#fff}
-.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
-.nav{display:flex;align-items:center;gap:12px;padding:16px 0}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}
-.brand img{height:44px;width:auto;max-width:150px;object-fit:contain;background:#fff;border-radius:10px;padding:4px}
-.mono{width:44px;height:44px;border-radius:12px;background:var(--s);display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
-.brand-name{font-weight:700;font-size:18px;line-height:1.15;overflow:hidden;text-overflow:ellipsis}
-.brand-zone{font-size:13px;opacity:.75}
-.nav .panel-btn{margin-left:auto;flex:none;border:1px solid rgba(255,255,255,.4);border-radius:99px;padding:8px 14px;font-size:14px;font-weight:600}
-.hero{padding:34px 0 46px}
-.hero h1{font-size:clamp(28px,6vw,44px);line-height:1.08;font-weight:700;letter-spacing:-.02em;max-width:640px}
-.hero p{margin-top:12px;opacity:.85;max-width:560px}
-.hero .cta{margin-top:22px;display:inline-flex;align-items:center;gap:10px;background:var(--s);color:#fff;padding:13px 20px;border-radius:99px;font-weight:600}
-
-/* propiedades */
-main{padding:30px 0 120px}
-.sec-t{font-size:22px;font-weight:700;margin-bottom:4px}
-.sec-s{color:var(--mute);font-size:15px;margin-bottom:18px}
-.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
-.prop{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-.ph{height:118px;background:linear-gradient(135deg,var(--p),var(--s));position:relative;display:grid;place-items:center;color:rgba(255,255,255,.55)}
-.ph svg{width:46px;height:46px}
-.op{position:absolute;left:12px;top:12px;background:#fff;color:var(--ink);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:99px}
-.pb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
-.pb h3{font-size:16px;line-height:1.3}
-.meta{color:var(--mute);font-size:14px}
-.price{font-weight:700;font-size:17px;color:var(--p);margin-top:auto;padding-top:6px}
-.ask{align-self:flex-start;color:var(--s);font-weight:600;font-size:14px;padding:4px 0}
-.info{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:6px;font-size:15px}
-.info b{font-weight:600}
-.empty{background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:22px;color:var(--mute)}
+/* fondo: captura de la web de la inmobiliaria */
+.shot{position:relative;width:100%;max-width:1366px;margin:0 auto;user-select:none;-webkit-user-select:none}
+.shot img{display:block;width:100%;height:auto;pointer-events:none;-webkit-user-drag:none}
+.shot .fade{position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom,rgba(246,245,242,0),var(--bg));pointer-events:none}
+.shot .guard{position:absolute;inset:0}
+.after{text-align:center;color:var(--mute);font-size:14px;padding:6px 16px 130px}
+/* sin captura */
+.plain{min-height:calc(100vh - 40px);display:grid;place-items:center;padding:24px 16px 140px}
+.plain .box{max-width:440px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 22px}
+.plain .mark{display:flex;justify-content:center;margin-bottom:14px}
+.plain .mark img{height:64px;width:auto;max-width:200px;object-fit:contain}
+.plain .mark .mono{width:64px;height:64px;font-size:24px;color:#fff;border-radius:16px}
+.plain h1{font-size:22px;line-height:1.2;margin-bottom:8px}
+.plain p{color:var(--mute)}
+.mono{width:44px;height:44px;border-radius:12px;background:var(--s);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
 
 /* globo + chat */
 .launch{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:10px}
-.tip{background:#fff;border:1px solid var(--line);box-shadow:0 10px 30px -12px rgba(0,0,0,.3);padding:9px 14px;border-radius:14px;font-size:14px;font-weight:500;max-width:210px}
+.tip{background:#fff;border:2px solid var(--s);box-shadow:0 12px 30px -10px rgba(0,0,0,.4);padding:10px 14px;border-radius:14px;font-size:15px;font-weight:600;max-width:220px;cursor:pointer;line-height:1.3}
+.bubble{animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--s) 55%,transparent),0 14px 30px -10px rgba(0,0,0,.45)}70%{box-shadow:0 0 0 16px transparent,0 14px 30px -10px rgba(0,0,0,.45)}100%{box-shadow:0 0 0 0 transparent,0 14px 30px -10px rgba(0,0,0,.45)}}
 .bubble{width:62px;height:62px;border-radius:50%;background:var(--s);color:#fff;display:grid;place-items:center;box-shadow:0 14px 30px -10px rgba(0,0,0,.45);position:relative}
 .bubble svg{width:28px;height:28px}
 .bubble .dot{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#22c55e;border:2px solid #fff}
-.chat{position:fixed;z-index:50;right:16px;bottom:16px;width:380px;max-width:calc(100vw - 32px);height:min(620px,calc(100vh - 32px));background:#fff;border-radius:20px;box-shadow:0 30px 70px -20px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden}
-@media (max-width:560px){.chat{inset:0;width:100%;max-width:none;height:100%;border-radius:0}}
+.veil{position:fixed;inset:0;z-index:45;background:rgba(10,8,12,.55)}
+.chat{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;max-width:calc(100vw - 32px);height:min(720px,calc(100vh - 32px));background:#fff;border-radius:20px;box-shadow:0 30px 70px -20px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden}
+@media (max-width:560px){.chat{inset:0;transform:none;width:100%;max-width:none;height:100%;border-radius:0}}
+.ch .pbtn{width:auto;height:32px;padding:0 11px;border:1px solid rgba(255,255,255,.45);border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap}
+.ch .mono{color:#fff}
 .ch{background:var(--p);color:#fff;padding:14px 14px;display:flex;align-items:center;gap:10px}
 .ch .mono{width:38px;height:38px;font-size:15px;border-radius:10px}
 .ch img{height:38px;width:38px;object-fit:contain;background:#fff;border-radius:10px;padding:3px}
@@ -120,8 +108,6 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
 .kbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:99px;font-weight:600;text-decoration:none;margin-top:8px}
 .kbtn.wa{background:#25D366;color:#fff}.kbtn.ml{border:1.5px solid var(--k-navy);color:var(--k-navy)}
 .loading{min-height:70vh;display:grid;place-items:center;color:var(--mute)}
-footer{text-align:center;font-size:13px;color:var(--mute);padding:24px 16px 100px}
-footer a{color:var(--k-coral);font-weight:600;text-decoration:none}
 </style>
 </head>
 <body>
@@ -201,43 +187,31 @@ footer a{color:var(--k-coral);font-weight:600;text-decoration:none}
       ? `<span class="pill">Demo</span><span>Inmobiliaria ficticia · Asistente virtual por <b>kionda IA</b></span>`
       : `<span class="pill">Demo</span><span>Preparada por <b>kionda IA</b> para ${esc(d.nombre)} · disponible hasta el ${fmtDate(d.vence)}</span>`;
 
+    const celu = safeUrl(d.captura_celu), compu = safeUrl(d.captura_compu);
+    const tactil = window.matchMedia("(hover: none)").matches;
+    const fondo = (celu || compu)
+      ? `<div class="shot" aria-label="Así se ve la web de ${esc(d.nombre)}">
+           <picture>
+             ${celu ? `<source media="(max-width: 700px)" srcset="${esc(celu)}">` : ""}
+             <img id="shotImg" src="${esc(compu || celu)}" alt="" draggable="false">
+           </picture>
+           <div class="guard"></div><div class="fade"></div>
+         </div>
+         <div class="after">Captura de la web de ${esc(d.nombre)} · el asistente está abajo a la derecha</div>`
+      : plainBox(d, mark, neutra);
+
     app.innerHTML = `
-      <header class="site"><div class="wrap">
-        <div class="nav">
-          <div class="brand">${mark}<div style="min-width:0"><div class="brand-name">${esc(d.nombre)}</div>${d.zona ? `<div class="brand-zone">${esc(d.zona)}</div>` : ""}</div></div>
-          <button class="panel-btn" id="openPanel">Ver panel</button>
-        </div>
-        <div class="hero">
-          <h1>Encontrá tu próxima propiedad${d.zona ? ` en ${esc(d.zona)}` : ""}</h1>
-          <p>Consultá por cualquier propiedad, a cualquier hora. Nuestro asistente te responde al instante y le pasa tu consulta al equipo.</p>
-          <button class="cta" id="heroCta">${ICON_CHAT.replace("<svg", '<svg width="20" height="20"')} Consultar ahora</button>
-        </div>
-      </div></header>
-      <main><div class="wrap">
-        <h2 class="sec-t">Propiedades destacadas</h2>
-        <p class="sec-s">Preguntale al asistente por cualquiera de estas.</p>
-        ${props.length ? `<div class="grid">${props.map((p, i) => `
-          <article class="prop">
-            <div class="ph">${ICON_HOUSE}${p.operacion ? `<span class="op">${esc(p.operacion)}</span>` : ""}</div>
-            <div class="pb">
-              <h3>${esc(p.titulo || "Propiedad")}</h3>
-              <div class="meta">${[p.barrio, p.ambientes ? p.ambientes + " amb." : ""].filter(Boolean).map(esc).join(" · ")}</div>
-              ${p.detalle ? `<div class="meta">${esc(p.detalle)}</div>` : ""}
-              <div class="price">${esc(p.precio || "Consultar precio")}</div>
-              <button class="ask" data-i="${i}">Consultar por esta →</button>
-            </div>
-          </article>`).join("")}</div>` : `<div class="empty">Consultale al asistente qué estás buscando y el equipo te acerca opciones.</div>`}
-        ${d.horarios ? `<div class="info"><div><b>Horarios de atención:</b> ${esc(d.horarios)}</div><div>El asistente responde las 24 horas.</div></div>` : ""}
-      </div></main>
-      <footer>Demo de asistente virtual con IA · <a href="https://kiondaia.com" target="_blank" rel="noopener">kionda IA</a></footer>
+      <div id="bg">${fondo}</div>
 
       <div class="launch" id="launch">
-        <div class="tip" id="tip">¿Buscás algo? Te ayudo 👋</div>
+        <div class="tip" id="tip">${tactil ? "Tocá acá" : "Hacé clic acá"} para probar el asistente 👉</div>
         <button class="bubble" id="bubble" aria-label="Abrir el asistente">${ICON_CHAT}<span class="dot"></span></button>
       </div>
 
+      <div class="veil hide" id="veil"></div>
       <section class="chat hide" id="chat" aria-label="Asistente virtual">
-        <div class="ch">${mark}<div class="ch-t"><b>Asistente de ${esc(d.nombre)}</b><small>En línea · responde al instante</small></div>
+        <div class="ch">${mark}<div class="ch-t"><b>Asistente virtual</b><small>${esc(d.nombre)}</small></div>
+          <button class="pbtn" id="openPanel">Ver panel</button>
           <button id="reset" title="Nueva charla" aria-label="Nueva charla">↻</button>
           <button id="close" title="Cerrar" aria-label="Cerrar">✕</button></div>
         <div class="cdemo">Versión demo · asistente con IA</div>
@@ -249,9 +223,20 @@ footer a{color:var(--k-coral);font-weight:600;text-decoration:none}
 
       <section class="panel hide" id="panel"></section>`;
 
+    // si la captura no carga, se muestra el fondo simple
+    const img = $("#shotImg");
+    if (img) img.onerror = () => { $("#bg").innerHTML = plainBox(d, mark, neutra); };
+
     setupChat(d, props);
     setupPanel(d);
-    setTimeout(() => { const t = $("#tip"); if (t) t.classList.add("hide"); }, 9000);
+  }
+
+  function plainBox(d, mark, neutra) {
+    return `<div class="plain"><div class="box">
+        <div class="mark">${mark}</div>
+        <h1>${neutra ? "Asistente virtual de " + esc(d.nombre) : "Asistente virtual para " + esc(d.nombre)}</h1>
+        <p>Así atendería las consultas de ${neutra ? "una inmobiliaria" : "su web"}: responde a cualquier hora, pregunta qué busca cada persona y deja los interesados ordenados en un panel. Probalo con el botón de abajo.</p>
+      </div></div>`;
   }
 
   // ---------- chat ----------
@@ -280,13 +265,14 @@ footer a{color:var(--k-coral);font-weight:600;text-decoration:none}
       chips.innerHTML = state.log.length ? "" : ["Quiero comprar", "Busco alquilar", "Quiero tasar mi propiedad"].map((c) => `<button type="button">${c}</button>`).join("");
       txt.disabled = send.disabled = state.done;
     }
+    const veil = $("#veil");
     function open(prefill) {
-      chat.classList.remove("hide"); launch.classList.add("hide");
+      chat.classList.remove("hide"); veil.classList.remove("hide"); launch.classList.add("hide");
       draw();
       if (prefill && !state.done) { txt.value = prefill; }
       setTimeout(() => txt.focus(), 50);
     }
-    function close() { chat.classList.add("hide"); launch.classList.remove("hide"); }
+    function close() { chat.classList.add("hide"); veil.classList.add("hide"); launch.classList.remove("hide"); }
 
     async function ask(text) {
       text = text.trim();
@@ -318,13 +304,10 @@ footer a{color:var(--k-coral);font-weight:600;text-decoration:none}
     }
 
     $("#bubble").onclick = () => open();
-    $("#heroCta").onclick = () => open();
+    $("#tip").onclick = () => open();
+    veil.onclick = close;
     $("#close").onclick = close;
     $("#reset").onclick = () => { state = { id: null, log: [], done: false }; save(); draw(); txt.focus(); };
-    document.querySelectorAll(".ask").forEach((b) => b.onclick = () => {
-      const p = props[+b.dataset.i];
-      open(`Hola, quiero consultar por: ${p.titulo}${p.barrio ? " en " + p.barrio : ""}`);
-    });
     chips.onclick = (e) => { if (e.target.tagName === "BUTTON") ask(e.target.textContent); };
     form.onsubmit = (e) => { e.preventDefault(); ask(txt.value); };
     txt.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 560) { e.preventDefault(); ask(txt.value); } });
