@@ -54,7 +54,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 .msgs>*{flex-shrink:0}
 .sbar{display:flex;align-items:center;gap:8px;background:#eef6ff;color:#1e3a5f;font-size:12.5px;padding:6px 10px 6px 14px;border-bottom:1px solid #d6e6f7}
 .sbar span{flex:1}
-.sbar button{border:1px solid #9cb9d9;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;background:#fff}
+.sbar button{border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:700;background:var(--p);color:#fff;white-space:nowrap}
 .acts{display:flex;flex-direction:column;gap:6px;align-self:flex-start;max-width:85%}
 .acts button{text-align:left;border:1px solid var(--s);color:var(--s);background:#fff;border-radius:14px;padding:8px 12px;font-size:14px;font-weight:500;line-height:1.3}
 .acts button.pri{background:var(--s);color:#fff;font-weight:600;text-align:center}
@@ -70,7 +70,10 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 .kclose{align-self:stretch;background:#fff;border:1.5px solid var(--s);border-radius:16px;padding:14px;display:grid;gap:8px;font-size:15px;line-height:1.4}
 .kclose .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .kclose .row a,.kclose .row button{flex:1 1 auto;text-align:center;border-radius:99px;padding:9px 12px;font-size:14px;font-weight:600;text-decoration:none;border:1px solid var(--s);color:var(--s);background:#fff}
-.kclose .row .wa{background:#25D366;border-color:#25D366;color:#fff}
+.kclose .row .pri{background:var(--s);color:#fff}
+.kclose .precio{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}
+.kclose .pt{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.kclose .precio .wa{display:block;text-align:center;background:#25D366;color:#fff;border-radius:99px;padding:10px 12px;font-weight:600;text-decoration:none}
 .ch .pbtn{width:auto;height:32px;padding:0 11px;border:1px solid rgba(255,255,255,.45);border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap}
 .ch .mono{color:#fff}
 .ch{background:var(--p);color:#fff;padding:14px 14px;display:flex;align-items:center;gap:10px}
@@ -100,23 +103,54 @@ form.in button:disabled{opacity:.45}
 
 /* panel */
 .panel{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto}
-.ptop{position:sticky;top:0;background:var(--p);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;z-index:2}
+.ptop{position:sticky;top:0;background:var(--p);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:8px;z-index:2}
 .ptop b{font-size:17px;flex:1}
 .ptop button{border:1px solid rgba(255,255,255,.4);border-radius:99px;padding:7px 13px;font-size:14px;font-weight:600}
-.pin{max-width:760px;margin:0 auto;padding:16px 16px 60px}
-.pintro{color:var(--mute);font-size:14px;margin-bottom:14px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
-.stat b{display:block;font-size:22px}
-.stat small{font-size:12px;color:var(--mute)}
+.pin{max-width:820px;margin:0 auto;padding:14px 16px 60px}
+.pintro{color:var(--mute);font-size:14px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:22px;line-height:1.2}
+.stat small{font-size:12.5px;color:var(--mute)}
+.stat.g b{color:#15803d}.stat.o b{color:var(--s)}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+@media (max-width:640px){.charts{grid-template-columns:1fr}}
+.chart{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.chart h4{font-size:13px;font-weight:600;margin-bottom:10px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:70px}
+.bars i{flex:1;background:var(--s);opacity:.85;border-radius:3px 3px 0 0;min-height:2px}
+.bars i.z{background:var(--line)}
+.bx{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:4px}
+.tops{display:grid;gap:8px}
+.top .tl{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.top .tl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .tb{height:6px;background:var(--line);border-radius:9px;margin-top:4px;overflow:hidden}
+.top .tb i{display:block;height:100%;background:var(--s);border-radius:9px}
+.filters{display:grid;gap:8px;margin-bottom:12px}
+.fchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.fchips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:500}
+.fchips button.on{background:var(--p);border-color:var(--p);color:#fff}
+.fsel{display:grid;grid-template-columns:repeat(3,1fr) 1.4fr;gap:6px}
+@media (max-width:560px){.fsel{grid-template-columns:1fr 1fr}}
+.fsel select,.fsel input{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;background:#fff}
+.count{font-size:13px;color:var(--mute);margin-bottom:8px}
 .lead{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.lead.done{opacity:.72}
 .lh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
-.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em}
-.caliente{background:#fee2e2;color:#b91c1c}.tibio{background:#fef3c7;color:#92400e}.frio{background:#e0f2fe;color:#075985}
-.lh time{font-size:13px;color:var(--mute);margin-left:auto}
+.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.caliente{background:#dcfce7;color:#15803d}.tibio{background:#fef3c7;color:#a16207}.frio{background:#eef0f2;color:#4b5563}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f1efe9;color:var(--mute)}
+.tag.ej{background:#eef2ff;color:#4338ca}.tag.ok{background:#dcfce7;color:#15803d}.tag.yo{background:var(--s);color:#fff}
+.lh time{font-size:12.5px;color:var(--mute);margin-left:auto}
 .lead p{font-size:15px}
 .kv{font-size:14px;color:var(--mute);margin-top:6px}
 .kv b{color:var(--ink);font-weight:600}
+.lact{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.lact button,.lact a{border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px;font-weight:600;background:#fff;text-decoration:none;color:var(--ink)}
+.lact a.wa{background:#25D366;border-color:#25D366;color:#fff}
+.lact .dis{opacity:.45;pointer-events:none}
 details{margin-top:10px}
 summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
 .conv{margin-top:8px;display:flex;flex-direction:column;gap:6px;background:#fafaf8;border-radius:12px;padding:10px}
@@ -192,9 +226,9 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
   rpc("get_demo", { p_slug: slug }).then((res) => {
     if (res.estado === "activa") return render(res.demo);
     if (res.estado === "finalizada")
-      return showState("Esta demo ya finalizó", `La demo del asistente virtual para ${res.nombre} ya no está disponible. Si querés verla de nuevo o tener el asistente en tu web, escribinos.`);
-    return showState("Demo no encontrada", "El link no corresponde a ninguna demo activa. Si te lo pasaron, escribinos y te mandamos uno nuevo.");
-  }).catch(() => showState("No pudimos cargar la demo", "Revisá tu conexión e intentá de nuevo en un rato."));
+      return showState("Esta demo ya finalizó", `La demo del asistente virtual para ${res.nombre} ya no está disponible. Si desea verla nuevamente o tener el asistente en su web, puede escribirnos.`);
+    return showState("Demo no encontrada", "El enlace no corresponde a ninguna demo activa. Si se lo enviaron, puede escribirnos y le enviamos uno nuevo.");
+  }).catch(() => showState("No pudimos cargar la demo", "Revise su conexión e intente nuevamente en unos minutos."));
 
   function render(d) {
     const neutra = d.tipo === "neutra";
@@ -219,14 +253,14 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
            </picture>
            <div class="guard"></div><div class="fade"></div>
          </div>
-         <div class="after">Captura de la web de ${esc(d.nombre)} · el asistente está abajo a la derecha</div>`
+         <div class="after">Captura de la web de ${esc(d.nombre)} · el asistente se encuentra abajo a la derecha</div>`
       : plainBox(d, mark, neutra);
 
     app.innerHTML = `
       <div id="bg">${fondo}</div>
 
       <div class="launch" id="launch">
-        <div class="tip" id="tip">${tactil ? "Tocá acá" : "Hacé clic acá"} para probar el asistente 👉</div>
+        <div class="tip" id="tip">${tactil ? "Toque aquí" : "Haga clic aquí"} para probar el asistente</div>
         <button class="bubble" id="bubble" aria-label="Abrir el asistente">${ICON_CHAT}<span class="dot"></span></button>
       </div>
 
@@ -237,10 +271,10 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
           <button id="reset" title="Empezar de nuevo" aria-label="Empezar de nuevo">↻</button>
           <button id="close" title="Cerrar" aria-label="Cerrar">✕</button></div>
         <div class="cdemo" id="cdemo">Versión demo · asistente con IA</div>
-        <div class="sbar hide" id="sbar"><span>Simulación · escribí como si fueras un cliente</span><button type="button" id="endSim">Terminar</button></div>
+        <div class="sbar hide" id="sbar"><span>Simulación en curso · escriba como si fuera un cliente</span><button type="button" id="endSim">Finalizar simulación</button></div>
         <div class="msgs" id="msgs"></div>
         <div class="simgo hide" id="simgo"><button type="button" id="startSim">▶ Empezar simulación</button></div>
-        <form class="in" id="form"><textarea id="txt" rows="1" placeholder="Escribí tu consulta…" maxlength="1200"></textarea><button id="send" aria-label="Enviar">${ICON_SEND}</button></form>
+        <form class="in" id="form"><textarea id="txt" rows="1" placeholder="Escriba su consulta…" maxlength="1200"></textarea><button id="send" aria-label="Enviar">${ICON_SEND}</button></form>
         <div class="note">Asistente con IA. Puede cometer errores.</div>
       </section>
 
@@ -258,12 +292,12 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
     return `<div class="plain"><div class="box">
         <div class="mark">${mark}</div>
         <h1>${neutra ? "Asistente virtual de " + esc(d.nombre) : "Asistente virtual para " + esc(d.nombre)}</h1>
-        <p>Así atendería las consultas de ${neutra ? "una inmobiliaria" : "su web"}: responde a cualquier hora, pregunta qué busca cada persona y deja los interesados ordenados en un panel. Probalo con el botón de abajo.</p>
+        <p>Así atendería las consultas de ${neutra ? "una inmobiliaria" : "su web"}: responde a cualquier hora, pregunta qué busca cada persona y deja los interesados ordenados en un panel. Puede probarlo con el botón de abajo.</p>
       </div></div>`;
   }
 
   // ---------- chat ----------
-  const LUCAS_WA = "5491162604647";
+  const BOT_WA = "5491132654042";
   function saludoHora() {
     const h = new Date().getHours();
     return h >= 5 && h < 13 ? "Buen día" : h >= 13 && h < 20 ? "Buenas tardes" : "Buenas noches";
@@ -271,12 +305,11 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
   function introPresentacion(d, n) {
     const neutra = d.tipo === "neutra";
     return neutra
-      ? `${saludoHora()} 👋 Soy una demo del asistente virtual que podría tener una inmobiliaria.\nPara esta prueba usamos ${n} propiedades de una inmobiliaria ficticia; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
-      : `${saludoHora()} 👋 Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos ${n} propiedades de su web; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`;
+      ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener una inmobiliaria.\nPara esta prueba usamos ${n} propiedades de una inmobiliaria ficticia; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
+      : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos ${n} propiedades de su web; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`;
   }
-  function textoCierre() {
-    return "¡Así funcionaría con sus clientes! 🙌 La charla quedó resumida y calificada en el panel.\nEl asistente cuesta USD 300 por única vez + USD 20 por mes de mantenimiento.\nSi les interesa, coordinamos una videollamada de 20 minutos. ¡Gracias por probarlo!";
-  }
+  const TEXTO_CIERRE = "Gracias por probar la demo. La conversación quedó registrada en el panel, junto con consultas de ejemplo para ver cómo se ordenan los interesados.";
+  const TEXTO_PRECIO = "Implementación completa: USD 300, por única vez.\nMantenimiento: USD 30 por mes.\nIncluye la configuración con sus datos, la carga de todas sus propiedades, el panel para el equipo y la instalación en su web.";
 
   function setupChat(d, props) {
     const K = "demo2:" + d.slug;
@@ -292,7 +325,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
     }
     const save = () => { store.set(K + ":modo", modo); store.set(K + ":" + modo, JSON.stringify(st[modo])); };
     const S = () => st[modo];
-    const podes = d.trato === "usted" ? "puede" : d.trato === "tu" ? "puedes" : "podés";
+    const podes = "puede";
     let busy = false;
 
     // --- que el chat siga al teclado (tipo WhatsApp) ---
@@ -346,13 +379,17 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       if (img) img.addEventListener("load", () => { if (pegado) abajo(); });
       msgs.appendChild(el);
     }
-    function cierre() {
+    function cierre(fin) {
       const el = document.createElement("div");
       el.className = "kclose";
-      const wa = `https://wa.me/${LUCAS_WA}?text=${encodeURIComponent(`Hola Lucas, vi la demo del asistente virtual para ${d.nombre}.`)}`;
-      el.innerHTML = `<div style="white-space:pre-wrap">${esc(textoCierre())}</div>
-        <div class="row"><a class="wa" href="${wa}" target="_blank" rel="noopener">Coordinar videollamada</a>
+      const wa = `https://wa.me/${BOT_WA}?text=${encodeURIComponent(`Hola, vengo por la demo de ${d.nombre} (código ${d.slug})`)}`;
+      el.innerHTML = `<div>${esc(TEXTO_CIERRE)}</div>
+        <div class="precio ${fin.precio ? "" : "hide"}"><div class="pt">Precio</div><div style="white-space:pre-wrap">${esc(TEXTO_PRECIO)}</div>
+          <a class="wa" href="${wa}" target="_blank" rel="noopener">Enviar mensaje por WhatsApp</a></div>
+        <div class="row">${fin.precio ? "" : `<button type="button" class="pri" data-a="precio">Me interesa saber el precio</button>`}
         <button type="button" data-a="panel">Ver panel</button><button type="button" data-a="otra">Simular de nuevo</button></div>`;
+      const bp = el.querySelector('[data-a="precio"]');
+      if (bp) bp.onclick = () => { fin.precio = true; save(); el.querySelector(".precio").classList.remove("hide"); bp.remove(); if (pegado) abajo(); };
       el.querySelector('[data-a="panel"]').onclick = () => $("#openPanel").click();
       el.querySelector('[data-a="otra"]').onclick = () => { st.simulacion = nuevo(); save(); draw(); };
       msgs.appendChild(el);
@@ -373,7 +410,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
           ["¿Cómo se instala en la web?", () => ask("¿Cómo se instala en la web?")],
         ]);
       } else {
-        add("b", d.saludo || `Hola, soy el asistente de ${d.nombre}. ¿Buscás comprar, alquilar o tasar?`);
+        add("b", d.saludo || `Hola, soy el asistente virtual de ${d.nombre}. ¿Está buscando comprar, alquilar o tasar una propiedad?`);
         if (props.length) {
           add("b", `También ${podes} consultarme por alguna de estas propiedades:`);
           if (!s.log.length) botones(props.map((p) => [
@@ -383,12 +420,12 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         }
       }
       s.log.forEach((m) => {
-        if (m.r === "fin") return cierre();
+        if (m.r === "fin") return cierre(m);
         add(m.r, m.t);
         (m.m || []).forEach(tarjeta);
       });
       txt.disabled = send.disabled = s.done;
-      txt.placeholder = sim ? "Escribí como si fueras un cliente…" : "Escribí tu pregunta…";
+      txt.placeholder = sim ? "Escriba como si fuera un cliente…" : "Escriba su pregunta…";
       pegado = true; requestAnimationFrame(abajo);
     }
 
@@ -433,7 +470,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         });
         const j = await r.json();
         if (j.id) s.id = j.id;
-        const reply = j.reply || "Tuve un problema para responder. ¿Probás de nuevo?";
+        const reply = j.reply || "Tuve un problema para responder. ¿Podría intentar de nuevo?";
         t.textContent = reply;
         const most = Array.isArray(j.mostrar) ? j.mostrar : [];
         s.log.push({ r: "b", t: reply, m: most });
@@ -441,10 +478,10 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         if (j.finalizada) setTimeout(() => location.reload(), 2500);
         else if (j.done) {
           if (m0 === "simulacion") { s.done = true; s.log.push({ r: "fin" }); save(); busy = false; return draw(); }
-          s.done = true; add("sys", "Charla finalizada · tocá ↻ para empezar otra");
+          s.done = true; add("sys", "Conversación finalizada · toque ↻ para empezar otra");
         }
       } catch {
-        t.textContent = "No pude conectarme. Revisá tu conexión e intentá de nuevo.";
+        t.textContent = "No pude conectarme. Revise su conexión e intente nuevamente.";
         s.log.pop();
       }
       save();
@@ -473,40 +510,154 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
   }
 
   // ---------- panel ----------
+  const NIVEL = { caliente: "Para contactar", tibio: "Interesado", frio: "Explorando" };
+  const OPER = { compra: "Compra", alquiler: "Alquiler", tasacion: "Tasación", otro: "Otro" };
+  // horario comercial de referencia: lunes a viernes 9 a 18 h, sábados 9 a 13 h (hora de Argentina)
+  function fueraDeHorario(iso) {
+    const t = new Date(new Date(iso).toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+    const dia = t.getDay(), h = t.getHours() + t.getMinutes() / 60;
+    if (dia === 0) return true;
+    if (dia === 6) return !(h >= 9 && h < 13);
+    return !(h >= 9 && h < 18);
+  }
+  function waLink(contacto, nombre, inmo) {
+    let n = String(contacto || "").replace(/\D/g, "");
+    if (n.length < 8) return "";
+    if (n.startsWith("0")) n = n.slice(1);
+    if (n.startsWith("15")) n = n.slice(2);
+    if (!n.startsWith("54")) n = "549" + n;
+    const txt = `Hola${nombre ? " " + nombre.split(" ")[0] : ""}, le escribimos de ${inmo} por su consulta.`;
+    return `https://wa.me/${n}?text=${encodeURIComponent(txt)}`;
+  }
+
   function setupPanel(d) {
     const panel = $("#panel");
     const neutra = d.tipo === "neutra";
-    const lbl = { caliente: "Caliente", tibio: "Tibio", frio: "Frío" };
+    const props = Array.isArray(d.propiedades) ? d.propiedades : [];
     const when = (s) => new Date(s).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const f = { nivel: "", oper: "", fecha: "", estado: "", q: "" };
+    let rows = [];
+
+    function filtrar() {
+      const ahora = Date.now(), q = f.q.trim().toLowerCase();
+      return rows.filter((r) => {
+        if (f.nivel && r.calificacion !== f.nivel) return false;
+        if (f.oper && r.operacion !== f.oper) return false;
+        if (f.estado && r.estado !== f.estado) return false;
+        if (f.fecha) {
+          const dias = { hoy: 1, "7": 7, "30": 30 }[f.fecha];
+          if (ahora - new Date(r.fecha).getTime() > dias * 864e5) return false;
+        }
+        if (q && !`${r.nombre || ""} ${r.busca || ""} ${r.resumen || ""}`.toLowerCase().includes(q)) return false;
+        return true;
+      });
+    }
+
+    function estadisticas() {
+      const total = rows.length;
+      const cal = rows.filter((r) => r.calificacion === "caliente").length;
+      const pend = rows.filter((r) => r.calificacion === "caliente" && r.estado !== "contactado").length;
+      const fuera = rows.filter((r) => fueraDeHorario(r.fecha)).length;
+      // consultas por dia (ultimos 14)
+      const dias = [];
+      for (let i = 13; i >= 0; i--) {
+        const dt = new Date(Date.now() - i * 864e5);
+        const key = dt.toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
+        dias.push({ key, n: 0 });
+      }
+      rows.forEach((r) => {
+        const key = new Date(r.fecha).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
+        const x = dias.find((z) => z.key === key); if (x) x.n++;
+      });
+      const max = Math.max(1, ...dias.map((z) => z.n));
+      // propiedades mas consultadas
+      const cuenta = props.map(() => 0);
+      rows.forEach((r) => (r.props || []).forEach((k) => { if (cuenta[k - 1] !== undefined) cuenta[k - 1]++; }));
+      const top = cuenta.map((n, i) => ({ n, t: props[i].titulo || "Propiedad" })).filter((x) => x.n).sort((a, b) => b.n - a.n).slice(0, 4);
+      const tmax = Math.max(1, ...top.map((x) => x.n));
+      return `
+        <div class="stats">
+          <div class="stat"><b>${total}</b><small>Consultas</small></div>
+          <div class="stat g"><b>${cal}</b><small>Para contactar</small></div>
+          <div class="stat"><b>${pend}</b><small>Sin contactar aún</small></div>
+          <div class="stat o"><b>${total ? Math.round((100 * fuera) / total) : 0}%</b><small>Fuera del horario comercial</small></div>
+        </div>
+        <div class="charts">
+          <div class="chart"><h4>Consultas por día (últimos 14 días)</h4>
+            <div class="bars">${dias.map((z) => `<i class="${z.n ? "" : "z"}" style="height:${Math.max(3, (z.n / max) * 100)}%" title="${z.key}: ${z.n}"></i>`).join("")}</div>
+            <div class="bx"><span>${dias[0].key.slice(0, 5)}</span><span>Hoy</span></div></div>
+          <div class="chart"><h4>Propiedades más consultadas</h4>
+            <div class="tops">${top.length ? top.map((x) => `<div class="top"><div class="tl"><span>${esc(x.t)}</span><b>${x.n}</b></div><div class="tb"><i style="width:${(x.n / tmax) * 100}%"></i></div></div>`).join("") : `<small style="color:var(--mute)">Todavía no hay datos.</small>`}</div></div>
+        </div>`;
+    }
+
+    function tarjetaLead(r) {
+      const wa = !r.ejemplo && !neutra ? waLink(r.contacto, r.nombre, d.nombre) : "";
+      const n = (r.mensajes || []).length;
+      return `<article class="lead ${r.estado === "contactado" ? "done" : ""}">
+        <div class="lh"><span class="badge ${esc(r.calificacion)}">${NIVEL[r.calificacion] || esc(r.calificacion)}</span>
+          <b>${esc(r.nombre || "Sin nombre")}</b>
+          ${r.ejemplo ? `<span class="tag ej">Ejemplo</span>` : `<span class="tag yo">Real</span>`}
+          ${r.operacion ? `<span class="tag">${OPER[r.operacion] || esc(r.operacion)}</span>` : ""}
+          ${r.estado === "contactado" ? `<span class="tag ok">Contactada</span>` : ""}
+          <time>${when(r.fecha)}${fueraDeHorario(r.fecha) ? " · fuera de horario" : ""}</time></div>
+        <p>${esc(r.resumen || "Conversación en curso.")}</p>
+        ${r.busca ? `<div class="kv"><b>Busca:</b> ${esc(r.busca)}</div>` : ""}
+        ${r.contacto ? `<div class="kv"><b>Contacto:</b> ${esc(r.contacto)}</div>` : ""}
+        <div class="lact">
+          <button type="button" data-id="${esc(r.id)}" data-e="${r.estado === "contactado" ? "pendiente" : "contactado"}">${r.estado === "contactado" ? "Marcar como pendiente" : "Marcar como contactada"}</button>
+          ${r.contacto ? (wa ? `<a class="wa" href="${wa}" target="_blank" rel="noopener">Escribir por WhatsApp</a>` : `<a class="wa dis" title="Disponible en consultas reales">Escribir por WhatsApp</a>`) : ""}
+        </div>
+        ${n ? `<details><summary>Ver conversación (${n} mensajes)</summary>
+          <div class="conv">${(r.mensajes || []).map((m) => `<div class="m ${m.role === "user" ? "u" : "b"}">${esc(m.text)}</div>`).join("")}</div></details>` : ""}
+      </article>`;
+    }
+
+    function pintarLista() {
+      const lista = filtrar();
+      $("#plist", panel).innerHTML = `<div class="count">${lista.length} de ${rows.length} consultas</div>` +
+        (lista.length ? lista.map(tarjetaLead).join("") : `<div class="empty">No hay consultas con estos filtros.</div>`);
+      panel.querySelectorAll("[data-e]").forEach((btn) => btn.onclick = async () => {
+        const r = rows.find((x) => x.id === btn.dataset.id); if (!r) return;
+        btn.disabled = true;
+        try { await rpc("set_lead_estado", { p_slug: d.slug, p_id: r.id, p_estado: btn.dataset.e }); r.estado = btn.dataset.e; } catch {}
+        $("#pstats", panel).innerHTML = estadisticas();
+        pintarLista();
+      });
+    }
+
+    function pintar() {
+      const chip = (v, l) => `<button type="button" data-n="${v}" class="${f.nivel === v ? "on" : ""}">${l}</button>`;
+      $(".pin", panel).innerHTML = `
+        <p class="pintro">${neutra
+          ? "Así recibe la inmobiliaria cada consulta: resumida, clasificada por nivel de interés y lista para contactar. En esta demo pública los contactos se muestran ocultos."
+          : `Así recibiría ${esc(d.nombre)} cada consulta: resumida, clasificada por nivel de interés y lista para contactar. Primero aparece su simulación; las marcadas como "Ejemplo" son consultas simuladas para mostrar filtros y estadísticas.`}</p>
+        <div id="pstats">${estadisticas()}</div>
+        <div class="filters">
+          <div class="fchips">${chip("", "Todas")}${chip("caliente", "Para contactar")}${chip("tibio", "Interesado")}${chip("frio", "Explorando")}</div>
+          <div class="fsel">
+            <select id="fo"><option value="">Operación: todas</option><option value="compra">Compra</option><option value="alquiler">Alquiler</option><option value="tasacion">Tasación</option></select>
+            <select id="ff"><option value="">Fecha: todas</option><option value="hoy">Últimas 24 h</option><option value="7">Últimos 7 días</option><option value="30">Últimos 30 días</option></select>
+            <select id="fe"><option value="">Estado: todos</option><option value="pendiente">Pendientes</option><option value="contactado">Contactadas</option></select>
+            <input id="fq" type="search" placeholder="Buscar por nombre o búsqueda">
+          </div>
+        </div>
+        <div id="plist"></div>`;
+      $("#fo", panel).value = f.oper; $("#ff", panel).value = f.fecha; $("#fe", panel).value = f.estado; $("#fq", panel).value = f.q;
+      panel.querySelectorAll("[data-n]").forEach((b) => b.onclick = () => { f.nivel = b.dataset.n; pintar(); });
+      $("#fo", panel).onchange = (e) => { f.oper = e.target.value; pintarLista(); };
+      $("#ff", panel).onchange = (e) => { f.fecha = e.target.value; pintarLista(); };
+      $("#fe", panel).onchange = (e) => { f.estado = e.target.value; pintarLista(); };
+      $("#fq", panel).oninput = (e) => { f.q = e.target.value; pintarLista(); };
+      pintarLista();
+    }
 
     async function load() {
       panel.innerHTML = `<div class="ptop"><b>Panel de consultas</b><button id="pRef">Actualizar</button><button id="pClose">Volver</button></div><div class="pin"><div class="loading" style="min-height:40vh">Cargando…</div></div>`;
       $("#pClose").onclick = () => panel.classList.add("hide");
       $("#pRef").onclick = load;
-      let rows = [];
-      try { rows = await rpc("get_demo_panel", { p_slug: d.slug }); } catch { $(".pin", panel).innerHTML = `<div class="empty">No pudimos cargar el panel. Probá de nuevo.</div>`; return; }
-      const c = { caliente: 0, tibio: 0, frio: 0 };
-      rows.forEach((r) => { c[r.calificacion] = (c[r.calificacion] || 0) + 1; });
-      $(".pin", panel).innerHTML = `
-        <p class="pintro">${neutra
-          ? "Así le llegan las consultas a la inmobiliaria: cada charla con su resumen y una calificación. En esta demo pública los contactos se muestran ocultos."
-          : `Acá ves cada charla que tuvo el asistente de ${esc(d.nombre)}: un resumen, qué busca la persona, sus datos y qué tan lista está para avanzar. Probalo: escribile al asistente y tocá "Actualizar".`}</p>
-        <div class="stats">
-          <div class="stat"><b>${rows.length}</b><small>Charlas</small></div>
-          <div class="stat"><b>${c.caliente}</b><small>Calientes</small></div>
-          <div class="stat"><b>${c.tibio}</b><small>Tibios</small></div>
-          <div class="stat"><b>${c.frio}</b><small>Fríos</small></div>
-        </div>
-        ${rows.length ? rows.map((r) => `
-          <article class="lead">
-            <div class="lh"><span class="badge ${esc(r.calificacion)}">${lbl[r.calificacion] || esc(r.calificacion)}</span><b>${esc(r.nombre || "Sin nombre")}</b><time>${when(r.fecha)}</time></div>
-            <p>${esc(r.resumen || "Charla en curso.")}</p>
-            ${r.busca ? `<div class="kv"><b>Busca:</b> ${esc(r.busca)}</div>` : ""}
-            ${r.contacto ? `<div class="kv"><b>Contacto:</b> ${esc(r.contacto)}</div>` : ""}
-            <details><summary>Ver charla completa (${(r.mensajes || []).length} mensajes)</summary>
-              <div class="conv">${(r.mensajes || []).map((m) => `<div class="m ${m.role === "user" ? "u" : "b"}">${esc(m.text)}</div>`).join("")}</div>
-            </details>
-          </article>`).join("") : `<div class="empty">Todavía no hay charlas. Abrí el asistente, hacé una consulta y volvé acá.</div>`}`;
+      try { rows = await rpc("get_demo_panel", { p_slug: d.slug }); } catch { $(".pin", panel).innerHTML = `<div class="empty">No se pudo cargar el panel. Intente nuevamente.</div>`; return; }
+      pintar();
     }
     $("#openPanel").onclick = () => { panel.classList.remove("hide"); load(); };
   }
