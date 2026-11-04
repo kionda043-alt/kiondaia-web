@@ -204,6 +204,35 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
 .kbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:99px;font-weight:600;text-decoration:none;margin-top:8px}
 .kbtn.wa{background:#25D366;color:#fff}.kbtn.ml{border:1.5px solid var(--k-navy);color:var(--k-navy)}
 .loading{min-height:70vh;display:grid;place-items:center;color:var(--mute)}
+/* tema WhatsApp: la demo simula el WhatsApp de la inmobiliaria */
+.bubble{background:#25d366}
+.bubble .dot{display:none}
+.tip{border-color:#25d366}
+.chat{--s:#00a884;background:#efeae2}
+.ch{background:#008069}
+.ch .pbtn{border-color:rgba(255,255,255,.55)}
+.ch-t small{opacity:.85}
+.cdemo{background:#fff3c4;color:#54656f;border-bottom:0;font-size:11.5px}
+.sbar{background:#d9fdd3;color:#0b4a3b;border-bottom:1px solid #c5ebc0}
+.sbar button{background:#008069}
+.msgs{background-color:#efeae2;background-image:radial-gradient(rgba(84,101,111,.07) 1px,transparent 1.2px);background-size:18px 18px;gap:6px}
+.m{font-size:15px;line-height:1.38;padding:7px 10px 8px;border-radius:8px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.m.b{background:#fff;border:0;border-top-left-radius:0;color:#111b21}
+.m.u{background:#d9fdd3;color:#111b21;border-top-right-radius:0}
+.m.sys{box-shadow:none;background:#ffffffcc;color:#54656f;font-size:12.5px;border-radius:8px;padding:5px 10px}
+.acts button{border:0;background:#fff;color:#008069;border-radius:8px;box-shadow:0 1px .5px rgba(11,20,26,.13);font-weight:600}
+.acts button.pri{background:#00a884;color:#fff}
+.pcard{border:0;border-radius:8px;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.pcard a{color:#027eb5}
+.simgo{background:#efeae2}
+.simgo button{background:#00a884}
+form.in{background:#f0f2f5;border-top:0}
+form.in textarea{border:0;border-radius:22px;background:#fff;padding:10px 14px}
+form.in button{background:#00a884}
+.note{background:#f0f2f5;padding-bottom:8px}
+.kclose{border:0;box-shadow:0 1px .5px rgba(11,20,26,.13);border-radius:10px}
+.kclose .row a,.kclose .row button{border-color:#00a884;color:#008069}
+.kclose .row .pri{background:#00a884;color:#fff}
 </style>
 </head>
 <body>
@@ -230,6 +259,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
   };
   const app = $("#app"), band = $("#kband");
 
+  const ICON_WA = '<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><path fill="#fff" d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3.2 29l6.4-1.7c2 1.1 4.2 1.6 6.4 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.6c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.8 1 1-3.7-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.8C5.2 9.9 10 5.2 16 5.2s10.8 4.7 10.8 10.6S22 26.6 16 26.6z"/><path fill="#fff" d="M22 18.7c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.6s1.2 3 1.3 3.2c.2.2 2.3 3.5 5.5 4.9.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3z"/></svg>';
   const ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>';
   const ICON_HOUSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>';
   const ICON_SEND = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
@@ -301,17 +331,17 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
 
       <div class="dim" aria-hidden="true"></div>
       <div class="launch" id="launch">
-        <div class="tip" id="tip">${tactil ? "Toque aquí" : "Haga clic aquí"} para probar el asistente</div>
-        <button class="bubble" id="bubble" aria-label="Abrir el asistente">${ICON_CHAT}<span class="dot"></span></button>
+        <div class="tip" id="tip">${tactil ? "Toque aquí" : "Haga clic aquí"} para probar el asistente por WhatsApp</div>
+        <button class="bubble" id="bubble" aria-label="Abrir el asistente por WhatsApp">${ICON_WA}<span class="dot"></span></button>
       </div>
 
       <div class="veil hide" id="veil"></div>
       <section class="chat hide" id="chat" aria-label="Asistente virtual">
-        <div class="ch">${mark}<div class="ch-t"><b>Asistente virtual</b><small>${esc(d.nombre)}</small></div>
+        <div class="ch">${mark}<div class="ch-t"><b>${esc(d.nombre)}</b><small>en línea · asistente virtual</small></div>
           <button class="pbtn" id="openPanel">Ver panel</button>
           <button id="reset" title="Empezar de nuevo" aria-label="Empezar de nuevo">↻</button>
           <button id="close" title="Cerrar" aria-label="Cerrar">✕</button></div>
-        <div class="cdemo" id="cdemo">Versión demo · asistente con IA</div>
+        <div class="cdemo" id="cdemo">Simulación de WhatsApp · demo del asistente con IA</div>
         <div class="sbar hide" id="sbar"><span>Simulación en curso · escriba como si fuera un cliente</span><button type="button" id="endSim">Finalizar simulación</button></div>
         <div class="msgs" id="msgs"></div>
         <div class="simgo hide" id="simgo"><button type="button" id="startSim">▶ Empezar simulación</button></div>
@@ -353,7 +383,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos ${n} propiedades de su web; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`;
   }
   const TEXTO_CIERRE = "Gracias por probar la demo. La conversación quedó registrada en el panel, junto con consultas de ejemplo para ver cómo se ordenan los interesados.";
-  const TEXTO_PRECIO = "Implementación completa: USD 300, por única vez.\nMantenimiento: USD 30 por mes.\nIncluye la configuración con sus datos, la carga de todas sus propiedades, la actualización automática, el panel de consultas y de propiedades (con importar y exportar Excel), la mini web si no tienen una y la instalación.";
+  const TEXTO_PRECIO = "Implementación completa: USD 300, por única vez.\nMantenimiento: USD 30 por mes, con hasta 1.000 mensajes de WhatsApp incluidos.\nIncluye la conexión de su WhatsApp, el botón en su web, la carga y actualización automática de todas sus propiedades, el panel de consultas y de propiedades (con Excel) y la mini web si no tienen una.";
 
   function setupChat(d, props) {
     const K = "demo2:" + d.slug;
@@ -456,7 +486,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         if (!s.log.length) botones([
           ["▶ Empezar simulación", empezarSim, true],
           ["¿Qué incluye el servicio?", () => ask("¿Qué incluye el servicio?")],
-          ["¿Cómo se instala en la web?", () => ask("¿Cómo se instala en la web?")],
+          ["¿Cómo funciona por WhatsApp?", () => ask("¿Cómo funciona por WhatsApp?")],
         ]);
       } else {
         add("b", d.saludo || `Hola, soy el asistente virtual de ${d.nombre}. ¿Está buscando comprar, alquilar o tasar una propiedad?`);
