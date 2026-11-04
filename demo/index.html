@@ -156,6 +156,45 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
 .conv{margin-top:8px;display:flex;flex-direction:column;gap:6px;background:#fafaf8;border-radius:12px;padding:10px}
 .conv .m{font-size:14px}
 
+/* panel: pestañas y propiedades */
+.ptabs{position:sticky;top:57px;z-index:2;display:flex;gap:6px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.ptabs button{flex:1;max-width:200px;border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font-size:14px;font-weight:600}
+.ptabs button.on{background:var(--p);border-color:var(--p);color:#fff}
+.pacts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pacts button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 13px;font-size:13.5px;font-weight:600}
+.pacts button.pri{background:var(--s);border-color:var(--s);color:#fff}
+.prow{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:8px;cursor:pointer}
+.prow img,.prow .nofoto{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none;background:#eceae4}
+.prow .pinfo{flex:1;min-width:0;display:grid;gap:1px}
+.prow .pinfo b{font-size:14px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .pinfo small{font-size:12.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prow .pp{font-size:14px;font-weight:700}
+.pest{flex:none;border:1px solid var(--line);border-radius:99px;padding:6px 8px;font:inherit;font-size:12.5px;font-weight:600;background:#fff;max-width:118px}
+.e-disponible .pest{background:#dcfce7;border-color:#bbf7d0;color:#15803d}
+.e-reservada .pest{background:#fef3c7;border-color:#fde68a;color:#a16207}
+.e-vendida .pest,.e-alquilada .pest{background:#e0e7ff;border-color:#c7d2fe;color:#3730a3}
+.e-pausada .pest{background:#eef0f2;border-color:#e2e4e7;color:#4b5563}
+.e-vendida,.e-alquilada,.e-pausada{opacity:.75}
+.more{width:100%;border:1px dashed var(--line);background:#fff;border-radius:12px;padding:10px;font-weight:600;font-size:14px;margin:4px 0 12px}
+.plog{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:6px}
+.lgrow{display:flex;gap:10px;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
+.lgrow:first-child{border-top:0}
+.lgrow time{color:var(--mute);flex:none;font-size:12.5px;padding-top:1px}
+.pmodal{position:fixed;inset:0;z-index:80;background:rgba(10,8,12,.55);display:grid;place-items:center;padding:16px;overflow-y:auto}
+.pmbox{background:#fff;border-radius:18px;padding:18px;width:min(560px,100%);max-height:calc(100dvh - 32px);overflow-y:auto}
+.pmbox h3{font-size:18px;margin-bottom:12px}
+.pform{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pform label{display:grid;gap:4px;font-size:12.5px;color:var(--mute);font-weight:600}
+.pform label.full,.pform .full{grid-column:1/-1}
+.pform input,.pform select{border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:inherit;font-size:15px;color:var(--ink);background:#fff;width:100%}
+.mrow{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.mrow button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 16px;font-weight:600}
+.mrow button.pri{background:var(--s);border-color:var(--s);color:#fff}
+.ires{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.ires div{background:#fafaf8;border:1px solid var(--line);border-radius:12px;padding:10px}
+.ires b{display:block;font-size:20px}.ires small{color:var(--mute);font-size:12.5px}
+.ptoast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;background:#16161a;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100vw - 32px);box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+
 /* estados */
 .state{min-height:calc(100vh - 40px);display:grid;place-items:center;padding:24px 16px}
 .state .box{max-width:440px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 22px}
@@ -306,10 +345,12 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
     const neutra = d.tipo === "neutra";
     return neutra
       ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener una inmobiliaria.\nPara esta prueba usamos ${n} propiedades de una inmobiliaria ficticia; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
+      : d.n_admin
+      ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos las ${d.n_admin} propiedades publicadas en su web, que también puede administrar desde el panel.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
       : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos ${n} propiedades de su web; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`;
   }
   const TEXTO_CIERRE = "Gracias por probar la demo. La conversación quedó registrada en el panel, junto con consultas de ejemplo para ver cómo se ordenan los interesados.";
-  const TEXTO_PRECIO = "Implementación completa: USD 300, por única vez.\nMantenimiento: USD 30 por mes.\nIncluye la configuración con sus datos, la carga de todas sus propiedades, el panel para el equipo y la instalación en su web.";
+  const TEXTO_PRECIO = "Implementación completa: USD 300, por única vez.\nMantenimiento: USD 30 por mes.\nIncluye la configuración con sus datos, la carga de todas sus propiedades, la actualización automática, el panel de consultas y de propiedades (con importar y exportar Excel), la mini web si no tienen una y la instalación.";
 
   function setupChat(d, props) {
     const K = "demo2:" + d.slug;
@@ -366,7 +407,9 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
     }
     function tarjeta(i) {
       const p = props[i - 1];
-      if (!p) return;
+      if (p) tarjetaObj(p);
+    }
+    function tarjetaObj(p) {
       const foto = safeUrl(p.foto), link = safeUrl(p.link);
       const meta = [p.operacion, p.barrio, p.ambientes ? p.ambientes + " amb." : ""].filter(Boolean).map(esc).join(" · ");
       const el = document.createElement("div");
@@ -423,6 +466,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         if (m.r === "fin") return cierre(m);
         add(m.r, m.t);
         (m.m || []).forEach(tarjeta);
+        (m.tj || []).forEach(tarjetaObj);
       });
       txt.disabled = send.disabled = s.done;
       txt.placeholder = sim ? "Escriba como si fuera un cliente…" : "Escriba su pregunta…";
@@ -473,8 +517,10 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         const reply = j.reply || "Tuve un problema para responder. ¿Podría intentar de nuevo?";
         t.textContent = reply;
         const most = Array.isArray(j.mostrar) ? j.mostrar : [];
-        s.log.push({ r: "b", t: reply, m: most });
+        const tj = Array.isArray(j.tarjetas) ? j.tarjetas.slice(0, 2) : [];
+        s.log.push({ r: "b", t: reply, m: most, tj });
         most.forEach(tarjeta);
+        tj.forEach(tarjetaObj);
         if (j.finalizada) setTimeout(() => location.reload(), 2500);
         else if (j.done) {
           if (m0 === "simulacion") { s.done = true; s.log.push({ r: "fin" }); save(); busy = false; return draw(); }
@@ -652,14 +698,253 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       pintarLista();
     }
 
+    let tab = "consultas";
     async function load() {
-      panel.innerHTML = `<div class="ptop"><b>Panel de consultas</b><button id="pRef">Actualizar</button><button id="pClose">Volver</button></div><div class="pin"><div class="loading" style="min-height:40vh">Cargando…</div></div>`;
+      panel.innerHTML = `<div class="ptop"><b>Panel</b><button id="pRef">Actualizar</button><button id="pClose">Volver</button></div>
+        <div class="ptabs"><button type="button" data-t="consultas" class="${tab === "consultas" ? "on" : ""}">Consultas</button><button type="button" data-t="propiedades" class="${tab === "propiedades" ? "on" : ""}">Propiedades</button></div>
+        <div class="pin"><div class="loading" style="min-height:40vh">Cargando…</div></div>`;
       $("#pClose").onclick = () => panel.classList.add("hide");
       $("#pRef").onclick = load;
+      panel.querySelectorAll("[data-t]").forEach((b) => b.onclick = () => { tab = b.dataset.t; load(); });
+      if (tab === "propiedades") return propiedades.load($(".pin", panel));
       try { rows = await rpc("get_demo_panel", { p_slug: d.slug }); } catch { $(".pin", panel).innerHTML = `<div class="empty">No se pudo cargar el panel. Intente nuevamente.</div>`; return; }
       pintar();
     }
+    const propiedades = setupPropiedades(d);
     $("#openPanel").onclick = () => { panel.classList.remove("hide"); load(); };
+  }
+  // ---------- panel: propiedades ----------
+  const ESTADOS = [["disponible", "Disponible"], ["reservada", "Reservada"], ["vendida", "Vendida"], ["alquilada", "Alquilada"], ["pausada", "Pausada"]];
+  const ESTADO_TXT = Object.fromEntries(ESTADOS);
+  const OPS = [["venta", "Venta"], ["alquiler", "Alquiler"], ["venta y alquiler", "Venta y alquiler"]];
+  const CAMPOS = [
+    ["codigo", "Código"], ["estado", "Estado"], ["operacion", "Operación"], ["tipo", "Tipo"], ["ubicacion", "Ubicación"], ["titulo", "Título"],
+    ["precio_venta", "Precio venta"], ["precio_alquiler", "Precio alquiler"], ["ambientes", "Ambientes"], ["dormitorios", "Dormitorios"], ["banos", "Baños"],
+    ["sup_cubierta", "Sup. cubierta (m²)"], ["sup_total", "Total construido (m²)"], ["terreno", "Terreno (m²)"], ["link", "Link al aviso"], ["foto", "Foto principal"],
+  ];
+  const sinTilde = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+  let xlsxP = null;
+  const cargarXLSX = () => xlsxP || (xlsxP = new Promise((ok, mal) => {
+    const sc = document.createElement("script");
+    sc.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+    sc.onload = () => ok(window.XLSX); sc.onerror = () => { xlsxP = null; mal(new Error("xlsx")); };
+    document.head.appendChild(sc);
+  }));
+
+  function setupPropiedades(d) {
+    let box = null, props = [], log = [], ver = 40;
+    const f = { q: "", estado: "", oper: "", tipo: "" };
+
+    function filtrar() {
+      const q = sinTilde(f.q);
+      return props.filter((p) => {
+        if (f.estado && p.estado !== f.estado) return false;
+        if (f.oper && !p.operacion.includes(f.oper)) return false;
+        if (f.tipo && p.tipo !== f.tipo) return false;
+        if (q && !sinTilde(`${p.codigo} ${p.titulo} ${p.tipo} ${p.ubicacion}`).includes(q)) return false;
+        return true;
+      });
+    }
+    function fila(p) {
+      const precio = [p.precio_venta, p.precio_alquiler].filter(Boolean).join(" · ") || "Precio a consultar";
+      const meta = [p.ambientes ? p.ambientes + " amb." : "", p.sup_cubierta ? p.sup_cubierta + " m²" : p.terreno ? p.terreno + " m² de terreno" : ""].filter(Boolean).join(" · ");
+      return `<div class="prow e-${esc(p.estado)}" data-id="${esc(p.id)}">
+        ${safeUrl(p.foto) ? `<img src="${esc(p.foto)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'nofoto'}))">` : `<div class="nofoto"></div>`}
+        <div class="pinfo"><b>${esc(p.tipo || "Propiedad")} · ${esc(p.ubicacion || "")}</b>
+          <small>${esc(p.titulo)} · Cód. ${esc(p.codigo)}</small>
+          <span class="pp">${esc(precio)}</span>${meta ? `<small>${esc(meta)}</small>` : ""}</div>
+        <select class="pest" data-id="${esc(p.id)}" aria-label="Estado">${ESTADOS.map(([v, l]) => `<option value="${v}" ${p.estado === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+      </div>`;
+    }
+    function resumen() {
+      const c = (e) => props.filter((p) => p.estado === e).length;
+      return `<div class="stats">
+        <div class="stat g"><b>${c("disponible")}</b><small>Disponibles (las ofrece el asistente)</small></div>
+        <div class="stat"><b>${c("reservada")}</b><small>Reservadas</small></div>
+        <div class="stat"><b>${c("vendida") + c("alquilada")}</b><small>Vendidas o alquiladas</small></div>
+        <div class="stat"><b>${props.length}</b><small>Total cargadas</small></div></div>`;
+    }
+    function pintarLista() {
+      const lista = filtrar();
+      $("#prlist", box).innerHTML = `<div class="count">${lista.length} de ${props.length} propiedades</div>` +
+        (lista.length ? lista.slice(0, ver).map(fila).join("") : `<div class="empty">No hay propiedades con estos filtros.</div>`) +
+        (lista.length > ver ? `<button type="button" class="more" id="prMore">Mostrar más (${lista.length - ver} restantes)</button>` : "");
+      const m = $("#prMore", box); if (m) m.onclick = () => { ver += 60; pintarLista(); };
+      box.querySelectorAll(".pest").forEach((sel) => {
+        sel.onclick = (e) => e.stopPropagation();
+        sel.onchange = async () => {
+          const p = props.find((x) => x.id === sel.dataset.id); if (!p) return;
+          sel.disabled = true;
+          try { Object.assign(p, await rpc("guardar_propiedad", { p_slug: d.slug, p_prop: { id: p.id, estado: sel.value } })); toast(`${p.tipo || "Propiedad"} ${p.codigo}: ${ESTADO_TXT[p.estado]}.${p.estado === "disponible" ? " El asistente vuelve a ofrecerla." : " El asistente deja de ofrecerla."}`); }
+          catch { toast("No se pudo guardar. Intente nuevamente."); sel.value = p.estado; }
+          sel.disabled = false;
+          refrescarLog(); $("#prstats", box).innerHTML = resumen(); pintarLista();
+        };
+      });
+      box.querySelectorAll(".prow").forEach((r) => r.onclick = () => editar(props.find((x) => x.id === r.dataset.id)));
+    }
+    async function refrescarLog() {
+      try { const j = await rpc("get_propiedades", { p_slug: d.slug }); log = j.log || []; } catch {}
+      const el = $("#prlog", box); if (el) el.innerHTML = pintarLog();
+    }
+    function pintarLog() {
+      if (!log.length) return `<small style="color:var(--mute)">Todavía no hay cambios.</small>`;
+      return log.slice(0, 15).map((l) => `<div class="lgrow"><time>${new Date(l.fecha).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</time><span><b>${esc(l.cambio)}</b>${l.titulo ? " · " + esc(l.titulo) : ""}${l.codigo && l.codigo !== "-" ? " (" + esc(l.codigo) + ")" : ""}${l.detalle ? " · " + esc(l.detalle) : ""}</span></div>`).join("");
+    }
+    function pintar() {
+      const tipos = [...new Set(props.map((p) => p.tipo).filter(Boolean))].sort();
+      const chip = (v, l) => `<button type="button" data-e="${v}" class="${f.estado === v ? "on" : ""}">${l}</button>`;
+      box.innerHTML = `
+        <p class="pintro">Las propiedades que ve el asistente. Lo que se marque acá se aplica en el momento: una propiedad alquilada o vendida deja de ofrecerse. En el servicio real esta lista se actualiza sola dos veces por día desde su web o su sistema.</p>
+        <div id="prstats">${resumen()}</div>
+        <div class="pacts">
+          <button type="button" class="pri" id="prNew">+ Nueva propiedad</button>
+          <button type="button" id="prImp">Importar Excel</button>
+          <button type="button" id="prExp">Exportar Excel</button>
+          <button type="button" id="prTpl">Plantilla</button>
+          <input type="file" id="prFile" accept=".xlsx,.xls,.csv" class="hide">
+        </div>
+        <div class="filters">
+          <div class="fchips">${chip("", "Todas")}${ESTADOS.map(([v, l]) => chip(v, l + "s")).join("")}</div>
+          <div class="fsel">
+            <select id="pfo"><option value="">Operación: todas</option><option value="venta">Venta</option><option value="alquiler">Alquiler</option></select>
+            <select id="pft"><option value="">Tipo: todos</option>${tipos.map((t) => `<option>${esc(t)}</option>`).join("")}</select>
+            <input id="pfq" type="search" placeholder="Buscar por código, barrio o título" style="grid-column:span 2">
+          </div>
+        </div>
+        <div id="prlist"></div>
+        <details class="plog"><summary>Últimos cambios</summary><div id="prlog">${pintarLog()}</div></details>`;
+      $("#pfo", box).value = f.oper; $("#pft", box).value = f.tipo; $("#pfq", box).value = f.q;
+      box.querySelectorAll("[data-e]").forEach((b) => b.onclick = () => { f.estado = b.dataset.e; ver = 40; pintar(); });
+      $("#pfo", box).onchange = (e) => { f.oper = e.target.value; ver = 40; pintarLista(); };
+      $("#pft", box).onchange = (e) => { f.tipo = e.target.value; ver = 40; pintarLista(); };
+      $("#pfq", box).oninput = (e) => { f.q = e.target.value; ver = 40; pintarLista(); };
+      $("#prNew", box).onclick = () => editar(null);
+      $("#prExp", box).onclick = exportar;
+      $("#prTpl", box).onclick = plantilla;
+      $("#prImp", box).onclick = () => $("#prFile", box).click();
+      $("#prFile", box).onchange = (e) => { const fl = e.target.files[0]; e.target.value = ""; if (fl) importar(fl); };
+      pintarLista();
+    }
+
+    // --- formulario (alta / edición) ---
+    function editar(p) {
+      const v = p || { estado: "disponible", operacion: "venta" };
+      const inp = (k, l, type = "text", span = false) => `<label class="${span ? "full" : ""}"><span>${l}</span><input name="${k}" type="${type}" value="${esc(v[k] ?? "")}" ${type === "number" ? 'inputmode="decimal" step="any"' : ""}></label>`;
+      const sel = (k, l, ops) => `<label><span>${l}</span><select name="${k}">${ops.map(([o, t]) => `<option value="${o}" ${v[k] === o ? "selected" : ""}>${t}</option>`).join("")}</select></label>`;
+      const m = modal(`<h3>${p ? "Editar propiedad" : "Nueva propiedad"}</h3>
+        <form class="pform">
+          ${inp("titulo", "Título", "text", true)}
+          ${sel("estado", "Estado", ESTADOS)}${sel("operacion", "Operación", OPS)}
+          ${inp("tipo", "Tipo (Casa, Departamento…)")}${inp("ubicacion", "Ubicación")}
+          ${inp("precio_venta", "Precio venta (ej. USD 145.000)")}${inp("precio_alquiler", "Precio alquiler (ej. $1.200.000)")}
+          ${inp("ambientes", "Ambientes", "number")}${inp("dormitorios", "Dormitorios", "number")}
+          ${inp("banos", "Baños", "number")}${inp("sup_cubierta", "Sup. cubierta (m²)", "number")}
+          ${inp("sup_total", "Total construido (m²)", "number")}${inp("terreno", "Terreno (m²)", "number")}
+          ${inp("codigo", "Código")}${inp("link", "Link al aviso", "url")}
+          ${inp("foto", "Link de la foto principal", "url", true)}
+          <div class="mrow full"><button type="button" data-x>Cancelar</button><button type="submit" class="pri">Guardar</button></div>
+        </form>`);
+      $("form", m).onsubmit = async (e) => {
+        e.preventDefault();
+        const datos = Object.fromEntries(new FormData(e.target).entries());
+        if (!datos.titulo.trim()) { toast("Falta el título."); return; }
+        if (p) datos.id = p.id;
+        const b = $("[type=submit]", m); b.disabled = true; b.textContent = "Guardando…";
+        try {
+          const r = await rpc("guardar_propiedad", { p_slug: d.slug, p_prop: datos });
+          const i = props.findIndex((x) => x.id === r.id);
+          if (i >= 0) props[i] = r; else props.unshift(r);
+          cerrarModal(); toast(p ? "Cambios guardados." : "Propiedad agregada. El asistente ya puede ofrecerla.");
+          refrescarLog(); $("#prstats", box).innerHTML = resumen(); pintarLista();
+        } catch { b.disabled = false; b.textContent = "Guardar"; toast("No se pudo guardar. Revise los datos e intente nuevamente."); }
+      };
+    }
+
+    // --- Excel ---
+    const filaExcel = (p) => CAMPOS.map(([k]) => k === "estado" ? ESTADO_TXT[p.estado] || p.estado : k === "operacion" ? (OPS.find((o) => o[0] === p.operacion) || [0, p.operacion])[1] : p[k] ?? "");
+    async function exportar() {
+      try {
+        const X = await cargarXLSX();
+        const ws = X.utils.aoa_to_sheet([CAMPOS.map((c) => c[1]), ...props.map(filaExcel)]);
+        ws["!cols"] = CAMPOS.map(([k]) => ({ wch: ["titulo", "ubicacion", "link", "foto"].includes(k) ? 34 : 14 }));
+        const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Propiedades");
+        X.writeFile(wb, `propiedades-${d.slug}.xlsx`);
+      } catch { toast("No se pudo generar el Excel."); }
+    }
+    async function plantilla() {
+      try {
+        const X = await cargarXLSX();
+        const ej = { codigo: "A-001", estado: "disponible", operacion: "venta", tipo: "Casa", ubicacion: "Ingeniero Maschwitz", titulo: "Casa 3 ambientes con jardín", precio_venta: "USD 120.000", ambientes: 3, dormitorios: 2, banos: 1, sup_cubierta: 110, terreno: 400 };
+        const ws = X.utils.aoa_to_sheet([CAMPOS.map((c) => c[1]), filaExcel(ej)]);
+        const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Propiedades");
+        X.writeFile(wb, "plantilla-propiedades.xlsx");
+      } catch { toast("No se pudo generar la plantilla."); }
+    }
+    async function importar(file) {
+      let filas;
+      try {
+        const X = await cargarXLSX();
+        const wb = X.read(await file.arrayBuffer());
+        filas = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: false });
+      } catch { toast("No se pudo leer el archivo. Use .xlsx o .csv."); return; }
+      const mapa = Object.fromEntries(CAMPOS.map(([k, l]) => [sinTilde(l), k]));
+      Object.assign(mapa, { codigo: "codigo", ref: "codigo", referencia: "codigo", precio: "precio_venta", supcubierta: "sup_cubierta", superficiecubierta: "sup_cubierta", totalconstruido: "sup_total", terreno: "terreno", link: "link", foto: "foto", banos: "banos" });
+      const opDe = (t) => { const x = sinTilde(t); return x.includes("venta") && x.includes("alquiler") ? "venta y alquiler" : x.includes("alquiler") ? "alquiler" : x ? "venta" : ""; };
+      const rows = filas.map((fl) => {
+        const o = {};
+        for (const [col, val] of Object.entries(fl)) { const k = mapa[sinTilde(col)] || mapa[sinTilde(col).replace(/m2$/, "")]; if (k && String(val).trim() !== "") o[k] = String(val).trim(); }
+        if (o.operacion) o.operacion = opDe(o.operacion);
+        if (o.estado) o.estado = sinTilde(o.estado).replace(/s$/, "");
+        return o;
+      }).filter((o) => o.codigo || o.titulo);
+      if (!rows.length) { toast("No se encontraron filas. Use la plantilla para ver las columnas."); return; }
+      const cods = new Set(props.map((p) => p.codigo));
+      const act = rows.filter((r) => r.codigo && cods.has(r.codigo)).length;
+      const baja = rows.filter((r) => ["vendida", "alquilada", "pausada"].includes(r.estado)).length;
+      const m = modal(`<h3>Importar ${esc(file.name)}</h3>
+        <div class="ires"><div><b>${rows.length}</b><small>filas leídas</small></div><div><b>${rows.length - act}</b><small>nuevas</small></div><div><b>${act}</b><small>se actualizan (mismo código)</small></div><div><b>${baja}</b><small>pasan a vendida, alquilada o pausada</small></div></div>
+        <p class="pintro">Las propiedades con el mismo código se actualizan; no se duplican. Las que no estén en el archivo quedan como están.</p>
+        <div class="mrow"><button type="button" data-x>Cancelar</button><button type="button" class="pri" id="impOk">Importar</button></div>`);
+      $("#impOk", m).onclick = async () => {
+        const b = $("#impOk", m); b.disabled = true; b.textContent = "Importando…";
+        try {
+          let n = 0, u = 0;
+          for (let i = 0; i < rows.length; i += 300) { const r = await rpc("importar_propiedades", { p_slug: d.slug, p_rows: rows.slice(i, i + 300) }); n += r.nuevas; u += r.actualizadas; }
+          cerrarModal(); toast(`Importación lista: ${n} nuevas y ${u} actualizadas.`); load(box);
+        } catch { b.disabled = false; b.textContent = "Importar"; toast("No se pudo importar. Revise el archivo e intente nuevamente."); }
+      };
+    }
+
+    // --- modal y avisos ---
+    function modal(html) {
+      cerrarModal();
+      const m = document.createElement("div");
+      m.className = "pmodal"; m.innerHTML = `<div class="pmbox">${html}</div>`;
+      m.onclick = (e) => { if (e.target === m || e.target.hasAttribute("data-x")) cerrarModal(); };
+      document.body.appendChild(m);
+      return m;
+    }
+    function cerrarModal() { document.querySelectorAll(".pmodal").forEach((x) => x.remove()); }
+    function toast(t) {
+      const el = Object.assign(document.createElement("div"), { className: "ptoast", textContent: t });
+      document.body.appendChild(el); setTimeout(() => el.remove(), 3800);
+    }
+
+    async function load(el) {
+      box = el; ver = 40;
+      try { const j = await rpc("get_propiedades", { p_slug: d.slug }); props = j.props || []; log = j.log || []; }
+      catch { box.innerHTML = `<div class="empty">No se pudieron cargar las propiedades. Intente nuevamente.</div>`; return; }
+      if (!props.length) {
+        box.innerHTML = `<p class="pintro">Esta demo todavía no tiene propiedades administradas. Puede agregarlas a mano o importar un Excel.</p><div class="pacts"><button type="button" class="pri" id="prNew">+ Nueva propiedad</button><button type="button" id="prImp">Importar Excel</button><button type="button" id="prTpl">Plantilla</button><input type="file" id="prFile" accept=".xlsx,.xls,.csv" class="hide"></div>`;
+        $("#prNew", box).onclick = () => editar(null); $("#prTpl", box).onclick = plantilla;
+        $("#prImp", box).onclick = () => $("#prFile", box).click();
+        $("#prFile", box).onchange = (e) => { const fl = e.target.files[0]; e.target.value = ""; if (fl) importar(fl); };
+        return;
+      }
+      pintar();
+    }
+    return { load };
   }
 })();
 </script>
