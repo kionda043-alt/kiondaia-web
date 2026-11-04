@@ -231,6 +231,18 @@ form.in textarea{border:0;border-radius:22px;background:#fff;padding:10px 14px}
 form.in button{background:#00a884}
 .note{background:#f0f2f5;padding-bottom:8px}
 .kclose{border:0;box-shadow:0 1px .5px rgba(11,20,26,.13);border-radius:10px}
+.ch .pbtn{position:relative}
+.pbtn .nb{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#25D366;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px #008069}
+.pbtn.pulse{animation:kpl 1.3s ease-out 4}
+@keyframes kpl{0%{box-shadow:0 0 0 0 rgba(255,255,255,.75)}100%{box-shadow:0 0 0 13px rgba(255,255,255,0)}}
+.hint{align-self:center;max-width:92%;background:#fff3c4;color:#54656f;font-size:13px;line-height:1.35;border-radius:8px;padding:7px 12px;text-align:center;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.hint button{border:0;background:none;color:#008069;font-weight:700;font-size:13px;padding:0 0 0 4px;text-decoration:underline;cursor:pointer}
+.kclose .big{display:block;width:100%;border:0;border-radius:99px;padding:12px;font-size:15px;font-weight:700;background:#00a884;color:#fff;cursor:pointer}
+.kclose .pm{display:grid;gap:3px;font-size:15px}.kclose .pm small{color:var(--mute);font-size:13px}
+.lead.mia{border:2px solid #00a884}
+.tag.mia{background:#00a884;color:#fff;border-color:#00a884}
+.mtit{margin:4px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#008069}
+.lead .auto{margin:0;font-size:12.5px;color:#008069}
 .kclose .row a,.kclose .row button{border-color:#00a884;color:#008069}
 .kclose .row .pri{background:#00a884;color:#fff}
 </style>
@@ -382,8 +394,8 @@ form.in button{background:#00a884}
       ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos las ${d.n_admin} propiedades publicadas en su web, que también puede administrar desde el panel.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
       : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos ${n} propiedades de su web; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`;
   }
-  const TEXTO_CIERRE = "Gracias por probar la demo. La conversación quedó registrada en el panel, junto con consultas de ejemplo para ver cómo se ordenan los interesados.";
-  const TEXTO_PRECIO = "Implementación completa: USD 300, por única vez.\nMantenimiento: USD 30 por mes, con hasta 1.000 mensajes de WhatsApp incluidos.\nIncluye la conexión de su WhatsApp, el botón en su web, la carga y actualización automática de todas sus propiedades, el panel de consultas y de propiedades (con Excel) y la mini web si no tienen una.";
+  const TEXTO_CIERRE = "Gracias por probar la demo. Así le llegó esta consulta a su equipo:";
+  const PRECIO_HTML = `<div class="pm"><div><b>USD 300</b> de implementación, por única vez</div><div><b>USD 30 por mes</b> de mantenimiento</div><small>Incluye todo: su WhatsApp, su web, sus propiedades y el panel.</small></div>`;
 
   function setupChat(d, props) {
     const K = "demo2:" + d.slug;
@@ -397,7 +409,27 @@ form.in button{background:#00a884}
     for (const m of ["presentacion", "simulacion"]) {
       void m; // cada visita arranca de cero: no se guarda nada en el navegador
     }
-    const save = () => { if (st.simulacion.id) SESION.add(st.simulacion.id); };
+    // aviso tipo "mensaje sin leer" en el botón Ver panel
+    let vistasPanel = 0;
+    function badge() {
+      const b = $("#openPanel"); if (!b) return;
+      const n = SESION.size - vistasPanel;
+      let nb = b.querySelector(".nb");
+      if (n > 0) {
+        if (!nb) { nb = document.createElement("span"); nb.className = "nb"; b.appendChild(nb); b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); }
+        nb.textContent = n;
+      } else if (nb) { nb.remove(); b.classList.remove("pulse"); }
+    }
+    window.__panelVisto = () => { vistasPanel = SESION.size; badge(); };
+    const save = () => { if (st.simulacion.id) SESION.add(st.simulacion.id); badge(); };
+    function hint() {
+      const el = document.createElement("div");
+      el.className = "hint";
+      el.innerHTML = `Esta consulta ya está llegando al panel de su inmobiliaria.<button type="button">Ver panel</button>`;
+      el.querySelector("button").addEventListener("pointerdown", (e) => e.preventDefault());
+      el.querySelector("button").onclick = () => $("#openPanel").click();
+      msgs.appendChild(el);
+    }
     const S = () => st[modo];
     const podes = "puede";
     let busy = false;
@@ -463,10 +495,11 @@ form.in button{background:#00a884}
       el.className = "kclose";
       const wa = `https://wa.me/${BOT_WA}?text=${encodeURIComponent(`Hola, vengo por la demo de ${d.nombre} (código ${d.slug})`)}`;
       el.innerHTML = `<div>${esc(TEXTO_CIERRE)}</div>
-        <div class="precio ${fin.precio ? "" : "hide"}"><div class="pt">Precio</div><div style="white-space:pre-wrap">${esc(TEXTO_PRECIO)}</div>
+        <button type="button" class="big" data-a="panel">Ver mi consulta en el panel</button>
+        <div class="precio ${fin.precio ? "" : "hide"}"><div class="pt">Precio</div>${PRECIO_HTML}
           <a class="wa" href="${wa}" target="_blank" rel="noopener">Enviar mensaje por WhatsApp</a></div>
-        <div class="row">${fin.precio ? "" : `<button type="button" class="pri" data-a="precio">Me interesa saber el precio</button>`}
-        <button type="button" data-a="panel">Ver panel</button><button type="button" data-a="otra">Simular de nuevo</button></div>`;
+        <div class="row">${fin.precio ? "" : `<button type="button" data-a="precio">Me interesa saber el precio</button>`}
+        <button type="button" data-a="otra">Simular de nuevo</button></div>`;
       const bp = el.querySelector('[data-a="precio"]');
       if (bp) bp.onclick = () => { fin.precio = true; save(); el.querySelector(".precio").classList.remove("hide"); bp.remove(); if (pegado) abajo(); };
       el.querySelector('[data-a="panel"]').onclick = () => $("#openPanel").click();
@@ -494,6 +527,7 @@ form.in button{background:#00a884}
       vistas = new Set();
       s.log.forEach((m) => {
         if (m.r === "fin") return cierre(m);
+        if (m.r === "hint") return hint();
         add(m.r, m.t);
         (m.m || []).forEach(tarjeta);
         (m.tj || []).forEach(tarjetaObj);
@@ -551,6 +585,9 @@ form.in button{background:#00a884}
         s.log.push({ r: "b", t: reply, m: most, tj });
         most.forEach(tarjeta);
         tj.forEach(tarjetaObj);
+        if (m0 === "simulacion" && j.id && !s.hint && s.log.filter((x) => x.r === "b").length >= 2) {
+          s.hint = true; s.log.push({ r: "hint" }); hint();
+        }
         if (j.finalizada) setTimeout(() => location.reload(), 2500);
         else if (j.done) {
           if (m0 === "simulacion") { s.done = true; s.log.push({ r: "fin" }); save(); busy = false; return draw(); }
@@ -670,13 +707,15 @@ form.in button{background:#00a884}
     function tarjetaLead(r) {
       const wa = !r.ejemplo && !neutra ? waLink(r.contacto, r.nombre, d.nombre) : "";
       const n = (r.mensajes || []).length;
-      return `<article class="lead ${r.estado === "contactado" ? "done" : ""}">
+      const mia = SESION.has(r.id);
+      return `<article class="lead ${r.estado === "contactado" ? "done" : ""} ${mia ? "mia" : ""}">
         <div class="lh"><span class="badge ${esc(r.calificacion)}">${NIVEL[r.calificacion] || esc(r.calificacion)}</span>
           <b>${esc(r.nombre || "Sin nombre")}</b>
-          ${r.ejemplo ? `<span class="tag ej">Ejemplo</span>` : `<span class="tag yo">Real</span>`}
+          ${r.ejemplo ? `<span class="tag ej">Ejemplo</span>` : mia ? `<span class="tag mia">Su simulación</span>` : `<span class="tag yo">Real</span>`}
           ${r.operacion ? `<span class="tag">${OPER[r.operacion] || esc(r.operacion)}</span>` : ""}
           ${r.estado === "contactado" ? `<span class="tag ok">Contactada</span>` : ""}
           <time>${when(r.fecha)}${fueraDeHorario(r.fecha) ? " · fuera de horario" : ""}</time></div>
+        ${mia ? `<p class="auto">El asistente la calificó y la resumió solo, sin que nadie del equipo intervenga.</p>` : ""}
         <p>${esc(r.resumen || "Conversación en curso.")}</p>
         ${r.busca ? `<div class="kv"><b>Busca:</b> ${esc(r.busca)}</div>` : ""}
         ${r.contacto ? `<div class="kv"><b>Contacto:</b> ${esc(r.contacto)}</div>` : ""}
@@ -690,8 +729,11 @@ form.in button{background:#00a884}
     }
 
     function pintarLista() {
-      const lista = filtrar();
-      $("#plist", panel).innerHTML = `<div class="count">${lista.length} de ${rows.length} consultas</div>` +
+      const mias = rows.filter((r) => SESION.has(r.id));
+      const pm = $("#pmia", panel);
+      if (pm) pm.innerHTML = mias.length ? `<h4 class="mtit">Su consulta</h4>${mias.map(tarjetaLead).join("")}` : "";
+      const lista = filtrar().filter((r) => !SESION.has(r.id));
+      $("#plist", panel).innerHTML = `<div class="count">${lista.length} consultas de ejemplo</div>` +
         (lista.length ? lista.map(tarjetaLead).join("") : `<div class="empty">No hay consultas con estos filtros.</div>`);
       panel.querySelectorAll("[data-e]").forEach((btn) => btn.onclick = async () => {
         const r = rows.find((x) => x.id === btn.dataset.id); if (!r) return;
@@ -708,6 +750,7 @@ form.in button{background:#00a884}
         <p class="pintro">${neutra
           ? "Así recibe la inmobiliaria cada consulta: resumida, clasificada por nivel de interés y lista para contactar. En esta demo pública los contactos se muestran ocultos."
           : `Así recibiría ${esc(d.nombre)} cada consulta: resumida, clasificada por nivel de interés y lista para contactar. Primero aparece su simulación; las marcadas como "Ejemplo" son consultas simuladas para mostrar filtros y estadísticas.`}</p>
+        <div id="pmia"></div>
         <div id="pstats">${estadisticas()}</div>
         <div class="filters">
           <div class="fchips">${chip("", "Todas")}${chip("caliente", "Para contactar")}${chip("tibio", "Interesado")}${chip("frio", "Explorando")}</div>
@@ -741,7 +784,7 @@ form.in button{background:#00a884}
       pintar();
     }
     const propiedades = setupPropiedades(d);
-    $("#openPanel").onclick = () => { panel.classList.remove("hide"); load(); };
+    $("#openPanel").onclick = () => { tab = "consultas"; panel.classList.remove("hide"); load(); if (window.__panelVisto) window.__panelVisto(); };
   }
   // ---------- panel: propiedades ----------
   const ESTADOS = [["disponible", "Disponible"], ["reservada", "Reservada"], ["vendida", "Vendida"], ["alquilada", "Alquilada"], ["pausada", "Pausada"]];
