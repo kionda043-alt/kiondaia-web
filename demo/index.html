@@ -39,6 +39,7 @@ a{color:inherit}
 .mono{width:44px;height:44px;border-radius:12px;background:var(--s);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
 
 /* globo + chat */
+.dim{position:fixed;inset:0;z-index:35;background:rgba(12,10,16,.48);pointer-events:none}
 .launch{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:10px}
 .tip{background:#fff;border:2px solid var(--s);box-shadow:0 12px 30px -10px rgba(0,0,0,.4);padding:10px 14px;border-radius:14px;font-size:15px;font-weight:600;max-width:220px;cursor:pointer;line-height:1.3}
 .bubble{animation:pulse 2.2s infinite}
@@ -298,6 +299,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
     app.innerHTML = `
       <div id="bg">${fondo}</div>
 
+      <div class="dim" aria-hidden="true"></div>
       <div class="launch" id="launch">
         <div class="tip" id="tip">${tactil ? "Toque aquí" : "Haga clic aquí"} para probar el asistente</div>
         <button class="bubble" id="bubble" aria-label="Abrir el asistente">${ICON_CHAT}<span class="dot"></span></button>
@@ -337,6 +339,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
 
   // ---------- chat ----------
   const BOT_WA = "5491132654042";
+  const SESION = new Set(); // conversaciones de esta visita (lo único "real" que muestra el panel)
   function saludoHora() {
     const h = new Date().getHours();
     return h >= 5 && h < 13 ? "Buen día" : h >= 13 && h < 20 ? "Buenas tardes" : "Buenas noches";
@@ -359,12 +362,12 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       launch = $("#launch"), veil = $("#veil"), sbar = $("#sbar"), simgo = $("#simgo"), cdemo = $("#cdemo");
     const tactil = window.matchMedia("(hover: none)").matches;
     const nuevo = () => ({ id: null, log: [], done: false });
-    let modo = store.get(K + ":modo") === "simulacion" ? "simulacion" : "presentacion";
+    let modo = "presentacion";
     const st = { presentacion: nuevo(), simulacion: nuevo() };
     for (const m of ["presentacion", "simulacion"]) {
-      try { Object.assign(st[m], JSON.parse(store.get(K + ":" + m) || "{}")); } catch {}
+      void m; // cada visita arranca de cero: no se guarda nada en el navegador
     }
-    const save = () => { store.set(K + ":modo", modo); store.set(K + ":" + modo, JSON.stringify(st[modo])); };
+    const save = () => { if (st.simulacion.id) SESION.add(st.simulacion.id); };
     const S = () => st[modo];
     const podes = "puede";
     let busy = false;
@@ -409,7 +412,10 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       const p = props[i - 1];
       if (p) tarjetaObj(p);
     }
+    let vistas = new Set();
+    const claveT = (p) => p.link || p.titulo;
     function tarjetaObj(p) {
+      vistas.add(claveT(p));
       const foto = safeUrl(p.foto), link = safeUrl(p.link);
       const meta = [p.operacion, p.barrio, p.ambientes ? p.ambientes + " amb." : ""].filter(Boolean).map(esc).join(" · ");
       const el = document.createElement("div");
@@ -454,14 +460,8 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         ]);
       } else {
         add("b", d.saludo || `Hola, soy el asistente virtual de ${d.nombre}. ¿Está buscando comprar, alquilar o tasar una propiedad?`);
-        if (props.length) {
-          add("b", `También ${podes} consultarme por alguna de estas propiedades:`);
-          if (!s.log.length) botones(props.map((p) => [
-            `${p.titulo || "Propiedad"}${p.precio ? " · " + p.precio : ""}`,
-            () => ask(`Me interesa: ${p.titulo}${p.barrio ? " (" + p.barrio + ")" : ""}`),
-          ]));
-        }
       }
+      vistas = new Set();
       s.log.forEach((m) => {
         if (m.r === "fin") return cierre(m);
         add(m.r, m.t);
@@ -517,7 +517,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         const reply = j.reply || "Tuve un problema para responder. ¿Podría intentar de nuevo?";
         t.textContent = reply;
         const most = Array.isArray(j.mostrar) ? j.mostrar : [];
-        const tj = Array.isArray(j.tarjetas) ? j.tarjetas.slice(0, 2) : [];
+        const tj = (Array.isArray(j.tarjetas) ? j.tarjetas : []).filter((x) => !vistas.has(claveT(x))).slice(0, 2);
         s.log.push({ r: "b", t: reply, m: most, tj });
         most.forEach(tarjeta);
         tj.forEach(tarjetaObj);
@@ -542,7 +542,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
     $("#startSim").onclick = empezarSim;
     $("#endSim").onclick = terminarSim;
     $("#reset").onclick = () => {
-      if (modo === "simulacion") { modo = "presentacion"; st.presentacion = nuevo(); st.simulacion = nuevo(); store.set(K + ":simulacion", "{}"); }
+      if (modo === "simulacion") { modo = "presentacion"; st.presentacion = nuevo(); st.simulacion = nuevo(); }
       else st.presentacion = nuevo();
       save(); draw();
     };
@@ -707,7 +707,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       $("#pRef").onclick = load;
       panel.querySelectorAll("[data-t]").forEach((b) => b.onclick = () => { tab = b.dataset.t; load(); });
       if (tab === "propiedades") return propiedades.load($(".pin", panel));
-      try { rows = await rpc("get_demo_panel", { p_slug: d.slug }); } catch { $(".pin", panel).innerHTML = `<div class="empty">No se pudo cargar el panel. Intente nuevamente.</div>`; return; }
+      try { rows = await rpc("get_demo_panel", { p_slug: d.slug, p_ids: [...SESION] }); } catch { $(".pin", panel).innerHTML = `<div class="empty">No se pudo cargar el panel. Intente nuevamente.</div>`; return; }
       pintar();
     }
     const propiedades = setupPropiedades(d);
@@ -801,7 +801,6 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
           <button type="button" class="pri" id="prNew">+ Nueva propiedad</button>
           <button type="button" id="prImp">Importar Excel</button>
           <button type="button" id="prExp">Exportar Excel</button>
-          <button type="button" id="prTpl">Plantilla</button>
           <input type="file" id="prFile" accept=".xlsx,.xls,.csv" class="hide">
         </div>
         <div class="filters">
@@ -821,7 +820,6 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       $("#pfq", box).oninput = (e) => { f.q = e.target.value; ver = 40; pintarLista(); };
       $("#prNew", box).onclick = () => editar(null);
       $("#prExp", box).onclick = exportar;
-      $("#prTpl", box).onclick = plantilla;
       $("#prImp", box).onclick = () => $("#prFile", box).click();
       $("#prFile", box).onchange = (e) => { const fl = e.target.files[0]; e.target.value = ""; if (fl) importar(fl); };
       pintarLista();
@@ -872,15 +870,6 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         X.writeFile(wb, `propiedades-${d.slug}.xlsx`);
       } catch { toast("No se pudo generar el Excel."); }
     }
-    async function plantilla() {
-      try {
-        const X = await cargarXLSX();
-        const ej = { codigo: "A-001", estado: "disponible", operacion: "venta", tipo: "Casa", ubicacion: "Ingeniero Maschwitz", titulo: "Casa 3 ambientes con jardín", precio_venta: "USD 120.000", ambientes: 3, dormitorios: 2, banos: 1, sup_cubierta: 110, terreno: 400 };
-        const ws = X.utils.aoa_to_sheet([CAMPOS.map((c) => c[1]), filaExcel(ej)]);
-        const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Propiedades");
-        X.writeFile(wb, "plantilla-propiedades.xlsx");
-      } catch { toast("No se pudo generar la plantilla."); }
-    }
     async function importar(file) {
       let filas;
       try {
@@ -898,7 +887,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         if (o.estado) o.estado = sinTilde(o.estado).replace(/s$/, "");
         return o;
       }).filter((o) => o.codigo || o.titulo);
-      if (!rows.length) { toast("No se encontraron filas. Use la plantilla para ver las columnas."); return; }
+      if (!rows.length) { toast("No se encontraron filas. Exporte la lista actual para ver las columnas que se usan."); return; }
       const cods = new Set(props.map((p) => p.codigo));
       const act = rows.filter((r) => r.codigo && cods.has(r.codigo)).length;
       const baja = rows.filter((r) => ["vendida", "alquilada", "pausada"].includes(r.estado)).length;
@@ -936,8 +925,8 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       try { const j = await rpc("get_propiedades", { p_slug: d.slug }); props = j.props || []; log = j.log || []; }
       catch { box.innerHTML = `<div class="empty">No se pudieron cargar las propiedades. Intente nuevamente.</div>`; return; }
       if (!props.length) {
-        box.innerHTML = `<p class="pintro">Esta demo todavía no tiene propiedades administradas. Puede agregarlas a mano o importar un Excel.</p><div class="pacts"><button type="button" class="pri" id="prNew">+ Nueva propiedad</button><button type="button" id="prImp">Importar Excel</button><button type="button" id="prTpl">Plantilla</button><input type="file" id="prFile" accept=".xlsx,.xls,.csv" class="hide"></div>`;
-        $("#prNew", box).onclick = () => editar(null); $("#prTpl", box).onclick = plantilla;
+        box.innerHTML = `<p class="pintro">Esta demo todavía no tiene propiedades administradas. Puede agregarlas a mano o importar un Excel.</p><div class="pacts"><button type="button" class="pri" id="prNew">+ Nueva propiedad</button><button type="button" id="prImp">Importar Excel</button><input type="file" id="prFile" accept=".xlsx,.xls,.csv" class="hide"></div>`;
+        $("#prNew", box).onclick = () => editar(null); 
         $("#prImp", box).onclick = () => $("#prFile", box).click();
         $("#prFile", box).onchange = (e) => { const fl = e.target.files[0]; e.target.value = ""; if (fl) importar(fl); };
         return;
