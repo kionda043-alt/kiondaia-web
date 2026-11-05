@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Control">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Centro de control</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Ccircle cx='32' cy='32' r='14' fill='none' stroke='%2338bdf8' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%2338bdf8'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f172a'/%3E%3Ccircle cx='32' cy='32' r='14' fill='none' stroke='%2338bdf8' stroke-width='6'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%2338bdf8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#f4f5f7; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --accent:#1f6feb; --accent-ink:#fff;
+  --prueba:#2563eb; --prueba-bg:#dbeafe; --activo:#15803d; --activo-bg:#dcfce7; --atrasado:#b45309; --atrasado-bg:#fef3c7;
+  --pausado:#b91c1c; --pausado-bg:#fee2e2; --off:#475569; --off-bg:#e2e8f0; --shadow:0 1px 2px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0b1120; --card:#131c2e; --ink:#e5e7eb; --muted:#94a3b8; --line:#243045; --accent:#3b82f6;
+  --prueba:#93c5fd; --prueba-bg:#1e3a5f; --activo:#86efac; --activo-bg:#14532d; --atrasado:#fcd34d; --atrasado-bg:#4a3510;
+  --pausado:#fca5a5; --pausado-bg:#4c1414; --off:#cbd5e1; --off-bg:#334155; --shadow:none; } }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Plus Jakarta Sans",system-ui,sans-serif}
+body{min-height:100vh;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+.hide{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 0 8px}
+header.top .wrap{display:flex;align-items:center;gap:10px}
+header.top h1{font-size:19px;margin:0;flex:1}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:12px;width:42px;height:42px;display:grid;place-items:center;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow);margin:0 0 12px}
+h2{font-size:15px;margin:18px 0 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:520px){.grid4{grid-template-columns:repeat(4,1fr)}}
+.stat{border-radius:14px;padding:12px;cursor:pointer;border:0;text-align:left}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{font-size:13px;font-weight:600}
+.money{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)}
+.money:last-child{border:0}
+.money b{font-size:20px;white-space:nowrap;padding-left:10px}
+.list{list-style:none;margin:0;padding:0}
+.item{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.item:last-child{border:0}
+.item .t{flex:1;min-width:0}
+.item .n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .s{font-size:13px;color:var(--muted)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.b-prueba{color:var(--prueba);background:var(--prueba-bg)}.b-activo{color:var(--activo);background:var(--activo-bg)}
+.b-atrasado{color:var(--atrasado);background:var(--atrasado-bg)}.b-pausado{color:var(--pausado);background:var(--pausado-bg)}
+.b-no_siguio,.b-cancelado,.b-demo{color:var(--off);background:var(--off-bg)}
+.dots{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.dot{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.dot i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--pausado)}
+.dot i.ok{background:var(--activo)}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:var(--accent)}
+.bar>div.alto{background:var(--atrasado)}.bar>div.tope{background:var(--pausado)}
+input,select,textarea{width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px;font-size:16px}
+textarea{min-height:80px;resize:vertical}
+label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:12px 0 6px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:14px;font-weight:700;font-size:16px;cursor:pointer;background:var(--accent);color:var(--accent-ink);margin-top:12px}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.warn{background:var(--atrasado-bg);color:var(--atrasado)}
+.btn.danger{background:var(--pausado-bg);color:var(--pausado)}
+.btn.ok{background:var(--activo-bg);color:var(--activo)}
+.btn:disabled{opacity:.5}
+.btns3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btns3 .btn{padding:12px 6px;font-size:14px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;text-align:right;overflow-wrap:anywhere}
+.kv a{color:var(--accent)}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav.tabs button{flex:1;border:0;background:none;padding:10px 0 12px;font-size:12px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+nav.tabs button.on{color:var(--accent)}
+nav.tabs svg{width:24px;height:24px}
+.empty{color:var(--muted);text-align:center;padding:20px 0}
+.msg{border-radius:12px;padding:10px 12px;font-size:14px;margin-top:12px}
+.msg.err{background:var(--pausado-bg);color:var(--pausado)}.msg.okm{background:var(--activo-bg);color:var(--activo)}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+.sheet h3{margin:4px 0 4px;font-size:18px}
+.back{border:0;background:none;color:var(--accent);font-weight:700;padding:8px 0;cursor:pointer;font-size:15px}
+.login{min-height:100vh;display:flex;align-items:center;padding:24px 0}
+.login .card{padding:22px}
+.small{font-size:13px;color:var(--muted)}
+.pago{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.pago:last-child{border:0}
+.check{display:flex;gap:10px;align-items:center;margin-top:14px;font-weight:600}
+.check input{width:22px;height:22px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;z-index:30;max-width:90vw;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="vLogin" class="wrap login hide">
+  <div style="width:100%">
+    <div class="card">
+      <h1 style="margin:0 0 4px;font-size:22px">Centro de control</h1>
+      <p class="small" style="margin:0 0 6px">Bots de inmobiliarias · kionda IA</p>
+      <form id="fLogin">
+        <label for="lMail">Mail</label>
+        <input id="lMail" type="email" autocomplete="username" required>
+        <label for="lPass">Contraseña</label>
+        <input id="lPass" type="password" autocomplete="current-password" required>
+        <button class="btn" type="submit">Entrar</button>
+        <div id="lMsg"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- CAMBIAR CONTRASEÑA -->
+<section id="vClave" class="wrap login hide">
+  <div style="width:100%">
+    <div class="card">
+      <h1 style="margin:0 0 4px;font-size:20px">Elegí tu contraseña</h1>
+      <p class="small" style="margin:0 0 6px">Mínimo 10 caracteres. Es la que vas a usar desde ahora.</p>
+      <form id="fClave">
+        <label for="c1">Contraseña nueva</label>
+        <input id="c1" type="password" autocomplete="new-password" minlength="10" required>
+        <label for="c2">Repetila</label>
+        <input id="c2" type="password" autocomplete="new-password" minlength="10" required>
+        <button class="btn" type="submit">Guardar</button>
+        <button class="btn sec hide" type="button" id="cCancelar">Cancelar</button>
+        <div id="cMsg"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- APP -->
+<div id="vApp" class="hide">
+  <header class="top"><div class="wrap">
+    <h1 id="ttl">Resumen</h1>
+    <button class="iconbtn" id="bMenu" aria-label="Menú">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    </button>
+  </div></header>
+
+  <main class="wrap">
+    <!-- Resumen -->
+    <section id="pResumen">
+      <div class="grid4" id="stats"></div>
+      <div class="card" id="plata"></div>
+      <h2>Hoy hay que mirar</h2>
+      <div class="card"><ul class="list" id="mirar"></ul></div>
+    </section>
+
+    <!-- Lista de bots -->
+    <section id="pBots" class="hide">
+      <input id="q" type="search" placeholder="Buscar por nombre o zona" aria-label="Buscar">
+      <div class="chips" id="fEstado"></div>
+      <select id="fZona" aria-label="Zona" style="margin-bottom:12px"></select>
+      <div class="card"><ul class="list" id="bots"></ul></div>
+    </section>
+
+    <!-- Ficha -->
+    <section id="pFicha" class="hide"></section>
+
+    <!-- Alta / edición -->
+    <section id="pForm" class="hide"></section>
+  </main>
+
+  <nav class="tabs">
+    <button data-tab="pResumen" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Resumen</button>
+    <button data-tab="pBots"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg>Bots</button>
+    <button data-tab="pForm" data-nuevo="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Nuevo</button>
+  </nav>
+</div>
+
+<div id="sheet" class="sheet-bg hide"><div class="sheet" id="sheetIn"></div></div>
+<div id="toast" class="toast hide"></div>
+
+<script>
+const SB_URL = "https://pekqdgyxrqqjhmxtjovp.supabase.co";
+const SB_KEY = "sb_publishable_f-knrak9HDgsY49k-0oYvg_gIqIYQbS";
+const sb = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+const ESTADOS = { prueba:"En prueba", activo:"Activo", atrasado:"Atrasado", pausado:"Pausado", no_siguio:"No siguió", cancelado:"Cancelado" };
+const CONCEPTOS = { instalacion:"Instalación", cierre_prueba:"Cierre de prueba", mensual:"Mensual", otro:"Otro" };
+const MEDIOS = ["Transferencia","Mercado Pago","Efectivo","Otro"];
+const TOPE_MSJ = 1000;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const show = (el, on) => el.classList.toggle("hide", !on);
+let clientes = [], resumen = null, filtroEstado = "todos", actual = null, volverA = "pResumen";
+
+function hoyAR(){ return new Date(new Date().toLocaleString("en-US",{timeZone:"America/Argentina/Buenos_Aires"})); }
+function hoyISO(){ const d = hoyAR(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dias(a,b){ return Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00"))/864e5); }
+function fmt(d){ if(!d) return "—"; const [y,m,dd] = d.slice(0,10).split("-"); return `${dd}/${m}/${y.slice(2)}`; }
+function fmtHora(ts){ if(!ts) return "nunca"; const d = new Date(ts); const h = (Date.now()-d)/36e5;
+  if (h < 1) return "hace minutos"; if (h < 24) return "hace " + Math.floor(h) + " h"; return "hace " + Math.floor(h/24) + " días"; }
+function usd(n){ return "USD " + Number(n||0).toLocaleString("es-AR"); }
+function badge(e){ return `<span class="badge b-${e}">${ESTADOS[e]||e}</span>`; }
+function toast(t){ const el = $("#toast"); el.textContent = t; show(el,true); clearTimeout(el._t); el._t = setTimeout(()=>show(el,false), 2600); }
+function slugify(s){ return s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+
+function lineaPago(c){
+  const h = hoyISO();
+  if (c.estado === "prueba" && c.fin_prueba){ const d = dias(h, c.fin_prueba);
+    return d >= 0 ? `Prueba: quedan ${d} días (hasta ${fmt(c.fin_prueba)})` : `Prueba vencida hace ${-d} días`; }
+  if (c.pagado_hasta){ const d = dias(c.pagado_hasta, h);
+    return d > 0 ? `Pagado hasta ${fmt(c.pagado_hasta)} · ${d} días de atraso` : `Pagado hasta ${fmt(c.pagado_hasta)}`; }
+  return "Sin pagos registrados";
+}
+
+/* ---------- Sesión ---------- */
+async function arrancar(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session){ pantalla("login"); return; }
+  const { data: adm } = await sb.from("control_admins").select("debe_cambiar_clave").maybeSingle();
+  if (!adm){ await sb.auth.signOut(); pantalla("login"); $("#lMsg").innerHTML = `<div class="msg err">Este usuario no tiene acceso.</div>`; return; }
+  if (adm.debe_cambiar_clave){ pantalla("clave", true); return; }
+  pantalla("app"); await cargar();
+}
+function pantalla(p, obligatoria){
+  show($("#vLogin"), p==="login"); show($("#vClave"), p==="clave"); show($("#vApp"), p==="app");
+  show($("#cCancelar"), p==="clave" && !obligatoria);
+}
+
+$("#fLogin").addEventListener("submit", async (e) => {
+  e.preventDefault(); const b = e.submitter; b.disabled = true; $("#lMsg").innerHTML = "";
+  const { error } = await sb.auth.signInWithPassword({ email: $("#lMail").value.trim(), password: $("#lPass").value });
+  b.disabled = false;
+  if (error){ $("#lMsg").innerHTML = `<div class="msg err">Mail o contraseña incorrectos.</div>`; return; }
+  $("#lPass").value = ""; arrancar();
+});
+
+$("#fClave").addEventListener("submit", async (e) => {
+  e.preventDefault(); const p1 = $("#c1").value, p2 = $("#c2").value;
+  if (p1 !== p2){ $("#cMsg").innerHTML = `<div class="msg err">No coinciden.</div>`; return; }
+  if (p1.length < 10){ $("#cMsg").innerHTML = `<div class="msg err">Tiene que tener al menos 10 caracteres.</div>`; return; }
+  const b = e.submitter; b.disabled = true;
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if (error){ b.disabled = false; $("#cMsg").innerHTML = `<div class="msg err">${esc(error.message)}</div>`; return; }
+  await sb.rpc("control_clave_cambiada");
+  b.disabled = false; $("#c1").value = $("#c2").value = ""; $("#cMsg").innerHTML = "";
+  toast("Contraseña guardada"); pantalla("app"); cargar();
+});
+$("#cCancelar").addEventListener("click", () => pantalla("app"));
+
+/* ---------- Datos ---------- */
+async function cargar(){
+  const [r, c] = await Promise.all([
+    sb.rpc("control_resumen"),
+    sb.from("clientes").select("*").order("nombre")
+  ]);
+  if (r.error || c.error){ toast("Error al cargar: " + ((r.error||c.error).message)); return; }
+  resumen = r.data; clientes = c.data;
+  pintarResumen(); pintarFiltros(); pintarBots();
+  if (actual && !$("#pFicha").classList.contains("hide")) abrirFicha(actual.id, true);
+}
+
+function pintarResumen(){
+  const t = resumen.totales;
+  $("#stats").innerHTML = ["prueba","activo","atrasado","pausado"].map(e =>
+    `<button class="stat b-${e}" data-filtro="${e}"><b>${t[e]}</b><span>${ESTADOS[e]}</span></button>`).join("");
+  $("#stats").querySelectorAll("[data-filtro]").forEach(b => b.onclick = () => { filtroEstado = b.dataset.filtro; ir("pBots"); pintarFiltros(); pintarBots(); });
+  $("#plata").innerHTML = `
+    <div class="money"><span>Cobrado este mes</span><b>${usd(resumen.cobrado_mes)}</b></div>
+    <div class="money"><span>A cobrar este mes<br><span class="small">cierres de prueba + mensuales, incluye atrasos</span></span><b>${usd(resumen.a_cobrar_mes)}</b></div>
+    <div class="money"><span>Deuda atrasada</span><b style="color:var(--pausado)">${usd(resumen.deuda)}</b></div>`;
+  const m = resumen.mirar || [];
+  $("#mirar").innerHTML = m.length ? m.map(x => `<li class="item" data-id="${x.id}"><div class="t"><div class="n">${esc(x.nombre)}</div><div class="s">${esc(x.motivo)}</div></div><span aria-hidden="true">›</span></li>`).join("")
+    : `<li class="empty">Nada pendiente. Todo en orden.</li>`;
+  $("#mirar").querySelectorAll("[data-id]").forEach(li => li.onclick = () => { volverA = "pResumen"; abrirFicha(li.dataset.id); });
+}
+
+function pintarFiltros(){
+  const opts = ["todos", ...Object.keys(ESTADOS)];
+  $("#fEstado").innerHTML = opts.map(e => `<button class="chip ${filtroEstado===e?"on":""}" data-e="${e}">${e==="todos"?"Todos":ESTADOS[e]} · ${e==="todos"?clientes.length:clientes.filter(c=>c.estado===e).length}</button>`).join("");
+  $("#fEstado").querySelectorAll("[data-e]").forEach(b => b.onclick = () => { filtroEstado = b.dataset.e; pintarFiltros(); pintarBots(); });
+  const zonas = [...new Set(clientes.map(c => c.zona).filter(Boolean))].sort();
+  const sel = $("#fZona").value;
+  $("#fZona").innerHTML = `<option value="">Todas las zonas</option>` + zonas.map(z => `<option ${z===sel?"selected":""}>${esc(z)}</option>`).join("");
+}
+
+function pintarBots(){
+  const q = $("#q").value.trim().toLowerCase(), z = $("#fZona").value;
+  const lista = clientes.filter(c => (filtroEstado==="todos" || c.estado===filtroEstado) && (!z || c.zona===z)
+    && (!q || (c.nombre+" "+(c.zona||"")).toLowerCase().includes(q)));
+  $("#bots").innerHTML = lista.length ? lista.map(c => {
+    const pct = Math.min(100, Math.round(c.mensajes_mes / TOPE_MSJ * 100));
+    return `<li class="item" data-id="${c.id}"><div class="t">
+      <div class="n">${esc(c.nombre)}</div>
+      <div class="s">${esc(c.zona||"")} · ${lineaPago(c)}</div>
+      <div class="dots"><span class="dot"><i class="${c.wa_conectado?"ok":""}"></i>WhatsApp</span>
+        <span class="dot"><i class="${c.web_instalada?"ok":""}"></i>Web</span>
+        <span class="dot">Últ. atención ${fmtHora(c.ultima_actividad)}</span></div>
+      <div class="s" style="margin-top:4px">${c.conversaciones_mes} charlas · ${c.mensajes_mes}/${TOPE_MSJ} mensajes</div>
+      <div class="bar"><div class="${pct>=100?"tope":pct>=80?"alto":""}" style="width:${pct}%"></div></div>
+    </div>${badge(c.estado)}</li>`; }).join("") : `<li class="empty">No hay bots con ese filtro.</li>`;
+  $("#bots").querySelectorAll("[data-id]").forEach(li => li.onclick = () => { volverA = "pBots"; abrirFicha(li.dataset.id); });
+}
+$("#q").addEventListener("input", pintarBots);
+$("#fZona").addEventListener("change", pintarBots);
+
+/* ---------- Navegación ---------- */
+function ir(id){
+  ["pResumen","pBots","pFicha","pForm"].forEach(p => show($("#"+p), p===id));
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab===id));
+  $("#ttl").textContent = { pResumen:"Resumen", pBots:"Bots", pFicha:"Ficha", pForm:"Cliente" }[id];
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav.tabs button").forEach(b => b.onclick = () => {
+  if (b.dataset.nuevo) { formCliente(null); return; }
+  ir(b.dataset.tab);
+});
+
+/* ---------- Ficha ---------- */
+async function abrirFicha(id, silencioso){
+  const c = clientes.find(x => x.id === id); if (!c) return;
+  actual = c;
+  const [p, l] = await Promise.all([
+    sb.from("pagos").select("*").eq("cliente_id", id).order("fecha", { ascending:false }),
+    sb.from("clientes_log").select("*").eq("cliente_id", id).order("fecha", { ascending:false }).limit(15)
+  ]);
+  const pagos = p.data || [], log = l.data || [];
+  const total = pagos.reduce((s,x) => s + Number(x.monto), 0);
+  const wa = c.wa_numero ? `<a href="https://wa.me/${esc(c.wa_numero)}">+${esc(c.wa_numero)}</a>` : "—";
+  const apagado = ["no_siguio","cancelado"].includes(c.estado);
+  $("#pFicha").innerHTML = `
+    <button class="back" id="fBack">‹ Volver</button>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+        <div><div style="font-size:20px;font-weight:700">${esc(c.nombre)}</div><div class="small">${esc(c.zona||"")}${c.es_prueba?' · <span class="badge b-demo">Cliente de prueba</span>':''}</div></div>
+        ${badge(c.estado)}
+      </div>
+      <p style="margin:10px 0 0;font-weight:600">${lineaPago(c)}</p>
+    </div>
+
+    <button class="btn" id="bPago">Registrar pago</button>
+    <div class="btns3" style="margin-bottom:12px">
+      ${c.estado==="pausado"||apagado ? `<button class="btn ok" data-acc="reactivar">Reactivar</button>` : `<button class="btn warn" data-acc="pausar">Pausar</button>`}
+      <button class="btn sec" id="bEditar">Editar</button>
+      <button class="btn danger" data-acc="baja" ${apagado?"disabled":""}>Dar de baja</button>
+    </div>
+
+    <h2>Conexión y uso</h2>
+    <div class="card"><dl class="kv">
+      <dt>WhatsApp</dt><dd>${c.wa_conectado?"Conectado":"Sin conectar"}</dd>
+      <dt>Número</dt><dd>${wa}</dd>
+      <dt>Botón en la web</dt><dd>${c.web_instalada?"Instalado":"No instalado"}</dd>
+      <dt>Última atención</dt><dd>${fmtHora(c.ultima_actividad)}</dd>
+      <dt>Este mes</dt><dd>${c.conversaciones_mes} charlas · ${c.mensajes_mes}/${TOPE_MSJ} mensajes</dd>
+    </dl></div>
+
+    <h2>Datos</h2>
+    <div class="card"><dl class="kv">
+      <dt>Contacto</dt><dd>${esc(c.contacto_nombre||"—")}</dd>
+      <dt>Teléfono</dt><dd>${c.contacto_tel?`<a href="tel:${esc(c.contacto_tel)}">${esc(c.contacto_tel)}</a>`:"—"}</dd>
+      <dt>Mail</dt><dd>${c.contacto_mail?`<a href="mailto:${esc(c.contacto_mail)}">${esc(c.contacto_mail)}</a>`:"—"}</dd>
+      <dt>Web</dt><dd>${c.web?`<a href="${esc(c.web)}" target="_blank" rel="noopener">${esc(c.web.replace(/^https?:\/\//,""))}</a>`:"—"}</dd>
+      <dt>Alta</dt><dd>${fmt(c.creado)}</dd>
+      <dt>Prueba</dt><dd>${fmt(c.inicio_prueba)} → ${fmt(c.fin_prueba)}</dd>
+      <dt>Precios</dt><dd>${usd(c.precio_instalacion)} + ${usd(c.precio_cierre)} + ${usd(c.precio_mensual)}/mes</dd>
+      <dt>Código</dt><dd>${esc(c.slug||"—")}</dd>
+    </dl></div>
+
+    <h2>Notas</h2>
+    <div class="card"><textarea id="notas" placeholder="Notas para vos">${esc(c.notas||"")}</textarea>
+      <button class="btn sec" id="bNotas">Guardar notas</button></div>
+
+    <h2>Pagos · ${usd(total)} en total</h2>
+    <div class="card">${pagos.length ? pagos.map(x => `<div class="pago"><div><b>${CONCEPTOS[x.concepto]}</b><div class="small">${fmt(x.fecha)}${x.medio?" · "+esc(x.medio):""}${x.nota?" · "+esc(x.nota):""}</div></div><b>${usd(x.monto)}</b></div>`).join("") : `<div class="empty">Sin pagos todavía.</div>`}</div>
+
+    <h2>Historial</h2>
+    <div class="card">${log.length ? log.map(x => `<div class="pago"><div>${esc((x.detalle||x.accion).replace(/\b(cierre_prueba|no_siguio|instalacion|mensual|prueba|activo|atrasado|pausado|cancelado|otro)\b/g, k => ({...ESTADOS,...CONCEPTOS})[k] || k))}</div><span class="small">${fmt(x.fecha)}</span></div>`).join("") : `<div class="empty">Sin movimientos.</div>`}</div>`;
+  $("#fBack").onclick = () => ir(volverA);
+  $("#bPago").onclick = () => hojaPago(c);
+  $("#bEditar").onclick = () => formCliente(c);
+  $("#bNotas").onclick = async () => {
+    const { error } = await sb.from("clientes").update({ notas: $("#notas").value }).eq("id", c.id);
+    if (error) toast("No se pudo guardar"); else { c.notas = $("#notas").value; toast("Notas guardadas"); }
+  };
+  $("#pFicha").querySelectorAll("[data-acc]").forEach(b => b.onclick = () => confirmarAccion(c, b.dataset.acc));
+  if (!silencioso) ir("pFicha");
+}
+
+/* ---------- Registrar pago ---------- */
+function conceptoSugerido(c){
+  if (c.estado === "prueba") return { concepto:"cierre_prueba", monto:c.precio_cierre, texto:"Cierre de prueba: pasa a Activo y el primer mensual vence al mes." };
+  if (!c.inicio_prueba) return { concepto:"instalacion", monto:c.precio_instalacion, texto:"Instalación: arranca el mes de prueba." };
+  if (["activo","atrasado","pausado"].includes(c.estado)) return { concepto:"mensual", monto:c.precio_mensual, texto:"Mensual: corre «pagado hasta» un mes y reactiva si estaba pausado o atrasado." };
+  return { concepto:"otro", monto:0, texto:"Otro pago: no cambia el estado." };
+}
+function hojaPago(c){
+  const s = conceptoSugerido(c);
+  abrirHoja(`
+    <h3>Registrar pago</h3><p class="small" style="margin:0">${esc(c.nombre)}</p>
+    <label for="pConcepto">Concepto</label>
+    <select id="pConcepto">${Object.entries(CONCEPTOS).map(([k,v]) => `<option value="${k}" ${k===s.concepto?"selected":""}>${v}</option>`).join("")}</select>
+    <p class="small" id="pAyuda" style="margin:6px 0 0">${s.texto}</p>
+    <div class="row2">
+      <div><label for="pMonto">Monto (USD)</label><input id="pMonto" type="number" inputmode="decimal" min="0" step="0.01" value="${s.monto}"></div>
+      <div><label for="pFecha">Fecha</label><input id="pFecha" type="date" value="${hoyISO()}"></div>
+    </div>
+    <label for="pMedio">Medio</label>
+    <select id="pMedio">${MEDIOS.map(m => `<option>${m}</option>`).join("")}</select>
+    <label for="pNota">Nota (opcional)</label>
+    <input id="pNota" placeholder="Ej.: pagó en pesos al cambio del día">
+    <button class="btn" id="pOk">Registrar ${usd(s.monto)}</button>
+    <button class="btn sec" id="pCancel">Cancelar</button>`);
+  const ayudas = { instalacion:"Instalación: arranca el mes de prueba.", cierre_prueba:"Cierre de prueba: pasa a Activo y el primer mensual vence al mes.", mensual:"Mensual: corre «pagado hasta» un mes y reactiva si estaba pausado o atrasado.", otro:"Otro pago: no cambia el estado." };
+  const montos = { instalacion:c.precio_instalacion, cierre_prueba:c.precio_cierre, mensual:c.precio_mensual, otro:0 };
+  const upd = () => $("#pOk").textContent = "Registrar " + usd($("#pMonto").value);
+  $("#pConcepto").onchange = () => { const k = $("#pConcepto").value; $("#pAyuda").textContent = ayudas[k]; $("#pMonto").value = montos[k]; upd(); };
+  $("#pMonto").oninput = upd;
+  $("#pCancel").onclick = cerrarHoja;
+  $("#pOk").onclick = async (e) => {
+    const monto = Number($("#pMonto").value);
+    if (!(monto >= 0)) { toast("Revisá el monto"); return; }
+    e.target.disabled = true;
+    const { error } = await sb.rpc("control_registrar_pago", { p_cliente:c.id, p_monto:monto, p_concepto:$("#pConcepto").value,
+      p_medio:$("#pMedio").value, p_nota:$("#pNota").value || null, p_fecha:$("#pFecha").value || null });
+    e.target.disabled = false;
+    if (error){ toast("Error: " + error.message); return; }
+    cerrarHoja(); toast("Pago registrado"); await cargar(); abrirFicha(c.id);
+  };
+}
+
+/* ---------- Pausar / reactivar / baja ---------- */
+function confirmarAccion(c, acc){
+  const txt = {
+    pausar: ["Pausar el bot", "El asistente deja de responder solo. Su WhatsApp sigue andando a mano. No se borra nada.", "Pausar", "warn"],
+    reactivar: ["Reactivar el bot", "Vuelve a responder con IA en el momento. Si no está al día, queda como Atrasado.", "Reactivar", "ok"],
+    baja: ["Dar de baja", c.estado==="prueba" ? "Queda como «No siguió». Se apaga el bot, sin más cobros. Los datos se conservan." : "Queda como «Cancelado». Se apaga el bot. Los datos se conservan.", "Dar de baja", "danger"]
+  }[acc];
+  abrirHoja(`<h3>${txt[0]}</h3><p class="small" style="margin:0">${esc(c.nombre)}</p>
+    <p>${txt[1]}</p>
+    <label for="aMotivo">Motivo (opcional)</label><input id="aMotivo">
+    <button class="btn ${txt[3]}" id="aOk">${txt[2]}</button>
+    <button class="btn sec" id="aCancel">Cancelar</button>`);
+  $("#aCancel").onclick = cerrarHoja;
+  $("#aOk").onclick = async (e) => {
+    e.target.disabled = true;
+    const { data, error } = await sb.rpc("control_cambiar_estado", { p_cliente:c.id, p_accion:acc, p_motivo:$("#aMotivo").value || null });
+    e.target.disabled = false;
+    if (error){ toast("Error: " + error.message); return; }
+    cerrarHoja(); toast("Listo: " + (ESTADOS[data.estado]||data.estado)); await cargar(); abrirFicha(c.id);
+  };
+}
+
+/* ---------- Alta / edición ---------- */
+function formCliente(c){
+  const n = !c; c = c || { precio_instalacion:150, precio_cierre:150, precio_mensual:30 };
+  const v = (k) => esc(c[k] ?? "");
+  $("#pForm").innerHTML = `
+    ${n ? "" : `<button class="back" id="eBack">‹ Volver</button>`}
+    <div class="card">
+      <div style="font-size:18px;font-weight:700">${n ? "Nuevo cliente" : "Editar " + esc(c.nombre)}</div>
+      <label for="eNombre">Nombre de la inmobiliaria *</label><input id="eNombre" value="${v("nombre")}" required>
+      <label for="eSlug">Código (el mismo de su demo)</label><input id="eSlug" value="${v("slug")}" placeholder="se completa solo">
+      <label for="eZona">Zona</label><input id="eZona" value="${v("zona")}" placeholder="Ingeniero Maschwitz">
+      <label for="eContacto">Persona de contacto</label><input id="eContacto" value="${v("contacto_nombre")}">
+      <div class="row2">
+        <div><label for="eTel">Teléfono</label><input id="eTel" type="tel" value="${v("contacto_tel")}"></div>
+        <div><label for="eMail">Mail</label><input id="eMail" type="email" value="${v("contacto_mail")}"></div>
+      </div>
+      <label for="eWeb">Web</label><input id="eWeb" type="url" value="${v("web")}" placeholder="https://">
+      <label for="eWa">WhatsApp conectado (solo números, ej. 5491112345678)</label><input id="eWa" inputmode="numeric" value="${v("wa_numero")}">
+      <label class="check"><input type="checkbox" id="eWaOk" ${c.wa_conectado?"checked":""}> WhatsApp conectado y andando</label>
+      <label class="check"><input type="checkbox" id="eWebOk" ${c.web_instalada?"checked":""}> Botón instalado en su web</label>
+    </div>
+    <div class="card">
+      <div style="font-weight:700">Precios (USD)</div>
+      <p class="small" style="margin:4px 0 0">Cambialos solo si acordaste una condición especial.</p>
+      <div class="row2" style="grid-template-columns:1fr 1fr 1fr">
+        <div><label for="ePi">Instalación</label><input id="ePi" type="number" inputmode="decimal" value="${v("precio_instalacion")}"></div>
+        <div><label for="ePc">Cierre</label><input id="ePc" type="number" inputmode="decimal" value="${v("precio_cierre")}"></div>
+        <div><label for="ePm">Mensual</label><input id="ePm" type="number" inputmode="decimal" value="${v("precio_mensual")}"></div>
+      </div>
+      ${n ? `
+      <label class="check"><input type="checkbox" id="ePagoIni" checked> Ya pagó la instalación</label>
+      <div id="ePagoBox">
+        <div class="row2">
+          <div><label for="eFecha">Inicio de la prueba</label><input id="eFecha" type="date" value="${hoyISO()}"></div>
+          <div><label for="eMedio">Medio</label><select id="eMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join("")}</select></div>
+        </div>
+      </div>` : `
+      <div class="row2">
+        <div><label for="eIni">Inicio de prueba</label><input id="eIni" type="date" value="${v("inicio_prueba")}"></div>
+        <div><label for="eFin">Fin de prueba</label><input id="eFin" type="date" value="${v("fin_prueba")}"></div>
+      </div>
+      <label for="eHasta">Pagado hasta</label><input id="eHasta" type="date" value="${v("pagado_hasta")}">
+      <p class="small">Estas fechas las mueven solos los pagos. Tocalas solo para corregir un error.</p>`}
+      <label class="check"><input type="checkbox" id="eDemo" ${c.es_prueba?"checked":""}> Es un cliente de prueba (no real)</label>
+    </div>
+    <button class="btn" id="eOk">${n ? "Dar de alta" : "Guardar cambios"}</button>
+    <div id="eMsg"></div>`;
+  if (!n) $("#eBack").onclick = () => abrirFicha(c.id);
+  else {
+    $("#eNombre").oninput = () => { if (!$("#eSlug").dataset.tocado) $("#eSlug").value = slugify($("#eNombre").value); };
+    $("#eSlug").oninput = () => $("#eSlug").dataset.tocado = "1";
+    $("#ePagoIni").onchange = () => show($("#ePagoBox"), $("#ePagoIni").checked);
+  }
+  $("#eOk").onclick = async (e) => {
+    const nombre = $("#eNombre").value.trim();
+    if (!nombre){ $("#eMsg").innerHTML = `<div class="msg err">Falta el nombre.</div>`; return; }
+    const reg = {
+      nombre, slug: slugify($("#eSlug").value) || null, zona: $("#eZona").value.trim() || null,
+      contacto_nombre: $("#eContacto").value.trim() || null, contacto_tel: $("#eTel").value.trim() || null,
+      contacto_mail: $("#eMail").value.trim() || null, web: $("#eWeb").value.trim() || null,
+      wa_numero: $("#eWa").value.replace(/\D/g,"") || null, wa_conectado: $("#eWaOk").checked, web_instalada: $("#eWebOk").checked,
+      precio_instalacion: Number($("#ePi").value) || 0, precio_cierre: Number($("#ePc").value) || 0, precio_mensual: Number($("#ePm").value) || 0,
+      es_prueba: $("#eDemo").checked
+    };
+    if (!n){ reg.inicio_prueba = $("#eIni").value || null; reg.fin_prueba = $("#eFin").value || null; reg.pagado_hasta = $("#eHasta").value || null; }
+    e.target.disabled = true;
+    let res;
+    if (n) res = await sb.from("clientes").insert(reg).select().single();
+    else res = await sb.from("clientes").update(reg).eq("id", c.id).select().single();
+    if (res.error){ e.target.disabled = false;
+      $("#eMsg").innerHTML = `<div class="msg err">${res.error.code==="23505" ? "Ya existe un cliente con ese código." : esc(res.error.message)}</div>`; return; }
+    if (n && $("#ePagoIni").checked){
+      const f = $("#eFecha").value || hoyISO();
+      await sb.from("clientes").update({ inicio_prueba: f }).eq("id", res.data.id);
+      const p = await sb.rpc("control_registrar_pago", { p_cliente:res.data.id, p_monto:reg.precio_instalacion, p_concepto:"instalacion", p_medio:$("#eMedio").value, p_nota:null, p_fecha:f });
+      if (p.error) toast("Cliente creado, pero falló el pago: " + p.error.message);
+    }
+    e.target.disabled = false;
+    toast(n ? "Cliente dado de alta" : "Cambios guardados");
+    await cargar(); volverA = "pBots"; abrirFicha(res.data.id);
+  };
+  ir("pForm");
+}
+
+/* ---------- Hoja inferior y menú ---------- */
+function abrirHoja(html){ $("#sheetIn").innerHTML = html; show($("#sheet"), true); }
+function cerrarHoja(){ show($("#sheet"), false); }
+$("#sheet").addEventListener("click", (e) => { if (e.target.id === "sheet") cerrarHoja(); });
+
+$("#bMenu").onclick = () => {
+  abrirHoja(`<h3>Opciones</h3>
+    <button class="btn sec" id="mRecargar">Actualizar datos</button>
+    <button class="btn sec" id="mMail">Mandarme el resumen por mail ahora</button>
+    <button class="btn sec" id="mClave">Cambiar contraseña</button>
+    <button class="btn danger" id="mSalir">Cerrar sesión</button>
+    <div id="mMsg"></div>`);
+  $("#mRecargar").onclick = async () => { cerrarHoja(); await cargar(); toast("Actualizado"); };
+  $("#mClave").onclick = () => { cerrarHoja(); pantalla("clave", false); };
+  $("#mSalir").onclick = async () => { cerrarHoja(); await sb.auth.signOut(); pantalla("login"); };
+  $("#mMail").onclick = async (e) => {
+    e.target.disabled = true; $("#mMsg").innerHTML = "";
+    const { data, error } = await sb.functions.invoke("control-resumen", { body: { forzar: true } });
+    e.target.disabled = false;
+    const ok = !error && data && data.enviado;
+    $("#mMsg").innerHTML = `<div class="msg ${ok?"okm":"err"}">${ok ? "Enviado a " + esc(data.a) : "No se envió: " + esc((data && data.motivo) || (error && error.message) || "error")}</div>`;
+  };
+};
+
+sb.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT") pantalla("login"); });
+arrancar();
+</script>
+</body>
+</html>
