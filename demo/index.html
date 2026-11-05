@@ -392,6 +392,8 @@ form.in button{background:#00a884}
       ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener una inmobiliaria.\nPara esta prueba usamos ${n} propiedades de una inmobiliaria ficticia; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
       : d.n_admin
       ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos las ${d.n_admin} propiedades publicadas en su web, que también puede administrar desde el panel.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
+      : !n
+      ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nSu web todavía no muestra un listado de propiedades, así que esta prueba arranca sin cartera: en el panel puede cargarlas a mano o con un Excel y el asistente empieza a ofrecerlas al instante. Si lo necesitan, el servicio incluye una mini web con sus propiedades.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`
       : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${d.nombre}.\nPara esta prueba cargamos ${n} propiedades de su web; la versión real incluye todas las que publiquen.\n¿Les gustaría hacerme alguna pregunta antes de empezar la simulación? Desde ya, gracias por su atención.`;
   }
   const TEXTO_CIERRE = "Gracias por probar la demo. Así le llegó esta consulta a su equipo:";
