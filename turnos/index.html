@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="robots" content="noindex,nofollow">
+<title>Demo de asistente de turnos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#1f2937;--s:#0f766e;--bg:#f6f5f2;--card:#fff;--ink:#16161a;--mute:#62626b;--line:#e6e4df;--k-navy:#14112B;--k-coral:#FF5A36;--k-cream:#FFF4E6;--wa:#00a884;--wad:#008069}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+a{color:inherit}
+.hide{display:none!important}
+
+/* franja kionda */
+.kband{background:var(--k-navy);color:var(--k-cream);font:500 13px/1.35 'Space Grotesk',sans-serif;padding:9px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center;position:sticky;top:0;z-index:30}
+.kband b{color:var(--k-coral);font-weight:700}
+.kband .pill{border:1px solid rgba(255,244,230,.35);border-radius:99px;padding:2px 9px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.kband a{color:var(--k-cream);text-decoration:underline;text-underline-offset:2px}
+.kband a.on{color:var(--k-coral);font-weight:700;text-decoration:none}
+
+/* fondo */
+.shot{position:relative;width:100%;max-width:1366px;margin:0 auto;user-select:none;-webkit-user-select:none}
+.shot img{display:block;width:100%;height:auto;pointer-events:none;-webkit-user-drag:none}
+.shot .fade{position:absolute;left:0;right:0;bottom:0;height:160px;background:linear-gradient(to bottom,rgba(246,245,242,0),var(--bg));pointer-events:none}
+.shot .guard{position:absolute;inset:0}
+.after{text-align:center;color:var(--mute);font-size:14px;padding:6px 16px 130px}
+.plain{min-height:calc(100vh - 40px);display:grid;place-items:center;padding:24px 16px 140px}
+.plain .box{max-width:440px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 22px}
+.plain .mark{display:flex;justify-content:center;margin-bottom:14px}
+.plain .mark img{height:64px;width:auto;max-width:200px;object-fit:contain}
+.plain .mark .mono{width:64px;height:64px;font-size:24px;border-radius:16px}
+.plain h1{font-size:22px;line-height:1.2;margin-bottom:8px}
+.plain p{color:var(--mute)}
+.mono{width:44px;height:44px;border-radius:12px;background:var(--s);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+
+/* globo */
+.dim{position:fixed;inset:0;z-index:35;background:rgba(12,10,16,.48);pointer-events:none}
+.launch{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;align-items:center;gap:10px}
+.tip{background:#fff;border:2px solid #25d366;box-shadow:0 12px 30px -10px rgba(0,0,0,.4);padding:10px 14px;border-radius:14px;font-size:15px;font-weight:600;max-width:220px;cursor:pointer;line-height:1.3}
+.bubble{width:62px;height:62px;border-radius:50%;background:#25d366;color:#fff;display:grid;place-items:center;box-shadow:0 14px 30px -10px rgba(0,0,0,.45);animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(37,211,102,.55),0 14px 30px -10px rgba(0,0,0,.45)}70%{box-shadow:0 0 0 16px transparent,0 14px 30px -10px rgba(0,0,0,.45)}100%{box-shadow:0 0 0 0 transparent,0 14px 30px -10px rgba(0,0,0,.45)}}
+
+/* chat con look de WhatsApp */
+.veil{position:fixed;inset:0;z-index:45;background:rgba(10,8,12,.55)}
+.chat{position:fixed;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;max-width:calc(100vw - 32px);height:min(720px,calc(100vh - 32px));background:#efeae2;border-radius:20px;box-shadow:0 30px 70px -20px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden}
+@media (max-width:560px){.chat{left:0;top:0;transform:translateY(var(--vvt,0px));width:100%;max-width:none;height:var(--vvh,100dvh);border-radius:0}}
+html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
+.ch{background:var(--wad);color:#fff;padding:12px;display:flex;align-items:center;gap:9px}
+.ch .mono{width:38px;height:38px;font-size:15px;border-radius:50%}
+.ch img{height:38px;width:38px;object-fit:contain;background:#fff;border-radius:50%;padding:3px}
+.ch-t{min-width:0;flex:1}
+.ch-t b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-t small{font-size:12px;opacity:.85}
+.ch button{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+.ch .pbtn{width:auto;height:32px;padding:0 11px;border:1px solid rgba(255,255,255,.55);border-radius:99px;font-size:13px;font-weight:600;white-space:nowrap;position:relative}
+.pbtn .nb{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#25D366;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--wad)}
+.pbtn.pulse{animation:kpl 1.3s ease-out 4}
+@keyframes kpl{0%{box-shadow:0 0 0 0 rgba(255,255,255,.75)}100%{box-shadow:0 0 0 13px rgba(255,255,255,0)}}
+.cdemo{background:#fff3c4;color:#54656f;font-size:11.5px;padding:6px 14px;text-align:center}
+.sbar{display:flex;align-items:center;gap:8px;background:#d9fdd3;color:#0b4a3b;font-size:12.5px;padding:6px 10px 6px 14px;border-bottom:1px solid #c5ebc0}
+.sbar span{flex:1}
+.sbar button{border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:700;background:var(--wad);color:#fff;white-space:nowrap}
+.msgs{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px;display:flex;flex-direction:column;gap:6px;background-color:#efeae2;background-image:radial-gradient(rgba(84,101,111,.07) 1px,transparent 1.2px);background-size:18px 18px}
+.msgs>*{flex-shrink:0}
+.m{max-width:85%;font-size:15px;line-height:1.38;padding:7px 10px 8px;border-radius:8px;box-shadow:0 1px .5px rgba(11,20,26,.13);white-space:pre-wrap;word-wrap:break-word}
+.m.b{background:#fff;border-top-left-radius:0;color:#111b21;align-self:flex-start}
+.m.u{background:#d9fdd3;color:#111b21;border-top-right-radius:0;align-self:flex-end}
+.m.sys{align-self:center;box-shadow:none;background:#ffffffcc;color:#54656f;font-size:12.5px;padding:5px 10px;text-align:center}
+.typing{display:inline-flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:#b5b5bd;animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.acts{display:flex;flex-direction:column;gap:6px;align-self:flex-start;max-width:85%}
+.acts button{text-align:left;background:#fff;color:var(--wad);border-radius:8px;box-shadow:0 1px .5px rgba(11,20,26,.13);padding:8px 12px;font-size:14px;font-weight:600;line-height:1.3}
+.acts button.pri{background:var(--wa);color:#fff;text-align:center}
+.slots{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start;max-width:92%}
+.slots button{background:#fff;color:var(--wad);border:1.5px solid var(--wa);border-radius:99px;padding:7px 12px;font-size:14px;font-weight:600;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.slots button::before{content:"🕒 ";filter:grayscale(1)}
+.slots.used button{opacity:.5;pointer-events:none}
+.simgo{padding:8px 12px 0;background:#efeae2}
+.simgo button{width:100%;background:var(--wa);color:#fff;border-radius:12px;padding:11px;font-weight:600;font-size:15px}
+form.in{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:#f0f2f5}
+form.in textarea{flex:1;resize:none;border:0;border-radius:22px;background:#fff;padding:10px 14px;font:inherit;font-size:16px;max-height:110px;outline:none}
+form.in button{width:44px;height:44px;border-radius:50%;background:var(--wa);color:#fff;display:grid;place-items:center;align-self:flex-end}
+form.in button:disabled{opacity:.45}
+.note{font-size:11px;color:var(--mute);text-align:center;padding:0 12px 8px;background:#f0f2f5}
+.hint{align-self:center;max-width:92%;background:#fff3c4;color:#54656f;font-size:13px;line-height:1.35;border-radius:8px;padding:7px 12px;text-align:center;box-shadow:0 1px .5px rgba(11,20,26,.13)}
+.hint button{color:var(--wad);font-weight:700;font-size:13px;padding:0 0 0 4px;text-decoration:underline}
+/* recordatorio simulado */
+.rec{align-self:stretch;display:grid;gap:6px;margin:6px 0}
+.rec .rt{align-self:center;text-align:center;font-size:12.5px;color:#54656f;background:#ffffffcc;border-radius:8px;padding:5px 10px}
+.rec .rm{background:#fff;border-radius:8px;border-top-left-radius:0;box-shadow:0 1px .5px rgba(11,20,26,.13);max-width:88%;overflow:hidden}
+.rec .rm .rh{background:#f0f2f5;font-size:11.5px;color:#54656f;padding:5px 10px;display:flex;justify-content:space-between}
+.rec .rm p{padding:8px 10px;font-size:15px;line-height:1.38;color:#111b21;white-space:pre-wrap}
+.rec .rb{display:grid;border-top:1px solid #e9edef}
+.rec .rb button{padding:9px;color:#027eb5;font-weight:600;font-size:14.5px;border-top:1px solid #e9edef}
+.rec .rb button:first-child{border-top:0}
+.rec .rb button:disabled{color:#8696a0}
+.rec .ok{font-size:13px;color:var(--wad);font-weight:600;padding:0 10px 8px}
+/* cierre */
+.kclose{align-self:stretch;background:#fff;border-radius:10px;box-shadow:0 1px .5px rgba(11,20,26,.13);padding:14px;display:grid;gap:8px;font-size:15px;line-height:1.4}
+.kclose .big{display:block;width:100%;border-radius:99px;padding:12px;font-size:15px;font-weight:700;background:var(--wa);color:#fff}
+.kclose .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.kclose .row button{flex:1 1 auto;text-align:center;border-radius:99px;padding:9px 12px;font-size:14px;font-weight:600;border:1px solid var(--wa);color:var(--wad);background:#fff}
+.kclose .precio{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}
+.kclose .pt{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.kclose .pm{display:grid;gap:3px}.kclose .pm small{color:var(--mute);font-size:13px}
+.kclose .wa{display:block;text-align:center;background:#25D366;color:#fff;border-radius:99px;padding:10px 12px;font-weight:600;text-decoration:none}
+
+/* panel */
+.panel{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto}
+.ptop{position:sticky;top:0;background:var(--p);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:8px;z-index:3}
+.ptop b{font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptop button{border:1px solid rgba(255,255,255,.4);border-radius:99px;padding:7px 13px;font-size:14px;font-weight:600;white-space:nowrap}
+.ptabs{position:sticky;top:57px;z-index:2;display:flex;gap:6px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto}
+.ptabs button{flex:1 0 auto;max-width:220px;border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 12px;font-size:14px;font-weight:600}
+.ptabs button.on{background:var(--p);border-color:var(--p);color:#fff}
+.pin{max-width:960px;margin:0 auto;padding:14px 16px 60px}
+.pintro{color:var(--mute);font-size:14px;margin-bottom:12px}
+.pintro b{color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media (max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:22px;line-height:1.2}
+.stat small{font-size:12.5px;color:var(--mute)}
+.stat.g b{color:#15803d}.stat.r b{color:#b91c1c}.stat.o b{color:var(--s)}
+.fchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.fchips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 12px;font-size:13px;font-weight:500}
+.fchips button.on{background:var(--p);border-color:var(--p);color:#fff}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin:8px 0 10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+/* agenda día */
+.agwrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow-x:auto}
+.ag{display:grid;min-width:100%}
+.ag .hd{position:sticky;top:0;background:#fafaf8;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;padding:8px 6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag .hd small{display:block;font-weight:500;color:var(--mute);font-size:11.5px}
+.ag .col{position:relative;border-left:1px solid var(--line)}
+.ag .hrs{position:relative}
+.ag .hl{position:absolute;left:0;right:0;border-top:1px dashed #eceae4}
+.ag .hrs span{position:absolute;right:6px;font-size:11px;color:var(--mute);transform:translateY(-50%)}
+.ag .closed{position:absolute;inset:0;background:repeating-linear-gradient(45deg,#f6f5f2,#f6f5f2 6px,#efede8 6px,#efede8 12px)}
+.tb{position:absolute;left:3px;right:3px;border-radius:7px;padding:3px 6px;font-size:11.5px;line-height:1.25;overflow:hidden;border-left:3px solid}
+.tb b{font-weight:700}
+.tb.reservado{background:#e8f1fb;border-color:#5b8fd3;color:#1e3a5f}
+.tb.confirmado{background:#dff5ee;border-color:#16a37f;color:#0b4a3b}
+.tb.asistio{background:#f1efe9;border-color:#a8a29e;color:#57534e}
+.tb.ausente{background:#fde8e8;border-color:#e05252;color:#7f1d1d}
+.tb.mio{background:var(--wa);border-color:#065f46;color:#fff;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--wa);z-index:2}
+.tb .tag{display:inline-block;font-size:10px;font-weight:700;padding:0 5px;border-radius:99px;background:rgba(255,255,255,.7);color:inherit;margin-left:3px}
+.tb.mio .tag{background:#fff;color:#065f46}
+.daynav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px}
+.daynav button{flex:none;border:1px solid var(--line);background:#fff;border-radius:12px;padding:6px 10px;font-size:13px;font-weight:600;line-height:1.2;text-align:center;position:relative}
+.daynav button small{display:block;font-weight:500;color:var(--mute);font-size:11px}
+.daynav button.on{background:var(--p);border-color:var(--p);color:#fff}
+.daynav button.on small{color:#ffffffcc}
+.daynav button.su::after{content:"";position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--wa)}
+.vsw{display:flex;gap:6px;margin-bottom:10px}
+.vsw button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600}
+.vsw button.on{background:var(--p);border-color:var(--p);color:#fff}
+/* agenda semana */
+.wk{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.wk th{background:#fafaf8;font-weight:700;padding:8px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.wk td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle;min-width:92px}
+.wk td:first-child,.wk th:first-child{text-align:left;font-weight:600;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1}
+.wk th:first-child{background:#fafaf8}
+.wk tr{cursor:pointer}
+.wk tr:hover td{background:#fafaf8}
+.wk .bar{height:6px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:4px}
+.wk .bar i{display:block;height:100%;background:var(--s)}
+.wk .su{display:inline-block;margin-top:4px;font-size:11px;font-weight:700;background:var(--wa);color:#fff;border-radius:99px;padding:1px 7px}
+.wk .cerr{color:var(--mute);font-size:12px}
+/* turnos y consultas */
+.lead{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.lead.mia{border:2px solid var(--wa)}
+.lh{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.b-reservado{background:#e8f1fb;color:#1e4f8a}.b-confirmado{background:#dcfce7;color:#15803d}.b-cancelado{background:#eef0f2;color:#4b5563}.b-ausente{background:#fde8e8;color:#b91c1c}.b-asistio{background:#f1efe9;color:#57534e}
+.b-para_contactar{background:#dcfce7;color:#15803d}.b-interesado{background:#fef3c7;color:#a16207}.b-explorando{background:#eef0f2;color:#4b5563}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f1efe9;color:var(--mute)}
+.tag.ej{background:#eef2ff;color:#4338ca}.tag.mia{background:var(--wa);color:#fff}
+.lh time{font-size:12.5px;color:var(--mute);margin-left:auto}
+.lead p{font-size:15px}
+.kv{font-size:14px;color:var(--mute);margin-top:6px}
+.kv b{color:var(--ink);font-weight:600}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
+.conv{margin-top:8px;display:flex;flex-direction:column;gap:6px;background:#efeae2;border-radius:12px;padding:10px}
+.conv .m{font-size:14px}
+.empty{background:#fff;border:1px dashed var(--line);border-radius:14px;padding:16px;text-align:center;color:var(--mute);font-size:14px;margin-bottom:10px}
+/* servicios */
+.srow{display:grid;grid-template-columns:1fr 92px 110px;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+@media (max-width:560px){.srow{grid-template-columns:1fr 1fr}.srow .sn{grid-column:1/-1}}
+.srow input,.srow select{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px;background:#fff}
+.srow small{grid-column:1/-1;color:var(--mute);font-size:12.5px}
+.srow .tag{margin-left:4px}
+.pacts{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 12px}
+.pacts button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:8px 13px;font-size:13.5px;font-weight:600}
+.pacts button.pri{background:var(--s);border-color:var(--s);color:#fff}
+.box2{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;font-size:14px}
+.box2 h4{font-size:13px;margin-bottom:6px}
+.ptoast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:90;background:#16161a;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100vw - 32px);box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+
+/* estados */
+.state{min-height:calc(100vh - 40px);display:grid;place-items:center;padding:24px 16px}
+.state .box{max-width:440px;text-align:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 22px}
+.state h1{font-size:24px;margin-bottom:10px}
+.state p{color:var(--mute);margin-bottom:18px}
+.kbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:99px;font-weight:600;text-decoration:none;margin-top:8px}
+.kbtn.wa{background:#25D366;color:#fff}.kbtn.ml{border:1.5px solid var(--k-navy);color:var(--k-navy)}
+.loading{min-height:70vh;display:grid;place-items:center;color:var(--mute)}
+</style>
+</head>
+<body>
+<div class="kband" id="kband"></div>
+<div id="app"><div class="loading">Cargando demo…</div></div>
+
+<script>
+(() => {
+  const SB = "https://pekqdgyxrqqjhmxtjovp.supabase.co";
+  const KEY = "sb_publishable_f-knrak9HDgsY49k-0oYvg_gIqIYQbS";
+  const BOT = SB + "/functions/v1/turnos-demo-bot";
+  const NEUTRAS = { peluqueria: "turnos-demo-peluqueria", consultorio: "turnos-demo-consultorio" };
+  const WA = "https://wa.me/5491132654042";
+  const BOT_WA = "5491132654042";
+  const MAIL = "hola@kiondaia.com";
+
+  const qs = new URLSearchParams(location.search);
+  const slug = (qs.get("i") || NEUTRAS[qs.get("v")] || NEUTRAS.peluqueria).trim().toLowerCase();
+  const $ = (s, el = document) => el.querySelector(s);
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+  const app = $("#app"), band = $("#kband");
+
+  const ICON_WA = '<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><path fill="#fff" d="M16 3C8.8 3 3 8.7 3 15.8c0 2.5.7 4.9 2 7L3.2 29l6.4-1.7c2 1.1 4.2 1.6 6.4 1.6 7.2 0 13-5.7 13-12.8S23.2 3 16 3zm0 23.6c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.8 1 1-3.7-.3-.4c-1.1-1.7-1.7-3.7-1.7-5.8C5.2 9.9 10 5.2 16 5.2s10.8 4.7 10.8 10.6S22 26.6 16 26.6z"/><path fill="#fff" d="M22 18.7c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.6s1.2 3 1.3 3.2c.2.2 2.3 3.5 5.5 4.9.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.7.3-1.4.2-1.5-.1-.1-.3-.2-.6-.3z"/></svg>';
+  const ICON_SEND = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+  async function rpc(fn, args) {
+    const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey: KEY, "content-type": "application/json" }, body: JSON.stringify(args) });
+    if (!r.ok) throw new Error(fn + " " + r.status);
+    return r.json();
+  }
+
+  // ---------- fechas en hora de Argentina (UTC-3) ----------
+  const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const DCORTO = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+  const CLAVE = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
+  const ar = (iso) => new Date(Date.parse(iso) - 3 * 3600e3);
+  const ymd = (iso) => ar(iso).toISOString().slice(0, 10);
+  const hoyYmd = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+  const masDias = (d, n) => new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+  const dow = (d) => new Date(d + "T12:00:00Z").getUTCDay();
+  const hhmm = (iso) => { const t = ar(iso); return `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}`; };
+  const minDelDia = (iso) => { const t = ar(iso); return t.getUTCHours() * 60 + t.getUTCMinutes(); };
+  const aMin = (s) => { const [h, m] = String(s).split(":").map(Number); return h * 60 + (m || 0); };
+  const dLabel = (d) => `${DIAS[dow(d)]} ${Number(d.slice(8))}/${Number(d.slice(5, 7))}`;
+  const fmtDate = (d) => { const [y, m, day] = String(d).split("-"); return `${day}/${m}/${y}`; };
+  const cuando = (iso) => { const d = ymd(iso), h = hoyYmd(); return (d === h ? "hoy" : d === masDias(h, 1) ? "mañana" : d === masDias(h, -1) ? "ayer" : dLabel(d)) + " " + hhmm(iso); };
+
+  const initials = (n) => n.replace(/\(.*?\)/g, "").split(/[\s·]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  const safeColor = (c, def) => (/^#[0-9a-f]{6}$/i.test(c || "") ? c : def);
+  const safeUrl = (u) => (/^https:\/\//i.test(u || "") ? u : "");
+  const contactBlock = () => `<a class="kbtn wa" href="${WA}" target="_blank" rel="noopener">WhatsApp +54 9 11 3265-4042</a><a class="kbtn ml" href="mailto:${MAIL}">${MAIL}</a>`;
+  function showState(title, text) {
+    band.innerHTML = `<span class="pill">Demo</span><span>Asistente de turnos por <b>kionda IA</b></span>`;
+    app.innerHTML = `<div class="state"><div class="box"><h1>${esc(title)}</h1><p>${esc(text)}</p>${contactBlock()}</div></div>`;
+  }
+  function toast(t) {
+    const el = document.createElement("div"); el.className = "ptoast"; el.textContent = t;
+    document.body.appendChild(el); setTimeout(() => el.remove(), 3200);
+  }
+
+  // ---------- arranque ----------
+  rpc("turnos_get_demo", { p_slug: slug }).then((res) => {
+    if (res.estado === "activa") return render(res.demo);
+    if (res.estado === "finalizada")
+      return showState("Esta demo ya finalizó", `La demo del asistente de turnos para ${res.nombre} ya no está disponible. Si desea verla nuevamente o tener el asistente en su WhatsApp, puede escribirnos.`);
+    return showState("Demo no encontrada", "El enlace no corresponde a ninguna demo activa. Si se lo enviaron, puede escribirnos y le enviamos uno nuevo.");
+  }).catch(() => showState("No pudimos cargar la demo", "Revise su conexión e intente nuevamente en unos minutos."));
+
+  let D = null;            // ficha
+  let COD = uuid();        // código de la simulación (también semilla de la agenda)
+  let PANEL_N = 0;         // turnos nuevos sin ver en el panel
+  let TURNO = null;        // turno de la persona en esta simulación
+  const salud = () => D.rubro !== "peluqueria_estetica";
+  const persona = () => (salud() ? "paciente" : "cliente");
+  const vos = () => D.trato === "vos";
+
+  function render(d) {
+    D = d;
+    const neutra = d.tipo === "neutra";
+    document.documentElement.style.setProperty("--p", safeColor(d.color_principal, "#1f2937"));
+    document.documentElement.style.setProperty("--s", safeColor(d.color_secundario, "#0f766e"));
+    document.title = `${d.nombre} · Demo de asistente de turnos`;
+    const logo = safeUrl(d.logo_url);
+    const mark = logo ? `<img src="${esc(logo)}" alt="${esc(d.nombre)}" onerror="this.outerHTML='<div class=mono>${esc(initials(d.nombre))}</div>'">` : `<div class="mono">${esc(initials(d.nombre))}</div>`;
+
+    band.innerHTML = neutra
+      ? `<span class="pill">Demo</span><span>Negocio ficticio · Asistente de turnos por <b>kionda IA</b></span>
+         <span>Ver ejemplo: <a href="?v=peluqueria" class="${slug === NEUTRAS.peluqueria ? "on" : ""}">Peluquería</a> · <a href="?v=consultorio" class="${slug === NEUTRAS.consultorio ? "on" : ""}">Centro médico</a></span>`
+      : `<span class="pill">Demo</span><span>Preparada por <b>kionda IA</b> para ${esc(d.nombre)} · disponible hasta el ${fmtDate(d.vence)}</span>`;
+
+    const celu = safeUrl(d.captura_celu), compu = safeUrl(d.captura_compu);
+    const tactil = window.matchMedia("(hover: none)").matches;
+    const origen = d.fuente === "instagram" ? "del Instagram" : "de la web";
+    const fondo = (celu || compu)
+      ? `<div class="shot" aria-label="Así se ve ${origen} de ${esc(d.nombre)}"><picture>
+           ${celu ? `<source media="(max-width: 700px)" srcset="${esc(celu)}">` : ""}
+           <img id="shotImg" src="${esc(compu || celu)}" alt="" draggable="false"></picture>
+           <div class="guard"></div><div class="fade"></div></div>
+         <div class="after">Captura ${origen} de ${esc(d.nombre)} · el asistente se encuentra abajo a la derecha</div>`
+      : plainBox(d, mark, neutra);
+
+    app.innerHTML = `
+      <div id="bg">${fondo}</div>
+      <div class="dim" aria-hidden="true"></div>
+      <div class="launch" id="launch">
+        <div class="tip" id="tip">${tactil ? "Toque aquí" : "Haga clic aquí"} para probar el asistente por WhatsApp</div>
+        <button class="bubble" id="bubble" aria-label="Abrir el asistente por WhatsApp">${ICON_WA}</button>
+      </div>
+      <div class="veil hide" id="veil"></div>
+      <section class="chat hide" id="chat" aria-label="Asistente virtual">
+        <div class="ch">${mark}<div class="ch-t"><b>${esc(d.nombre)}</b><small>en línea · asistente virtual</small></div>
+          <button class="pbtn" id="openPanel">Ver panel</button>
+          <button id="reset" title="Empezar de nuevo" aria-label="Empezar de nuevo">↻</button>
+          <button id="close" title="Cerrar" aria-label="Cerrar">✕</button></div>
+        <div class="cdemo" id="cdemo">Simulación de WhatsApp · demo del asistente con IA</div>
+        <div class="sbar hide" id="sbar"><span>Simulación en curso · escriba como si fuera un ${persona()}</span><button type="button" id="endSim">Finalizar simulación</button></div>
+        <div class="msgs" id="msgs"></div>
+        <div class="simgo hide" id="simgo"><button type="button" id="startSim">▶ Empezar simulación</button></div>
+        <form class="in" id="form"><textarea id="txt" rows="1" placeholder="Escriba su consulta…" maxlength="1200"></textarea><button id="send" aria-label="Enviar">${ICON_SEND}</button></form>
+        <div class="note">Asistente con IA. Puede cometer errores. La agenda de esta demo es de ejemplo.</div>
+      </section>
+      <section class="panel hide" id="panel"></section>`;
+    const img = $("#shotImg");
+    if (img) img.onerror = () => { $("#bg").innerHTML = plainBox(d, mark, neutra); };
+    setupChat();
+    setupPanel();
+  }
+
+  function plainBox(d, mark, neutra) {
+    return `<div class="plain"><div class="box"><div class="mark">${mark}</div>
+      <h1>${neutra ? "Asistente de turnos de " + esc(d.nombre) : "Asistente de turnos para " + esc(d.nombre)}</h1>
+      <p>Así atendería su WhatsApp: responde a cualquier hora, ofrece los turnos libres de la agenda, los reserva y recuerda el turno el día anterior. Puede probarlo con el botón de abajo.</p>
+    </div></div>`;
+  }
+
+  // ---------- chat ----------
+  function saludoHora() {
+    const h = new Date().getHours();
+    return h >= 5 && h < 13 ? "Buen día" : h >= 13 && h < 20 ? "Buenas tardes" : "Buenas noches";
+  }
+  function introPresentacion() {
+    const neutra = D.tipo === "neutra";
+    const origen = D.fuente === "instagram" ? "su Instagram" : "su web";
+    const basica = (D.servicios || []).some((s) => s.ejemplo);
+    return neutra
+      ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener un negocio con turnos.\nPara esta prueba usamos ${D.nombre}, un negocio ficticio, con sus servicios, horarios y una agenda de ejemplo.\nPuede pedir un turno como lo haría un ${persona()}. ¿Le gustaría hacerme alguna pregunta antes de empezar la simulación?`
+      : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${D.nombre}.\n${basica ? `Para esta prueba cargamos servicios típicos de ejemplo y una agenda de ejemplo; los servicios reales se cargan en minutos desde el panel.` : `Para esta prueba cargamos los servicios y horarios publicados en ${origen} y una agenda de ejemplo.`}\nPuede pedir un turno como lo haría un ${persona()}. ¿Le gustaría hacerme alguna pregunta antes de empezar la simulación?`;
+  }
+  const PRECIO_HTML = `<div class="pm"><div><b>USD 150</b> de instalación, con <b>1 mes de prueba</b> incluido</div><div>Si le convence: <b>USD 150</b> más y <b>USD 30 por mes</b></div><small>Si no le convence, no paga nada más. Incluye su WhatsApp conectado, la agenda, los recordatorios y el panel.</small></div>`;
+
+  function textoRecordatorio(t) {
+    const nom = (t.cliente || "").split(" ")[0];
+    const quien = (D.profesionales || []).length > 1 ? ` con ${t.profesional}` : "";
+    const dir = D.datos_extra?.direccion ? `, ${D.datos_extra.direccion}` : "";
+    return vos()
+      ? `Hola${nom ? " " + nom : ""}. Te recordamos tu turno de ${t.servicio}${quien} mañana ${dLabel(ymd(t.inicio))} a las ${hhmm(t.inicio)} en ${D.nombre}${dir}.\n¿Confirmás tu asistencia?`
+      : `Hola${nom ? " " + nom : ""}. Le recordamos su turno de ${t.servicio}${quien} mañana ${dLabel(ymd(t.inicio))} a las ${hhmm(t.inicio)} en ${D.nombre}${dir}.\n¿Confirma su asistencia?`;
+  }
+
+  function setupChat() {
+    const root = document.documentElement;
+    const chat = $("#chat"), msgs = $("#msgs"), txt = $("#txt"), form = $("#form"), send = $("#send"),
+      launch = $("#launch"), veil = $("#veil"), sbar = $("#sbar"), simgo = $("#simgo"), cdemo = $("#cdemo");
+    const tactil = window.matchMedia("(hover: none)").matches;
+    const nuevo = (cod) => ({ cod: cod || uuid(), log: [], done: false, hint: false, precio: false });
+    let modo = "presentacion";
+    const st = { presentacion: nuevo(), simulacion: nuevo(COD) };
+    const S = () => st[modo];
+    let busy = false;
+
+    function badge() {
+      const b = $("#openPanel"); if (!b) return;
+      let nb = b.querySelector(".nb");
+      if (PANEL_N > 0) {
+        if (!nb) { nb = document.createElement("span"); nb.className = "nb"; b.appendChild(nb); b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); }
+        nb.textContent = PANEL_N;
+      } else if (nb) { nb.remove(); b.classList.remove("pulse"); }
+    }
+    window.__panelVisto = () => { PANEL_N = 0; badge(); };
+
+    // que el chat siga al teclado
+    let pegado = true;
+    msgs.addEventListener("scroll", () => { pegado = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 80; });
+    const abajo = () => { msgs.scrollTop = msgs.scrollHeight; };
+    const vv = window.visualViewport;
+    function fit() {
+      if (vv) { root.style.setProperty("--vvh", vv.height + "px"); root.style.setProperty("--vvt", vv.offsetTop + "px"); }
+      if (pegado) requestAnimationFrame(abajo);
+    }
+    if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); }
+    window.addEventListener("resize", fit);
+
+    const nodp = (b) => b.addEventListener("pointerdown", (e) => e.preventDefault());
+    function add(role, text) {
+      const el = document.createElement("div"); el.className = "m " + role; el.textContent = text; msgs.appendChild(el); return el;
+    }
+    function acciones(lista) {
+      const box = document.createElement("div"); box.className = "acts";
+      lista.forEach(([label, fn, pri]) => {
+        const b = document.createElement("button"); b.type = "button"; b.textContent = label; if (pri) b.className = "pri";
+        nodp(b); b.onclick = fn; box.appendChild(b);
+      });
+      msgs.appendChild(box);
+    }
+    function slots(entry) {
+      const box = document.createElement("div"); box.className = "slots" + (entry.usado ? " used" : "");
+      entry.botones.forEach((o) => {
+        const b = document.createElement("button"); b.type = "button"; b.textContent = o.label; nodp(b);
+        b.onclick = () => { if (entry.usado || busy) return; entry.usado = true; box.classList.add("used"); ask(o.label, o.opcion); };
+        box.appendChild(b);
+      });
+      msgs.appendChild(box);
+    }
+    function hint() {
+      const el = document.createElement("div"); el.className = "hint";
+      el.innerHTML = `Este turno ya está en la agenda de su negocio.<button type="button">Ver panel</button>`;
+      const b = el.querySelector("button"); nodp(b); b.onclick = () => $("#openPanel").click();
+      msgs.appendChild(el);
+    }
+    function recordatorio(entry) {
+      const t = entry.turno;
+      const el = document.createElement("div"); el.className = "rec";
+      el.innerHTML = `<div class="rt">Así le llegaría el recordatorio a su ${persona()} el día anterior:</div>
+        <div class="rm"><div class="rh"><span>${esc(D.nombre)}</span><span>Recordatorio automático · día anterior</span></div>
+          <p>${esc(textoRecordatorio(t))}</p>
+          ${entry.res ? `<div class="ok">${esc(entry.res)}</div>` : ""}
+          <div class="rb"><button type="button" data-a="confirmar">Confirmar</button><button type="button" data-a="cancelar">Cancelar</button><button type="button" data-a="reprogramar">Reprogramar</button></div></div>`;
+      el.querySelectorAll(".rb button").forEach((b) => {
+        nodp(b);
+        if (entry.res) b.disabled = true;
+        b.onclick = async () => {
+          if (entry.res || busy) return;
+          const a = b.dataset.a;
+          if (a === "reprogramar") {
+            entry.res = vos() ? "Elegiste reprogramar" : "Eligió reprogramar"; draw();
+            return ask(vos() ? "Quiero reprogramar mi turno" : "Quisiera reprogramar mi turno");
+          }
+          el.querySelectorAll(".rb button").forEach((x) => (x.disabled = true));
+          try {
+            const r = await rpc("turnos_demo_accion", { p_slug: D.slug, p_codigo: st.simulacion.cod, p_id: t.id, p_accion: a });
+            if (!r.ok) throw 0;
+            if (a === "confirmar") {
+              entry.res = "Turno confirmado. En el panel ya figura como confirmado.";
+              if (TURNO && TURNO.id === t.id) TURNO.estado = "confirmado";
+            } else {
+              entry.res = "Turno cancelado. El horario volvió a quedar libre en la agenda.";
+              if (TURNO && TURNO.id === t.id) TURNO.estado = "cancelado";
+            }
+            PANEL_N = 1; badge(); draw();
+          } catch {
+            el.querySelectorAll(".rb button").forEach((x) => (x.disabled = false));
+            toast("No pudimos registrar la respuesta. Intente de nuevo.");
+          }
+        };
+      });
+      msgs.appendChild(el);
+    }
+    function cierre(entry) {
+      const el = document.createElement("div"); el.className = "kclose";
+      const wa = `https://wa.me/${BOT_WA}?text=${encodeURIComponent(`Hola, vengo por la demo de turnos de ${D.nombre} (código ${D.slug})`)}`;
+      const conTurno = TURNO && TURNO.estado !== "cancelado";
+      el.innerHTML = `<div>${conTurno ? "Gracias por probar la demo. Así le quedó el turno en la agenda:" : "Gracias por probar la demo. Así se ve la agenda de su negocio:"}</div>
+        <button type="button" class="big" data-a="panel">${conTurno ? "Ver el turno en la agenda" : "Ver la agenda"}</button>
+        <div class="precio ${entry.precio ? "" : "hide"}"><div class="pt">Precio</div>${PRECIO_HTML}
+          <a class="wa" href="${wa}" target="_blank" rel="noopener">Enviar mensaje por WhatsApp</a></div>
+        <div class="row">${entry.precio ? "" : `<button type="button" data-a="precio">Me interesa saber el precio</button>`}
+          <button type="button" data-a="otra">Simular de nuevo</button></div>`;
+      const bp = el.querySelector('[data-a="precio"]');
+      if (bp) bp.onclick = () => { entry.precio = true; el.querySelector(".precio").classList.remove("hide"); bp.remove(); if (pegado) abajo(); };
+      el.querySelector('[data-a="panel"]').onclick = () => $("#openPanel").click();
+      el.querySelector('[data-a="otra"]').onclick = () => nuevaSim();
+      msgs.appendChild(el);
+    }
+
+    function draw() {
+      msgs.innerHTML = "";
+      const s = S(), sim = modo === "simulacion";
+      sbar.classList.toggle("hide", !sim || s.done);
+      cdemo.classList.toggle("hide", sim && !s.done);
+      simgo.classList.toggle("hide", sim || s.log.length === 0);
+      if (!sim) {
+        add("b", introPresentacion());
+        if (!s.log.length) acciones([
+          ["▶ Empezar simulación", empezarSim, true],
+          ["¿Qué incluye el servicio?", () => ask("¿Qué incluye el servicio?")],
+          ["¿Cómo funciona por WhatsApp?", () => ask("¿Cómo funciona por WhatsApp?")],
+        ]);
+      } else {
+        add("b", D.saludo || `${saludoHora()}, soy el asistente virtual de ${D.nombre}. ¿En qué puedo ayudarle?`);
+      }
+      s.log.forEach((e, i) => {
+        if (e.r === "fin") return cierre(e);
+        if (e.r === "hint") return hint();
+        if (e.r === "rec") return recordatorio(e);
+        add(e.r, e.t);
+        if (e.botones && e.botones.length) { if (i !== s.log.length - 1) e.usado = true; slots(e); }
+      });
+      txt.disabled = send.disabled = s.done;
+      txt.placeholder = sim ? `Escriba como si fuera un ${persona()}…` : "Escriba su pregunta…";
+      pegado = true; requestAnimationFrame(abajo);
+    }
+
+    function empezarSim() { modo = "simulacion"; if (S().done) nuevaSim(); else draw(); }
+    function nuevaSim() {
+      COD = uuid(); TURNO = null; PANEL_N = 0; badge();
+      st.simulacion = nuevo(COD); modo = "simulacion"; draw();
+    }
+    function terminarSim() {
+      const s = st.simulacion; if (s.done) return;
+      s.done = true; s.log.push({ r: "fin", precio: false }); draw();
+    }
+    function open() {
+      chat.classList.remove("hide"); veil.classList.remove("hide"); launch.classList.add("hide");
+      root.classList.add("lock"); fit(); draw();
+      if (!tactil) setTimeout(() => txt.focus(), 50);
+    }
+    function close() {
+      chat.classList.add("hide"); veil.classList.add("hide"); launch.classList.remove("hide");
+      root.classList.remove("lock"); txt.blur();
+    }
+
+    async function ask(text, opcion) {
+      text = String(text || "").trim();
+      const s = S(), m0 = modo;
+      if (!text || busy || s.done) return;
+      busy = true; send.disabled = true;
+      msgs.querySelectorAll(".acts").forEach((x) => x.remove());
+      s.log.forEach((e) => { if (e.botones) e.usado = true; });
+      msgs.querySelectorAll(".slots").forEach((x) => x.classList.add("used"));
+      s.log.push({ r: "u", t: text }); add("u", text);
+      simgo.classList.toggle("hide", m0 === "simulacion");
+      txt.value = ""; txt.style.height = "";
+      const t = add("b", ""); t.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+      pegado = true; abajo();
+      try {
+        const body = { slug: D.slug, codigo: s.cod, message: text, modo: m0 };
+        if (opcion) body.opcion = opcion;
+        const r = await fetch(BOT, { method: "POST", headers: { "content-type": "application/json", apikey: KEY }, body: JSON.stringify(body) });
+        const j = await r.json();
+        const reply = j.reply || "Tuve un problema para responder. ¿Podría intentar de nuevo?";
+        t.textContent = reply;
+        const e = { r: "b", t: reply, botones: Array.isArray(j.botones) ? j.botones : [] };
+        s.log.push(e);
+        if (e.botones.length) slots(e);
+        if (m0 === "simulacion" && j.turno) {
+          TURNO = { ...j.turno, cliente: j.turno.cliente || "" };
+          if (j.turno.estado === "cancelado") { PANEL_N = 1; badge(); }
+          if (j.recordatorio) {
+            // nombre para el recordatorio: lo que dejó la persona
+            try { const p = await rpc("turnos_get_panel", { p_slug: D.slug, p_codigo: s.cod }); TURNO.cliente = p?.conversacion?.nombre || ""; } catch {}
+            s.log.push({ r: "rec", turno: { ...TURNO } });
+            if (!s.hint) { s.hint = true; s.log.push({ r: "hint" }); }
+            PANEL_N = 1; badge();
+            draw();
+          }
+        }
+        if (j.finalizada) setTimeout(() => location.reload(), 2500);
+        else if (j.done && m0 === "simulacion") { s.done = true; s.log.push({ r: "fin", precio: false }); busy = false; return draw(); }
+        else if (j.done) { s.done = true; add("sys", "Conversación finalizada · toque ↻ para empezar otra"); }
+      } catch {
+        t.textContent = "No pude conectarme. Revise su conexión e intente nuevamente.";
+        s.log.pop();
+      }
+      busy = false; send.disabled = s.done; txt.disabled = s.done;
+      if (pegado) abajo();
+    }
+
+    $("#bubble").onclick = open; $("#tip").onclick = open; veil.onclick = close; $("#close").onclick = close;
+    $("#startSim").onclick = empezarSim; $("#endSim").onclick = terminarSim;
+    $("#reset").onclick = () => {
+      if (modo === "simulacion") { st.presentacion = nuevo(); modo = "presentacion"; COD = uuid(); TURNO = null; PANEL_N = 0; badge(); st.simulacion = nuevo(COD); }
+      else st.presentacion = nuevo();
+      draw();
+    };
+    nodp(send);
+    form.onsubmit = (e) => { e.preventDefault(); ask(txt.value); };
+    txt.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !tactil) { e.preventDefault(); ask(txt.value); } });
+    txt.addEventListener("input", () => { txt.style.height = "auto"; txt.style.height = Math.min(txt.scrollHeight, 110) + "px"; });
+    txt.addEventListener("focus", () => { pegado = true; setTimeout(fit, 250); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#panel").classList.contains("hide")) close(); });
+  }
+
+  // ---------- panel ----------
+  const ESTADO = { reservado: "Reservado", confirmado: "Confirmado", cancelado: "Cancelado", ausente: "Ausente", asistio: "Asistió" };
+  const INTERES = { para_contactar: "Para contactar", interesado: "Interesado", explorando: "Explorando" };
+
+  function setupPanel() {
+    const panel = $("#panel");
+    const profs = (D.profesionales && D.profesionales.length) ? D.profesionales : [{ nombre: "General", horarios: null }];
+    let tab = "agenda", vista = "dia", dia = hoyYmd(), filtro = "";
+    let data = { agenda: [], conversacion: null };
+    let servicios = JSON.parse(JSON.stringify(D.servicios || []));
+
+    const franjas = (p, d) => {
+      const h = (p.horarios && typeof p.horarios === "object") ? p.horarios : D.horarios || {};
+      return (h[CLAVE[dow(d)]] || []).filter((r) => Array.isArray(r) && r.length === 2).map((r) => [aMin(r[0]), aMin(r[1])]);
+    };
+    const esMio = (t) => !t.ejemplo;
+
+    async function cargar() {
+      try {
+        const p = await rpc("turnos_get_panel", { p_slug: D.slug, p_codigo: COD });
+        data = { agenda: Array.isArray(p?.agenda) ? p.agenda : [], conversacion: p?.conversacion || null };
+      } catch { data = { agenda: [], conversacion: null }; toast("No pudimos cargar el panel. Intente de nuevo."); }
+      const mio = data.agenda.find((t) => esMio(t) && t.estado !== "cancelado");
+      if (mio) dia = ymd(mio.inicio);
+      dibujar();
+    }
+
+    function abrir() {
+      panel.classList.remove("hide"); window.__panelVisto && window.__panelVisto();
+      panel.innerHTML = `<div class="loading">Cargando panel…</div>`;
+      cargar();
+    }
+    $("#openPanel").onclick = abrir;
+
+    function dibujar() {
+      panel.innerHTML = `
+        <div class="ptop"><b>Panel de ${esc(D.nombre)}</b><button type="button" id="pClose">Volver al chat</button></div>
+        <div class="ptabs">
+          <button type="button" data-t="agenda" class="${tab === "agenda" ? "on" : ""}">Agenda</button>
+          <button type="button" data-t="turnos" class="${tab === "turnos" ? "on" : ""}">Turnos y consultas</button>
+          <button type="button" data-t="servicios" class="${tab === "servicios" ? "on" : ""}">Servicios</button>
+        </div>
+        <div class="pin" id="pin"></div>`;
+      $("#pClose").onclick = () => panel.classList.add("hide");
+      panel.querySelectorAll(".ptabs button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; dibujar(); panel.scrollTop = 0; }));
+      const pin = $("#pin");
+      if (tab === "agenda") agenda(pin);
+      else if (tab === "turnos") turnos(pin);
+      else serviciosTab(pin);
+    }
+
+    // ----- agenda -----
+    function agenda(pin) {
+      const hoy = hoyYmd();
+      const dias = Array.from({ length: 10 }, (_, i) => masDias(hoy, i - 3));
+      const mio = data.agenda.find((t) => esMio(t) && t.estado !== "cancelado");
+      pin.innerHTML = `
+        <p class="pintro">${mio ? `<b>Su turno</b> está marcado en verde: ${esc(mio.servicio)}${profs.length > 1 ? " con " + esc(mio.profesional) : ""}, ${esc(dLabel(ymd(mio.inicio)))} a las ${hhmm(mio.inicio)}. ` : ""}Los demás turnos son de ejemplo, para que vea cómo queda una semana real.</p>
+        <div class="vsw"><button type="button" data-v="dia" class="${vista === "dia" ? "on" : ""}">Día</button><button type="button" data-v="semana" class="${vista === "semana" ? "on" : ""}">Semana</button></div>
+        <div id="agv"></div>`;
+      pin.querySelectorAll(".vsw button").forEach((b) => (b.onclick = () => { vista = b.dataset.v; agenda(pin); }));
+      const agv = $("#agv");
+      if (vista === "semana") return semana(agv);
+      const conMio = new Set(data.agenda.filter((t) => esMio(t) && t.estado !== "cancelado").map((t) => ymd(t.inicio)));
+      agv.innerHTML = `<div class="daynav">${dias.map((d) => `<button type="button" data-d="${d}" class="${d === dia ? "on" : ""} ${conMio.has(d) ? "su" : ""}">${d === hoy ? "Hoy" : DCORTO[dow(d)]}<small>${Number(d.slice(8))}/${Number(d.slice(5, 7))}</small></button>`).join("")}</div>
+        <div class="legend"><span><i style="background:var(--wa)"></i>Su turno</span><span><i style="background:#16a37f"></i>Confirmado</span><span><i style="background:#5b8fd3"></i>Reservado</span><span><i style="background:#a8a29e"></i>Asistió</span><span><i style="background:#e05252"></i>Ausente</span></div>
+        <div class="agwrap" id="agw"></div>`;
+      agv.querySelectorAll(".daynav button").forEach((b) => (b.onclick = () => { dia = b.dataset.d; agenda(pin); }));
+      const sel = agv.querySelector(".daynav .on"); if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
+      grillaDia($("#agw"), dia);
+    }
+
+    function grillaDia(box, d) {
+      const fr = profs.map((p) => franjas(p, d));
+      const todos = fr.flat();
+      const turnosDia = data.agenda.filter((t) => ymd(t.inicio) === d && t.estado !== "cancelado");
+      if (!todos.length && !turnosDia.length) { box.innerHTML = `<div class="empty" style="margin:10px">${esc(dLabel(d))}: el negocio no atiende.</div>`; return; }
+      let ini = Math.min(...todos.map((r) => r[0]), ...turnosDia.map((t) => minDelDia(t.inicio)));
+      let fin = Math.max(...todos.map((r) => r[1]), ...turnosDia.map((t) => minDelDia(t.fin)));
+      ini = Math.floor(ini / 60) * 60; fin = Math.ceil(fin / 60) * 60;
+      const PPM = 1.15, H = (fin - ini) * PPM;
+      const colW = profs.length > 2 ? "minmax(118px,1fr)" : "minmax(140px,1fr)";
+      let html = `<div class="ag" style="grid-template-columns:46px repeat(${profs.length},${colW})">
+        <div class="hd"></div>${profs.map((p) => `<div class="hd">${esc(p.nombre)}${p.especialidad ? `<small>${esc(p.especialidad)}</small>` : ""}</div>`).join("")}
+        <div class="hrs" style="height:${H}px">`;
+      for (let m = ini; m <= fin; m += 60) html += `<span style="top:${(m - ini) * PPM}px">${String(m / 60).padStart(2, "0")}</span>`;
+      html += `</div>`;
+      profs.forEach((p, i) => {
+        html += `<div class="col" style="height:${H}px">`;
+        // horas cerradas para este profesional (fuera de sus franjas)
+        const abiertas = fr[i].sort((a, b) => a[0] - b[0]);
+        let cur = ini;
+        for (const [a, b] of abiertas) { if (a > cur) html += `<div class="closed" style="top:${(cur - ini) * PPM}px;height:${(a - cur) * PPM}px;bottom:auto"></div>`; cur = Math.max(cur, b); }
+        if (cur < fin) html += `<div class="closed" style="top:${(cur - ini) * PPM}px;height:${(fin - cur) * PPM}px;bottom:auto"></div>`;
+        for (let m = ini; m <= fin; m += 60) html += `<div class="hl" style="top:${(m - ini) * PPM}px"></div>`;
+        turnosDia.filter((t) => t.profesional === p.nombre).forEach((t) => {
+          const a = minDelDia(t.inicio), b = minDelDia(t.fin);
+          const cls = esMio(t) ? "mio" : t.estado;
+          html += `<div class="tb ${cls}" style="top:${(a - ini) * PPM + 1}px;height:${Math.max((b - a) * PPM - 2, 16)}px" title="${esc(`${hhmm(t.inicio)} a ${hhmm(t.fin)} · ${t.servicio} · ${t.cliente || ""} · ${ESTADO[t.estado] || ""}`)}">
+            <b>${hhmm(t.inicio)}</b> ${esc(t.cliente || "")}<span class="tag">${esMio(t) ? "Su turno" : "Ejemplo"}</span><br>${esc(t.servicio)}</div>`;
+        });
+        html += `</div>`;
+      });
+      html += `</div>`;
+      box.innerHTML = html;
+      const m = box.querySelector(".tb.mio");
+      if (m) setTimeout(() => m.scrollIntoView({ block: "center", inline: "nearest" }), 60);
+    }
+
+    function semana(agv) {
+      const hoy = hoyYmd();
+      const dias = Array.from({ length: 7 }, (_, i) => masDias(hoy, i));
+      let html = `<p class="pintro">Turnos de los próximos 7 días por profesional y qué tan llena está cada agenda. Toque un día para verlo en detalle.</p>
+        <div class="agwrap"><table class="wk"><thead><tr><th>Día</th>${profs.map((p) => `<th>${esc(p.nombre)}</th>`).join("")}</tr></thead><tbody>`;
+      dias.forEach((d) => {
+        html += `<tr data-d="${d}"><td>${d === hoy ? "Hoy" : esc(dLabel(d))}</td>`;
+        profs.forEach((p) => {
+          const fr = franjas(p, d);
+          const abierto = fr.reduce((s, r) => s + (r[1] - r[0]), 0);
+          const ts = data.agenda.filter((t) => ymd(t.inicio) === d && t.profesional === p.nombre && t.estado !== "cancelado");
+          const ocup = ts.reduce((s, t) => s + (minDelDia(t.fin) - minDelDia(t.inicio)), 0);
+          const mio = ts.find(esMio);
+          if (!abierto && !ts.length) { html += `<td class="cerr">No atiende</td>`; return; }
+          const pct = abierto ? Math.min(100, Math.round((ocup / abierto) * 100)) : 100;
+          html += `<td><b>${ts.length}</b> turno${ts.length === 1 ? "" : "s"}<div class="bar"><i style="width:${pct}%"></i></div>${mio ? `<span class="su">Su turno ${hhmm(mio.inicio)}</span>` : ""}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>`;
+      agv.innerHTML = html;
+      agv.querySelectorAll("tr[data-d]").forEach((tr) => (tr.onclick = () => { dia = tr.dataset.d; vista = "dia"; agenda($("#pin")); }));
+    }
+
+    // ----- turnos y consultas -----
+    function resumenEjemplo(t) {
+      const s = t.servicio, quien = profs.length > 1 ? ` con ${t.profesional}` : "";
+      if (t.origen === "manual") return `Turno de ${s}${quien} cargado a mano por el equipo.`;
+      return {
+        reservado: `Pidió turno de ${s} por WhatsApp. El asistente le ofreció horarios libres y lo reservó${quien}.`,
+        confirmado: `Sacó turno de ${s}${quien} por WhatsApp y lo confirmó con el recordatorio del día anterior.`,
+        cancelado: `Canceló su turno de ${s} desde el recordatorio. El horario volvió a quedar libre y se ofreció a otra persona.`,
+        asistio: `Turno de ${s}${quien} tomado por el asistente. Asistió.`,
+        ausente: `Turno de ${s}${quien}. No asistió y no avisó.`,
+      }[t.estado] || `Turno de ${s}.`;
+    }
+    function turnos(pin) {
+      const hoy = hoyYmd(), fin7 = masDias(hoy, 6);
+      const ej = data.agenda.filter((t) => t.ejemplo);
+      const semana = ej.filter((t) => ymd(t.inicio) >= hoy && ymd(t.inicio) <= fin7);
+      const nSem = semana.filter((t) => t.estado !== "cancelado").length;
+      const nConf = semana.filter((t) => t.estado === "confirmado").length;
+      const nCanc = ej.filter((t) => t.estado === "cancelado").length;
+      const pasados = ej.filter((t) => t.estado === "asistio" || t.estado === "ausente");
+      const nAus = pasados.filter((t) => t.estado === "ausente").length;
+      const pctAsist = ej.length ? Math.round((ej.filter((t) => t.origen === "asistente").length / ej.length) * 100) : 0;
+      // ~15 ejemplos variados, los más cercanos a hoy
+      const ahora = Date.now();
+      const ord = [...ej].sort((a, b) => Math.abs(Date.parse(a.inicio) - ahora) - Math.abs(Date.parse(b.inicio) - ahora));
+      const elegidos = [];
+      for (const est of ["cancelado", "ausente", "confirmado", "asistio", "reservado"]) {
+        ord.filter((t) => t.estado === est).slice(0, est === "cancelado" || est === "ausente" ? 2 : 4).forEach((t) => elegidos.push(t));
+      }
+      let lista = elegidos.sort((a, b) => Date.parse(b.inicio) - Date.parse(a.inicio)).slice(0, 15);
+      const filtrosDef = [["", "Todos"], ["reservado", "Reservados"], ["confirmado", "Confirmados"], ["cancelado", "Cancelados"], ["ausente", "Ausentes"], ["asistente", "Del asistente"]];
+      if (filtro === "asistente") lista = lista.filter((t) => t.origen === "asistente");
+      else if (filtro) lista = lista.filter((t) => t.estado === filtro);
+
+      const c = data.conversacion;
+      const mio = data.agenda.filter(esMio).sort((a, b) => Date.parse(b.inicio) - Date.parse(a.inicio));
+      const miT = mio.find((t) => t.estado !== "cancelado") || mio[0];
+      let su = "";
+      if (c && (c.resumen || c.mensajes?.length)) {
+        su = `<div class="mtit" style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--wad);margin:4px 0 6px">Su conversación</div>
+        <div class="lead mia"><div class="lh"><span class="tag mia">Su consulta</span>
+          ${miT ? `<span class="badge b-${esc(miT.estado)}">${esc(ESTADO[miT.estado] || miT.estado)}</span>` : `<span class="badge b-${esc(c.interes)}">${esc(INTERES[c.interes] || "")}</span>`}
+          <time>${esc(cuando(c.fecha))}</time></div>
+          <p>${esc(c.resumen || "Conversación en curso.")}</p>
+          ${miT ? `<div class="kv"><b>Turno:</b> ${esc(miT.servicio)}${profs.length > 1 ? " con " + esc(miT.profesional) : ""}, ${esc(dLabel(ymd(miT.inicio)))} ${hhmm(miT.inicio)}</div>` : ""}
+          ${c.nombre ? `<div class="kv"><b>${salud() ? "Paciente" : "Cliente"}:</b> ${esc(c.nombre)}${c.telefono ? " · " + esc(c.telefono) : ""}</div>` : ""}
+          ${(c.mensajes || []).length ? `<details><summary>Ver conversación</summary><div class="conv">${c.mensajes.map((m) => `<div class="m ${m.role === "user" ? "u" : "b"}">${esc(m.text)}</div>`).join("")}</div></details>` : ""}
+        </div>`;
+      } else {
+        su = `<div class="empty">Su conversación aparece acá apenas pida un turno en la simulación.</div>`;
+      }
+
+      pin.innerHTML = `
+        <div class="stats">
+          <div class="stat o"><b>${nSem + (miT && miT.estado !== "cancelado" ? 1 : 0)}</b><small>turnos esta semana</small></div>
+          <div class="stat g"><b>${nConf}</b><small>confirmados con el recordatorio</small></div>
+          <div class="stat"><b>${nCanc}</b><small>cancelaciones avisadas (horario liberado)</small></div>
+          <div class="stat r"><b>${nAus}</b><small>ausentes sin aviso</small></div>
+        </div>
+        <p class="pintro">${pctAsist}% de los turnos de ejemplo los tomó el asistente por WhatsApp; el resto los cargó el equipo a mano.</p>
+        ${su}
+        <div class="mtit" style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:14px 0 6px">Turnos de ejemplo</div>
+        <div class="fchips">${filtrosDef.map(([k, l]) => `<button type="button" data-f="${k}" class="${filtro === k ? "on" : ""}">${l}</button>`).join("")}</div>
+        ${lista.length ? lista.map((t) => `<div class="lead"><div class="lh"><span class="badge b-${esc(t.estado)}">${esc(ESTADO[t.estado] || t.estado)}</span><span class="tag ej">Ejemplo</span>
+            <span class="tag">${t.origen === "asistente" ? "Asistente" : "Cargado a mano"}</span><time>${esc(cuando(t.inicio))}</time></div>
+            <p>${esc(resumenEjemplo(t))}</p>
+            <div class="kv"><b>${esc(t.cliente || "")}</b> · ${esc(t.servicio)}${profs.length > 1 ? " · " + esc(t.profesional) : ""}</div></div>`).join("")
+          : `<div class="empty">No hay turnos con ese filtro.</div>`}`;
+      pin.querySelectorAll(".fchips button").forEach((b) => (b.onclick = () => { filtro = b.dataset.f; turnos(pin); }));
+    }
+
+    // ----- servicios (editable, no se guarda) -----
+    function serviciosTab(pin) {
+      const durs = [15, 20, 30, 40, 45, 60, 75, 90, 120, 150, 180];
+      const nombresProf = profs.map((p) => p.nombre);
+      pin.innerHTML = `
+        <p class="pintro">Lo que el asistente ofrece y cuánto dura cada turno. ${salud() ? "En salud no se publican precios: el asistente no los da." : "Si un precio queda vacío, el asistente dice que el salón lo confirma."} <b>En esta demo los cambios no se guardan.</b></p>
+        ${servicios.map((s, i) => `<div class="srow" data-i="${i}">
+          <div class="sn"><input data-k="nombre" value="${esc(s.nombre)}" aria-label="Servicio">${s.ejemplo ? `<span class="tag ej">Ejemplo</span>` : ""}${s.estimada ? `<span class="tag">Duración estimada</span>` : ""}</div>
+          <select data-k="duracion" aria-label="Duración">${[...new Set([...durs, Number(s.duracion) || 30])].sort((a, b) => a - b).map((m) => `<option value="${m}" ${m === (Number(s.duracion) || 30) ? "selected" : ""}>${m} min</option>`).join("")}</select>
+          <input data-k="precio" value="${esc(s.precio || "")}" placeholder="${salud() ? "No se publica" : "Sin precio"}" aria-label="Precio" ${salud() ? "disabled" : ""}>
+          <small>${(s.profesionales || []).length ? "Lo hace: " + esc(s.profesionales.join(", ")) : nombresProf.length > 1 ? "Lo hacen todos" : ""}</small>
+        </div>`).join("")}
+        <div class="pacts"><button type="button" class="pri" id="sAdd">+ Agregar servicio</button><button type="button" id="sExp">Exportar Excel</button><button type="button" id="sImp">Importar Excel</button></div>
+        <div class="box2"><h4>Horarios de atención</h4>${profs.map((p) => `<div><b>${esc(p.nombre)}:</b> ${esc(textoHorarios(p.horarios || D.horarios))}</div>`).join("")}</div>
+        ${D.obras_sociales ? `<div class="box2"><h4>Obras sociales y prepagas</h4>${esc(D.obras_sociales)}</div>` : ""}
+        <div class="box2"><h4>Bloqueos (vacaciones y feriados)</h4>En la versión real se cargan desde acá y el asistente deja de ofrecer esos días.</div>`;
+      pin.querySelectorAll(".srow").forEach((row) => {
+        const i = Number(row.dataset.i);
+        row.querySelectorAll("[data-k]").forEach((inp) => (inp.onchange = () => {
+          const k = inp.dataset.k; servicios[i][k] = k === "duracion" ? Number(inp.value) : inp.value;
+          toast("Cambio aplicado en la demo. En la versión real, el asistente lo usa al instante.");
+        }));
+      });
+      $("#sAdd").onclick = () => { servicios.push({ nombre: "Nuevo servicio", duracion: 30, precio: null, profesionales: [] }); serviciosTab(pin); };
+      $("#sExp").onclick = $("#sImp").onclick = () => toast("Disponible en la versión real: se exporta e importa la lista de servicios en Excel.");
+    }
+    function textoHorarios(h) {
+      if (!h) return "no informados";
+      const orden = ["lun", "mar", "mie", "jue", "vie", "sab", "dom"];
+      const t = orden.filter((k) => Array.isArray(h[k]) && h[k].length).map((k) => `${DCORTO[CLAVE.indexOf(k)]} ${h[k].map((r) => `${r[0]} a ${r[1]}`).join(" y ")}`);
+      return t.length ? t.join(" · ") : "no informados";
+    }
+  }
+})();
+</script>
+</body>
+</html>
