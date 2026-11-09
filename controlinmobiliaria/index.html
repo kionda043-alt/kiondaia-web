@@ -272,7 +272,7 @@ function pintarResumen(){
   $("#stats").querySelectorAll("[data-filtro]").forEach(b => b.onclick = () => { filtroEstado = b.dataset.filtro; ir("pBots"); pintarFiltros(); pintarBots(); });
   $("#plata").innerHTML = `
     <div class="money"><span>Cobrado este mes</span><b>${usd(resumen.cobrado_mes)}</b></div>
-    <div class="money"><span>A cobrar este mes<br><span class="small">cierres de prueba + mensuales, incluye atrasos</span></span><b>${usd(resumen.a_cobrar_mes)}</b></div>
+    <div class="money"><span>A cobrar este mes<br><span class="small">mensuales, incluye atrasos</span></span><b>${usd(resumen.a_cobrar_mes)}</b></div>
     <div class="money"><span>Deuda atrasada</span><b style="color:var(--pausado)">${usd(resumen.deuda)}</b></div>`;
   const m = resumen.mirar || [];
   $("#mirar").innerHTML = m.length ? m.map(x => `<li class="item" data-id="${x.id}"><div class="t"><div class="n">${esc(x.nombre)}</div><div class="s">${esc(x.motivo)}</div></div><span aria-hidden="true">›</span></li>`).join("")
@@ -366,8 +366,8 @@ async function abrirFicha(id, silencioso){
       <dt>Mail</dt><dd>${c.contacto_mail?`<a href="mailto:${esc(c.contacto_mail)}">${esc(c.contacto_mail)}</a>`:"—"}</dd>
       <dt>Web</dt><dd>${c.web?`<a href="${esc(c.web)}" target="_blank" rel="noopener">${esc(c.web.replace(/^https?:\/\//,""))}</a>`:"—"}</dd>
       <dt>Alta</dt><dd>${fmt(c.creado)}</dd>
-      <dt>Prueba</dt><dd>${fmt(c.inicio_prueba)} → ${fmt(c.fin_prueba)}</dd>
-      <dt>Precios</dt><dd>${usd(c.precio_instalacion)} + ${usd(c.precio_cierre)} + ${usd(c.precio_mensual)}/mes</dd>
+      ${c.inicio_prueba ? `<dt>Prueba</dt><dd>${fmt(c.inicio_prueba)} → ${fmt(c.fin_prueba)}</dd>` : ""}
+      <dt>Precios</dt><dd>${usd(c.precio_instalacion)}${Number(c.precio_cierre) > 0 ? " + " + usd(c.precio_cierre) + " (cierre de prueba)" : " única vez"} + ${usd(c.precio_mensual)}/mes</dd>
       <dt>Código</dt><dd>${esc(c.slug||"—")}</dd>
     </dl></div>
 
@@ -392,9 +392,10 @@ async function abrirFicha(id, silencioso){
 }
 
 /* ---------- Registrar pago ---------- */
+function textoInstalacion(c){ return Number(c.precio_cierre) > 0 ? "Instalación: arranca el mes de prueba (condición especial)." : "Instalación (pago único): pasa a Activo. Después registrá el primer mensual."; }
 function conceptoSugerido(c){
+  if (!c.inicio_prueba && !c.pagado_hasta) return { concepto:"instalacion", monto:c.precio_instalacion, texto:textoInstalacion(c) };
   if (c.estado === "prueba") return { concepto:"cierre_prueba", monto:c.precio_cierre, texto:"Cierre de prueba: pasa a Activo y el primer mensual vence al mes." };
-  if (!c.inicio_prueba) return { concepto:"instalacion", monto:c.precio_instalacion, texto:"Instalación: arranca el mes de prueba." };
   if (["activo","atrasado","pausado"].includes(c.estado)) return { concepto:"mensual", monto:c.precio_mensual, texto:"Mensual: corre «pagado hasta» un mes y reactiva si estaba pausado o atrasado." };
   return { concepto:"otro", monto:0, texto:"Otro pago: no cambia el estado." };
 }
@@ -415,7 +416,7 @@ function hojaPago(c){
     <input id="pNota" placeholder="Ej.: pagó en pesos al cambio del día">
     <button class="btn" id="pOk">Registrar ${usd(s.monto)}</button>
     <button class="btn sec" id="pCancel">Cancelar</button>`);
-  const ayudas = { instalacion:"Instalación: arranca el mes de prueba.", cierre_prueba:"Cierre de prueba: pasa a Activo y el primer mensual vence al mes.", mensual:"Mensual: corre «pagado hasta» un mes y reactiva si estaba pausado o atrasado.", otro:"Otro pago: no cambia el estado." };
+  const ayudas = { instalacion:textoInstalacion(c), cierre_prueba:"Cierre de prueba: pasa a Activo y el primer mensual vence al mes.", mensual:"Mensual: corre «pagado hasta» un mes y reactiva si estaba pausado o atrasado.", otro:"Otro pago: no cambia el estado." };
   const montos = { instalacion:c.precio_instalacion, cierre_prueba:c.precio_cierre, mensual:c.precio_mensual, otro:0 };
   const upd = () => $("#pOk").textContent = "Registrar " + usd($("#pMonto").value);
   $("#pConcepto").onchange = () => { const k = $("#pConcepto").value; $("#pAyuda").textContent = ayudas[k]; $("#pMonto").value = montos[k]; upd(); };
@@ -457,7 +458,7 @@ function confirmarAccion(c, acc){
 
 /* ---------- Alta / edición ---------- */
 function formCliente(c){
-  const n = !c; c = c || { precio_instalacion:150, precio_cierre:150, precio_mensual:30 };
+  const n = !c; c = c || { precio_instalacion:150, precio_cierre:0, precio_mensual:30 };
   const v = (k) => esc(c[k] ?? "");
   $("#pForm").innerHTML = `
     ${n ? "" : `<button class="back" id="eBack">‹ Volver</button>`}
@@ -478,7 +479,7 @@ function formCliente(c){
     </div>
     <div class="card">
       <div style="font-weight:700">Precios (USD)</div>
-      <p class="small" style="margin:4px 0 0">Cambialos solo si acordaste una condición especial.</p>
+      <p class="small" style="margin:4px 0 0">Precio vigente: USD 150 de instalación (única vez) + USD 30 por mes. «Cierre» va en 0: solo se usa si acordaste un mes de prueba.</p>
       <div class="row2" style="grid-template-columns:1fr 1fr 1fr">
         <div><label for="ePi">Instalación</label><input id="ePi" type="number" inputmode="decimal" value="${v("precio_instalacion")}"></div>
         <div><label for="ePc">Cierre</label><input id="ePc" type="number" inputmode="decimal" value="${v("precio_cierre")}"></div>
@@ -487,8 +488,9 @@ function formCliente(c){
       ${n ? `
       <label class="check"><input type="checkbox" id="ePagoIni" checked> Ya pagó la instalación</label>
       <div id="ePagoBox">
+        <label class="check"><input type="checkbox" id="ePagoMes" checked> Pagó también el primer mes</label>
         <div class="row2">
-          <div><label for="eFecha">Inicio de la prueba</label><input id="eFecha" type="date" value="${hoyISO()}"></div>
+          <div><label for="eFecha">Fecha del pago</label><input id="eFecha" type="date" value="${hoyISO()}"></div>
           <div><label for="eMedio">Medio</label><select id="eMedio">${MEDIOS.map(m=>`<option>${m}</option>`).join("")}</select></div>
         </div>
       </div>` : `
@@ -528,9 +530,13 @@ function formCliente(c){
       $("#eMsg").innerHTML = `<div class="msg err">${res.error.code==="23505" ? "Ya existe un cliente con ese código." : esc(res.error.message)}</div>`; return; }
     if (n && $("#ePagoIni").checked){
       const f = $("#eFecha").value || hoyISO();
-      await sb.from("clientes").update({ inicio_prueba: f }).eq("id", res.data.id);
+      if (reg.precio_cierre > 0) await sb.from("clientes").update({ inicio_prueba: f }).eq("id", res.data.id);
       const p = await sb.rpc("control_registrar_pago", { p_cliente:res.data.id, p_monto:reg.precio_instalacion, p_concepto:"instalacion", p_medio:$("#eMedio").value, p_nota:null, p_fecha:f });
       if (p.error) toast("Cliente creado, pero falló el pago: " + p.error.message);
+      else if (reg.precio_cierre == 0 && $("#ePagoMes").checked && reg.precio_mensual > 0){
+        const m = await sb.rpc("control_registrar_pago", { p_cliente:res.data.id, p_monto:reg.precio_mensual, p_concepto:"mensual", p_medio:$("#eMedio").value, p_nota:null, p_fecha:f });
+        if (m.error) toast("Cliente creado, pero falló el primer mensual: " + m.error.message);
+      }
     }
     e.target.disabled = false;
     toast(n ? "Cliente dado de alta" : "Cambios guardados");
