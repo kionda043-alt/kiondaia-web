@@ -363,7 +363,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       ? `${saludoHora()}. Soy una demo del asistente virtual que podría tener un negocio con turnos.\nPara esta prueba usamos ${D.nombre}, un negocio ficticio, con sus servicios, horarios y una agenda de ejemplo.\nPuede pedir un turno como lo haría un ${persona()}. ¿Le gustaría hacerme alguna pregunta antes de empezar la simulación?`
       : `${saludoHora()}. Soy una demo del asistente virtual que podría tener ${D.nombre}.\n${basica ? `Para esta prueba cargamos servicios típicos de ejemplo y una agenda de ejemplo; los servicios reales se cargan en minutos desde el panel.` : `Para esta prueba cargamos los servicios y horarios publicados en ${origen} y una agenda de ejemplo.`}\nPuede pedir un turno como lo haría un ${persona()}. ¿Le gustaría hacerme alguna pregunta antes de empezar la simulación?`;
   }
-  const PRECIO_HTML = `<div class="pm"><div><b>USD 150</b> de instalación, con <b>1 mes de prueba</b> incluido</div><div>Si le convence: <b>USD 150</b> más y <b>USD 30 por mes</b></div><small>Si no le convence, no paga nada más. Incluye su WhatsApp conectado, la agenda, los recordatorios y el panel.</small></div>`;
+  const PRECIO_HTML = `<div class="pm"><div><b>USD 150</b> de instalación</div><div>y <b>USD 30 por mes</b> de mantenimiento</div><small>Incluye su WhatsApp conectado, la agenda, los recordatorios y el panel. El abono es mes a mes.</small></div>`;
 
   function textoRecordatorio(t) {
     const nom = (t.cliente || "").split(" ")[0];
