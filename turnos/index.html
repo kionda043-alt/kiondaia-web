@@ -180,6 +180,7 @@ form.in button:disabled{opacity:.45}
 .badge{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:6px}
 .badge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
 .b-reservado{background:#e8f1fb;color:#1e4f8a}.b-confirmado{background:#dcfce7;color:#15803d}.b-cancelado{background:#eef0f2;color:#4b5563}.b-ausente{background:#fde8e8;color:#b91c1c}.b-asistio{background:#f1efe9;color:#57534e}
+.b-espera{background:#f3e8ff;color:#7e22ce}
 .b-para_contactar{background:#dcfce7;color:#15803d}.b-interesado{background:#fef3c7;color:#a16207}.b-explorando{background:#eef0f2;color:#4b5563}
 .tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;background:#f1efe9;color:var(--mute)}
 .tag.ej{background:#eef2ff;color:#4338ca}.tag.mia{background:var(--wa);color:#fff}
@@ -471,6 +472,12 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       });
       msgs.appendChild(el);
     }
+    function espera(entry) {
+      const el = document.createElement("div"); el.className = "hint";
+      el.innerHTML = `Anotado en la lista de espera: ${esc(entry.texto)}. Si se libera un turno, el negocio le escribe.<button type="button">Ver panel</button>`;
+      const b = el.querySelector("button"); nodp(b); b.onclick = () => $("#openPanel").click();
+      msgs.appendChild(el);
+    }
     function cierre(entry) {
       const el = document.createElement("div"); el.className = "kclose";
       const wa = `https://wa.me/${BOT_WA}?text=${encodeURIComponent(`Hola, vengo por la demo de turnos de ${D.nombre} (código ${D.slug})`)}`;
@@ -508,6 +515,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         if (e.r === "fin") return cierre(e);
         if (e.r === "hint") return hint();
         if (e.r === "rec") return recordatorio(e);
+        if (e.r === "esp") return espera(e);
         add(e.r, e.t);
         if (e.botones && e.botones.length) { if (i !== s.log.length - 1) e.usado = true; slots(e); }
       });
@@ -558,6 +566,10 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         const e = { r: "b", t: reply, botones: Array.isArray(j.botones) ? j.botones : [] };
         s.log.push(e);
         if (e.botones.length) slots(e);
+        if (m0 === "simulacion" && j.espera && j.espera.texto) {
+          s.log.push({ r: "esp", texto: j.espera.texto }); espera(s.log[s.log.length - 1]);
+          PANEL_N = 1; badge();
+        }
         if (m0 === "simulacion" && j.turno) {
           TURNO = { ...j.turno, cliente: j.turno.cliente || "" };
           if (j.turno.estado === "cancelado") { PANEL_N = 1; badge(); }
@@ -653,6 +665,7 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
       const dias = Array.from({ length: 10 }, (_, i) => masDias(hoy, i - 3));
       const mio = data.agenda.find((t) => esMio(t) && t.estado !== "cancelado");
       pin.innerHTML = `
+        ${data.conversacion?.espera ? `<div class="box2"><b>Lista de espera:</b> ${esc(data.conversacion.espera.texto || "")}. Si alguien cancela en ese horario, el asistente le avisa primero a esta persona.</div>` : ""}
         <p class="pintro">${mio ? `<b>Su turno</b> está marcado en verde: ${esc(mio.servicio)}${profs.length > 1 ? " con " + esc(mio.profesional) : ""}, ${esc(dLabel(ymd(mio.inicio)))} a las ${hhmm(mio.inicio)}. ` : ""}Los demás turnos son de ejemplo, para que vea cómo queda una semana real.</p>
         <div class="vsw"><button type="button" data-v="dia" class="${vista === "dia" ? "on" : ""}">Día</button><button type="button" data-v="semana" class="${vista === "semana" ? "on" : ""}">Semana</button></div>
         <div id="agv"></div>`;
@@ -771,9 +784,11 @@ summary{cursor:pointer;color:var(--s);font-size:14px;font-weight:600}
         su = `<div class="mtit" style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--wad);margin:4px 0 6px">Su conversación</div>
         <div class="lead mia"><div class="lh"><span class="tag mia">Su consulta</span>
           ${miT ? `<span class="badge b-${esc(miT.estado)}">${esc(ESTADO[miT.estado] || miT.estado)}</span>` : `<span class="badge b-${esc(c.interes)}">${esc(INTERES[c.interes] || "")}</span>`}
+          ${c.espera ? `<span class="badge b-espera">Lista de espera</span>` : ""}
           <time>${esc(cuando(c.fecha))}</time></div>
           <p>${esc(c.resumen || "Conversación en curso.")}</p>
           ${miT ? `<div class="kv"><b>Turno:</b> ${esc(miT.servicio)}${profs.length > 1 ? " con " + esc(miT.profesional) : ""}, ${esc(dLabel(ymd(miT.inicio)))} ${hhmm(miT.inicio)}</div>` : ""}
+          ${c.espera ? `<div class="kv"><b>Lista de espera:</b> ${esc(c.espera.texto || "")} · si se libera, se le avisa por WhatsApp</div>` : ""}
           ${c.nombre ? `<div class="kv"><b>${salud() ? "Paciente" : "Cliente"}:</b> ${esc(c.nombre)}${c.telefono ? " · " + esc(c.telefono) : ""}</div>` : ""}
           ${(c.mensajes || []).length ? `<details><summary>Ver conversación</summary><div class="conv">${c.mensajes.map((m) => `<div class="m ${m.role === "user" ? "u" : "b"}">${esc(m.text)}</div>`).join("")}</div></details>` : ""}
         </div>`;
