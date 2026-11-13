@@ -16,7 +16,7 @@ const IMG = "https://kiondaia.com/dobleas/ejemplo-service.jpg";
 // ---------- Botones (máx 3 por mensaje, títulos de hasta 20 letras) ----------
 const B_VENDEDOR = [["PROBAR", "🏍️ Probar el bot"], ["PANEL", "📊 Ver el panel"], ["LUCAS", "🙋 Hablar con Lucas"]];
 const B_DEMO = [["D_AVISO", "🔔 Ver un aviso"], ["D_SERVICE", "🧾 Imagen service"], ["SALIR", "↩️ Volver a Kionda"]];
-const B_AVISO = [["D_TURNO", "📅 Sí, quiero turno"], ["D_SEMANA", "⏰ La semana que viene"], ["SALIR", "↩️ Volver a Kionda"]];
+const B_AVISO = [["D_TURNO", "📅 Sí, quiero turno"], ["D_SEMANA", "⏰ Semana que viene"], ["SALIR", "↩️ Volver a Kionda"]];
 
 // ---------- Personalidades ----------
 const VENDEDOR = `Sos el asistente de ventas de kionda IA, la agencia de Lucas (Buenos Aires) que arma bots y apps con inteligencia artificial para negocios.
@@ -73,13 +73,25 @@ const botones = (to: string, body: string, bs: string[][]) =>
 const imagen = (to: string, link: string, caption: string) => wa({ to, type: "image", image: { link, caption } });
 
 // ---------- Gemini ----------
+// Gemini pide que la charla empiece con el usuario y alterne turnos: juntamos mensajes seguidos del mismo lado
+function ordenar(h: { r: string; t: string }[]) {
+  const out: { role: string; parts: { text: string }[] }[] = [];
+  for (const m of h) {
+    const role = m.r === "u" ? "user" : "model";
+    if (!out.length && role === "model") continue;
+    const last = out[out.length - 1];
+    if (last && last.role === role) last.parts[0].text += "\n" + m.t;
+    else out.push({ role, parts: [{ text: m.t }] });
+  }
+  return out;
+}
 async function ia(sistema: string, historial: { r: string; t: string }[]) {
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: sistema }] },
-      contents: historial.map((m) => ({ role: m.r === "u" ? "user" : "model", parts: [{ text: m.t }] })),
+      contents: ordenar(historial),
       generationConfig: { temperature: 0.6, maxOutputTokens: 400 },
     }),
   });
