@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doble As · Panel del taller</title>
+<meta name="theme-color" content="#0b0c0a">
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo.webp">
+
+<style>
+@font-face{font-family:Oswald;font-weight:500;font-display:swap;src:url(fonts/oswald-500.woff2) format("woff2")}@font-face{font-family:Oswald;font-weight:700;font-display:swap;src:url(fonts/oswald-700.woff2) format("woff2")}@font-face{font-family:Inter;font-weight:400 700;font-display:swap;src:url(fonts/inter.woff2) format("woff2")}
+:root{--bg:#0b0c0a;--card:#16180f;--card2:#1e2116;--line:#2b2f20;--txt:#f1f2ea;--mut:#9aa08a;--lime:#b8d432;--lime2:#d5ec5c;--red:#ff5a4f;--amber:#f2b33d;--ok:#4fd18b;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font:15px/1.45 Inter,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.h{font-family:Oswald,"Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.demo{background:var(--lime);color:#111;font-weight:700;font-size:12.5px;text-align:center;padding:6px 10px}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,12,10,.94);backdrop-filter:blur(8px);z-index:20}
+header img{width:44px;height:44px;border-radius:50%}
+header .t{line-height:1.1}header .t b{font-family:Oswald;font-size:20px;letter-spacing:.03em}header .t span{display:block;color:var(--mut);font-size:12px}
+.layout{display:flex;min-height:calc(100vh - 100px)}
+nav.side{display:none}
+main{flex:1;padding:16px 16px 110px;max-width:980px;margin:0 auto;width:100%}
+.title{display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px;gap:10px}
+.title h2{font-size:26px}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g4{grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat b{font-family:Oswald;font-size:32px;color:var(--lime);display:block;line-height:1.1}.stat span{color:var(--mut);font-size:13px}
+.sec{margin:22px 0 10px;font-size:18px;color:var(--lime)}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}
+.row .grow{flex:1;min-width:0}.row .grow b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.row small{color:var(--mut);font-size:13px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-weight:700;color:var(--lime);flex:none;border:1px solid var(--line)}
+.tag{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.t-red{background:rgba(255,90,79,.15);color:var(--red)}.t-amb{background:rgba(242,179,61,.15);color:var(--amber)}.t-ok{background:rgba(79,209,139,.13);color:var(--ok)}.t-lime{background:rgba(184,212,50,.15);color:var(--lime)}.t-mut{background:var(--card2);color:var(--mut)}
+.btn{background:var(--lime);color:#111;border:0;border-radius:11px;padding:11px 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn:active{transform:scale(.98)}.btn.sec2{background:var(--card2);color:var(--txt);border:1px solid var(--line)}.btn.sm{padding:7px 11px;font-size:13px;border-radius:9px}.btn.full{width:100%}
+.btn.wa{background:#25d366;color:#08210f}
+input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--lime)}
+label{display:block;font-size:13px;color:var(--mut);margin:12px 0 5px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card2);border-radius:99px;padding:8px 12px;font-size:13.5px;cursor:pointer;user-select:none}
+.chip.on{background:var(--lime);color:#111;border-color:var(--lime);font-weight:600}
+.search{margin-bottom:12px}
+.tabsx{display:flex;gap:8px;overflow:auto;margin-bottom:12px}
+.empty{color:var(--mut);text-align:center;padding:24px 8px}
+/* bottom nav */
+nav.bot{position:fixed;bottom:0;left:0;right:0;background:rgba(17,18,13,.97);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 6px calc(8px + env(safe-area-inset-bottom));z-index:30}
+nav button{background:none;border:0;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;cursor:pointer;padding:4px 8px;border-radius:10px}
+nav button svg{width:23px;height:23px}
+nav button.on{color:var(--lime)}
+nav.bot .plus{background:var(--lime);color:#111;width:54px;height:54px;border-radius:50%;margin-top:-22px;justify-content:center;box-shadow:0 6px 20px rgba(184,212,50,.35)}
+nav.bot .plus svg{width:28px;height:28px}
+/* modal */
+.mod{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.mod.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));border:1px solid var(--line)}
+.sheet .x{float:right;background:var(--card2);border:0;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:18px}
+.sheet h3{font-size:22px;margin-bottom:6px}
+.phone{background:#0b141a;border-radius:16px;padding:14px;margin:12px 0}
+.phone .hd{display:flex;align-items:center;gap:8px;color:#e9edef;font-size:13px;margin-bottom:10px}.phone .hd img{width:28px;height:28px;border-radius:50%}
+.bub{background:#202c33;color:#e9edef;padding:9px 11px;border-radius:0 10px 10px 10px;max-width:88%;font-size:14px;white-space:pre-line}
+.bub img{width:100%;border-radius:8px;margin-bottom:6px;display:block}
+.wbtns{display:grid;gap:5px;margin-top:5px;max-width:88%}.wbtns div{background:#202c33;color:#53bdeb;text-align:center;padding:8px;border-radius:9px;font-size:14px}
+.note{font-size:12.5px;color:var(--mut);margin-top:8px}
+.hist{border-left:2px solid var(--lime);padding-left:12px;margin:10px 0 0 6px}
+.hist div{margin-bottom:12px;font-size:14px}.hist b{color:var(--lime)}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--lime);color:#111;font-weight:700;padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;font-size:12px}
+.day b{display:block;font-size:17px;font-family:Oswald}.day.on{border-color:var(--lime);background:rgba(184,212,50,.12)}.day .bar{height:4px;border-radius:2px;background:var(--line);margin-top:5px;overflow:hidden}.day .bar i{display:block;height:100%;background:var(--lime)}
+.switch{width:46px;height:27px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;flex:none;border:0}.switch::after{content:"";position:absolute;width:21px;height:21px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s}.switch.on{background:var(--lime)}.switch.on::after{left:22px}
+.kpi-bar{height:8px;background:var(--card2);border-radius:5px;overflow:hidden;margin-top:8px}.kpi-bar i{display:block;height:100%;background:var(--lime)}
+canvas{max-width:100%;border-radius:12px;display:block}
+@media(min-width:900px){
+ nav.bot{display:none}
+ nav.side{display:flex;flex-direction:column;gap:4px;width:220px;padding:16px 10px;border-right:1px solid var(--line);position:sticky;top:69px;height:calc(100vh - 69px)}
+ nav.side button{flex-direction:row;font-size:14.5px;gap:12px;padding:11px 14px;width:100%;justify-content:flex-start}
+ nav.side button.on{background:var(--card2)}
+ main{padding:24px 28px 60px}
+ .g4{grid-template-columns:repeat(4,1fr)}
+ .mod{align-items:center}.sheet{border-radius:20px}
+ .toast{bottom:30px}
+}
+</style>
+</head>
+<body>
+<div class="demo">MODO DEMO · Datos de ejemplo para mostrar cómo funciona</div>
+<header><img src="logo.webp" alt="Doble As"><div class="t"><b>DOBLE AS</b><span>Panel del taller · Floresta</span></div></header>
+<div class="layout">
+<nav class="side" id="side"></nav>
+<main id="app"></main>
+</div>
+<nav class="bot" id="bot"></nav>
+<div class="mod" id="mod"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== DATOS ===================== */
+const HOY=new Date();HOY.setHours(12,0,0,0);
+const DIA=864e5;
+const d=(n)=>new Date(HOY.getTime()+n*DIA);
+const P=(x)=>typeof x==="string"&&x.length===10?new Date(x+"T12:00"):new Date(x);
+const iso=(x)=>{const t=P(x);return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")};
+const fmt=(x)=>P(x).toLocaleDateString("es-AR",{day:"numeric",month:"short"});
+const fmtL=(x)=>P(x).toLocaleDateString("es-AR",{day:"numeric",month:"long",year:"numeric"});
+const money=(n)=>"$ "+Math.round(n).toLocaleString("es-AR");
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const TRABAJOS=["Cambio de aceite","Filtro de aceite","Filtro de aire","Bujía","Lubricación de cadena","Tensado de cadena","Kit de arrastre","Pastillas de freno","Líquido de frenos","Regulación de válvulas","Carburación / inyección","Batería","Revisión eléctrica","Cubiertas","Revisión general"];
+const ACEITES={mineral:"Mineral",semi:"Semisintético",sintetico:"Sintético"};
+
+const S={
+ config:{intervalos:{mineral:3500,semi:6000,sintetico:8500},meses:6,diasAntes:7,turnosOn:true,cupos:4,
+  horario:"Lunes a viernes de 9 a 18 · Sábados de 9 a 13",direccion:"Miranda 4514, Floresta, CABA",tel:"11 2296-8175",resena:"https://g.page/r/doble-as/review"},
+ clientes:[],taller:[],turnos:[],presupuestos:[],avisos:[]
+};
+
+function seed(){
+ const C=[
+  ["Martín Gómez","11 5821-4410","Honda CB 190R","A245KLM",2021,"semi",[[-190,8200],[-15,13900]]],
+  ["Lucía Fernández","11 3390-1276","Yamaha FZ 2.0","A118GHT",2019,"mineral",[[-140,21400],[-62,24600]]],
+  ["Diego Rossi","11 6702-9931","Bajaj Rouser NS 200","A390PQR",2022,"semi",[[-170,9800]]],
+  ["Carla Benítez","11 4477-0815","Honda Wave 110","A072BBN",2018,"mineral",[[-120,30100],[-48,33300]]],
+  ["Javier Ortiz","11 2865-3344","Kawasaki Z400","A501XZT",2023,"sintetico",[[-210,4100],[-35,11900]]],
+  ["Sofía Paredes","11 5590-7782","Motomel Skua 150","A333FJK",2020,"mineral",[[-75,15200]]],
+  ["Nahuel Acosta","11 3812-6650","Yamaha YBR 125","A208MNS",2017,"mineral",[[-160,40200],[-95,43500]]],
+  ["Gabriel Luna","11 6033-1029","Suzuki DR 650","A190DRS",2016,"semi",[[-230,51000],[-112,55400]]],
+  ["Valentina Ríos","11 4129-5503","Benelli TNT 15","A455BEN",2021,"mineral",[[-30,12600]]],
+  ["Emiliano Castro","11 7020-8817","Voge 300 DS","A611VGE",2024,"sintetico",[[-100,6200]]],
+  ["Rocío Medina","11 5234-6612","Yamaha R15","A720RRR",2022,"semi",[[-185,7400],[-9,12800]]],
+  ["Pablo Herrera","11 3967-4458","Gilera Smash 110","A066GSM",2019,"mineral",[[-55,22800]]],
+ ];
+ C.forEach(([nombre,tel,modelo,patente,anio,aceite,svs],i)=>{
+  const m={id:uid(),modelo,patente,anio,aceite,services:svs.map(([dd,km],j)=>({id:uid(),fecha:iso(d(dd)),km,aceite,
+   trabajos:j===svs.length-1&&i%3===0?["Cambio de aceite","Filtro de aceite","Filtro de aire","Lubricación de cadena","Revisión general"]:["Cambio de aceite","Filtro de aceite","Lubricación de cadena"],
+   precio:j===svs.length-1&&i%3===0?85000:52000,notas:""}))};
+  S.clientes.push({id:uid(),nombre,tel,acepta:i!==5,alta:iso(d(svs[0][0])),motos:[m]});
+ });
+ const M=(i)=>S.clientes[i].motos[0];
+ S.taller=[{id:uid(),moto:M(2).id,estado:"en_taller",ingreso:iso(d(-1)),trabajo:"Service completo + kit de arrastre"},
+  {id:uid(),moto:M(7).id,estado:"en_taller",ingreso:iso(d(-3)),trabajo:"Revisión eléctrica, no arranca en frío"},
+  {id:uid(),moto:M(8).id,estado:"lista",ingreso:iso(d(-2)),trabajo:"Pastillas de freno delanteras"}];
+ S.turnos=[{id:uid(),fecha:iso(d(1)),moto:M(1).id,motivo:"Cambio de aceite",origen:"bot"},
+  {id:uid(),fecha:iso(d(1)),moto:M(6).id,motivo:"Service",origen:"bot"},
+  {id:uid(),fecha:iso(d(2)),moto:M(11).id,motivo:"Ruido en la cadena",origen:"bot"},
+  {id:uid(),fecha:iso(d(4)),moto:M(5).id,motivo:"Cambio de aceite",origen:"taller"}];
+ S.presupuestos=[{id:uid(),moto:M(7).id,fecha:iso(d(-1)),estado:"enviado",items:[["Batería 12V 9Ah",68000],["Revisión y limpieza de bornes",15000],["Mano de obra",20000]]},
+  {id:uid(),moto:M(2).id,fecha:iso(d(-2)),estado:"aprobado",items:[["Kit de arrastre",95000],["Service completo",80000]]}];
+ // historial de avisos (simulado)
+ const H=[[3,-60,"volvio"],[0,-20,"volvio"],[4,-40,"volvio"],[10,-14,"volvio"],[6,-10,"respondio"],[1,-6,"enviado"],[11,-4,"respondio"],[9,-2,"enviado"],[7,-25,"volvio"],[2,-30,"enviado"]];
+ S.avisos=H.map(([i,dd,estado])=>({id:uid(),moto:M(i).id,fecha:iso(d(dd)),tipo:"Recordatorio de service",estado}));
+}
+seed();
+
+/* ===================== LÓGICA ===================== */
+const allMotos=()=>S.clientes.flatMap(c=>c.motos.map(m=>({...m,cliente:c})));
+const motoById=(id)=>allMotos().find(m=>m.id===id);
+const ultimo=(m)=>m.services[m.services.length-1];
+function kmMes(m){
+ const s=m.services;if(s.length<2)return 700;
+ const a=s[s.length-2],b=s[s.length-1];const meses=Math.max(.5,(P(b.fecha)-P(a.fecha))/DIA/30.4);
+ return Math.max(150,Math.round((b.km-a.km)/meses));
+}
+function proximo(m){
+ const u=ultimo(m);if(!u)return null;
+ const int=S.config.intervalos[u.aceite]||S.config.intervalos.mineral;
+ const km=u.km+int, porKm=int/kmMes(m), meses=Math.min(S.config.meses,porKm);
+ const fecha=new Date(P(u.fecha).getTime()+meses*30.4*DIA);
+ const dias=Math.round((fecha-HOY)/DIA);
+ const estado=dias<0?"vencido":dias<=S.config.diasAntes?"pronto":"ok";
+ return {km,fecha,dias,estado,motivo:porKm<S.config.meses?"km":"tiempo"};
+}
+const tagEstado=(p)=>!p?'<span class="tag t-mut">Sin datos</span>':p.estado==="vencido"?`<span class="tag t-red">Vencido hace ${-p.dias} d</span>`:p.estado==="pronto"?`<span class="tag t-amb">En ${p.dias} días</span>`:`<span class="tag t-ok">${fmt(p.fecha)}</span>`;
+const ini=(n)=>n.split(" ").map(x=>x[0]).slice(0,2).join("");
+
+/* ===================== UI BASE ===================== */
+const I={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-1.5-5-4-5.6"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+ wrench:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0 5 5L22 14l-2 2-2.3-2.3a4 4 0 0 0-5-5L10 11 3 18l3 3 7-7 1.7-1.7"/></svg>',
+ menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+ doc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7M9 8h4"/></svg>',
+ bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 13.7H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10.3 3V3a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 17 4.6l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.4 1.9V9a1.7 1.7 0 0 0 1.6 1h.1a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg>',
+};
+const VIEWS=[["inicio","Inicio",I.home],["clientes","Clientes",I.users],["service","Cargar service",I.plus],["taller","En el taller",I.wrench],["turnos","Turnos",I.cal],["presupuestos","Presupuestos",I.doc],["avisos","Avisos de WhatsApp",I.bell],["ajustes","Ajustes",I.gear]];
+let VIEW="inicio";
+function navs(){
+ document.getElementById("side").innerHTML=VIEWS.map(([k,t,ic])=>`<button class="${VIEW===k?"on":""}" onclick="go('${k}')">${ic}${t}</button>`).join("");
+ const b=[["inicio","Inicio",I.home],["clientes","Clientes",I.users],["service","",I.plus],["taller","Taller",I.wrench],["mas","Más",I.menu]];
+ const more=["turnos","presupuestos","avisos","ajustes"].includes(VIEW);
+ document.getElementById("bot").innerHTML=b.map(([k,t,ic])=>`<button class="${k==="service"?"plus":""} ${(VIEW===k||(k==="mas"&&more))&&k!=="service"?"on":""}" onclick="${k==="mas"?"masMenu()":`go('${k}')`}" aria-label="${t||"Cargar service"}">${ic}${t?`<span>${t}</span>`:""}</button>`).join("");
+}
+function go(v,arg){VIEW=v;navs();closeMod();(R[v]||R.inicio)(arg);window.scrollTo(0,0)}
+const app=()=>document.getElementById("app");
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),2400)}
+function openMod(html){document.getElementById("sheet").innerHTML=`<button class="x" onclick="closeMod()">✕</button>`+html;document.getElementById("mod").classList.add("on")}
+function closeMod(){document.getElementById("mod").classList.remove("on")}
+document.getElementById("mod").addEventListener("click",e=>{if(e.target.id==="mod")closeMod()});
+function masMenu(){openMod(`<h3 class="h">Más</h3><div class="grid" style="margin-top:12px">${VIEWS.slice(4).map(([k,t,ic])=>`<button class="btn sec2 full" style="justify-content:flex-start" onclick="go('${k}')">${ic.replace("<svg",'<svg width="20" height="20"')} ${t}</button>`).join("")}</div>`)}
+
+/* vista previa de WhatsApp */
+function waPreview(texto,btns=[],img=""){
+ return `<div class="phone"><div class="hd"><img src="logo.webp" alt="">Doble As Taller de Motos</div>
+ <div class="bub">${img?`<img src="${img}" alt="">`:""}${esc(texto)}</div>
+ ${btns.length?`<div class="wbtns">${btns.map(b=>`<div>${esc(b)}</div>`).join("")}</div>`:""}</div>`;
+}
+function msgRecordatorio(m){
+ const p=proximo(m);const nom=m.cliente.nombre.split(" ")[0];
+ return `¡Hola ${nom}! Te escribimos de Doble As 🔧\nYa le toca el cambio de aceite a tu ${m.modelo} (último service: ${fmt(ultimo(m).fecha)}, ${ultimo(m).km.toLocaleString("es-AR")} km).\n¿Querés que te reservemos un turno?`;
+}
+
+/* ===================== VISTAS ===================== */
+const R={};
+R.inicio=()=>{
+ const motos=allMotos().map(m=>({m,p:proximo(m)}));
+ const venc=motos.filter(x=>x.p&&x.p.dias<=15).sort((a,b)=>a.p.dias-b.p.dias);
+ const env=S.avisos.length, volv=S.avisos.filter(a=>a.estado==="volvio").length;
+ const hoyT=S.turnos.filter(t=>t.fecha===iso(d(1))||t.fecha===iso(HOY));
+ app().innerHTML=`
+ <div class="title"><h2 class="h">Hola, Nicolás</h2><button class="btn sm" onclick="go('service')">+ Service</button></div>
+ <div class="grid g4">
+  <div class="card stat"><b>${volv}</b><span>clientes volvieron por los avisos (60 días)</span></div>
+  <div class="card stat"><b>${env}</b><span>avisos enviados por WhatsApp</span></div>
+  <div class="card stat"><b>${S.taller.length}</b><span>motos en el taller</span></div>
+  <div class="card stat"><b>${S.turnos.length}</b><span>turnos próximos (${S.turnos.filter(t=>t.origen==="bot").length} los dio el bot)</span></div>
+ </div>
+ <div class="card" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:baseline"><b>Efectividad de los avisos</b><span class="h" style="color:var(--lime);font-size:22px">${Math.round(volv/env*100)}%</span></div>
+ <div class="kpi-bar"><i style="width:${volv/env*100}%"></i></div><p class="note">De cada 10 clientes que recibieron el aviso, ${Math.round(volv/env*10)} volvieron al taller.</p></div>
+ <h3 class="sec h">Les toca service (próximos 15 días)</h3>
+ <div class="card">${venc.length?venc.map(({m,p})=>`<div class="row"><div class="av">${ini(m.cliente.nombre)}</div><div class="grow"><b>${esc(m.cliente.nombre)}</b><small>${esc(m.modelo)}</small><div style="margin-top:4px">${tagEstado(p)}</div></div><button class="btn sm sec2" onclick="verAviso('${m.id}')">Aviso</button></div>`).join(""):'<div class="empty">Nadie tiene el service vencido 👌</div>'}</div>
+ <h3 class="sec h">Próximos turnos</h3>
+ <div class="card">${S.turnos.slice().sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,4).map(t=>{const m=motoById(t.moto);return `<div class="row"><div class="av" style="font-size:12px">${fmt(t.fecha).replace(" ","<br>")}</div><div class="grow"><b>${esc(m.cliente.nombre)}</b><small>${esc(m.modelo)} · ${esc(t.motivo)}</small></div>${t.origen==="bot"?'<span class="tag t-lime">Por el bot</span>':""}</div>`}).join("")}</div>`;
+};
+
+R.clientes=(q="")=>{
+ const list=S.clientes.filter(c=>(c.nombre+c.tel+c.motos.map(m=>m.modelo+m.patente).join(" ")).toLowerCase().includes(q.toLowerCase()));
+ app().innerHTML=`<div class="title"><h2 class="h">Clientes</h2><button class="btn sm" onclick="nuevoCliente()">+ Nuevo</button></div>
+ <input class="search" placeholder="Buscar por nombre, moto o patente" value="${esc(q)}" oninput="R.clientes(this.value);this.focus();this.setSelectionRange(this.value.length,this.value.length)">
+ <div class="card">${list.map(c=>{const m=c.motos[0];const p=m&&proximo(m);return `<div class="row" style="cursor:pointer" onclick="fichaCliente('${c.id}')"><div class="av">${ini(c.nombre)}</div><div class="grow"><b>${esc(c.nombre)}</b><small>${c.motos.map(x=>esc(x.modelo)).join(", ")} · ${c.acepta?"✓ Acepta avisos":"✗ Sin avisos"}</small></div>${tagEstado(p)}</div>`}).join("")||'<div class="empty">No hay resultados</div>'}</div>`;
+};
+
+function fichaCliente(id){
+ const c=S.clientes.find(x=>x.id===id);
+ openMod(`<h3 class="h">${esc(c.nombre)}</h3><p class="note" style="margin:0">${esc(c.tel)} · Cliente desde ${fmt(c.alta)}</p>
+ <div class="row" style="margin-top:8px"><div class="grow"><b>Avisos por WhatsApp</b><small>El cliente aceptó recibir recordatorios</small></div><button class="switch ${c.acepta?"on":""}" onclick="c=S.clientes.find(x=>x.id==='${c.id}');c.acepta=!c.acepta;this.classList.toggle('on');toast(c.acepta?'Avisos activados':'Avisos desactivados')"></button></div>
+ ${c.motos.map(m=>{const p=proximo(m);return `<div class="card" style="margin-top:12px;background:var(--card2)">
+  <div style="display:flex;justify-content:space-between;gap:8px"><div><b class="h" style="font-size:19px">${esc(m.modelo)}</b><br><small style="color:var(--mut)">${esc(m.patente)} · ${m.anio} · Aceite ${ACEITES[m.aceite].toLowerCase()}</small></div>${tagEstado(p)}</div>
+  ${p?`<p style="margin-top:10px;font-size:14px">Próximo service: <b>${p.km.toLocaleString("es-AR")} km</b> o el <b>${fmtL(p.fecha)}</b>, lo que llegue primero.<br><small style="color:var(--mut)">Hace unos ${kmMes(m).toLocaleString("es-AR")} km por mes.</small></p>`:""}
+  <div class="hist">${m.services.slice().reverse().map(s=>`<div><b>${fmtL(s.fecha)}</b> · ${s.km.toLocaleString("es-AR")} km<br>${s.trabajos.map(esc).join(", ")}${s.precio?` · ${money(s.precio)}`:""}</div>`).join("")}</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" onclick="go('service','${m.id}')">+ Service</button><button class="btn sm sec2" onclick="verAviso('${m.id}')">Ver aviso</button>${m.services.length?`<button class="btn sm sec2" onclick="imagenService('${m.id}')">Imagen del último service</button>`:""}</div>
+ </div>`}).join("")}`);
+}
+
+function nuevoCliente(){
+ openMod(`<h3 class="h">Nuevo cliente</h3>
+ <label>Nombre y apellido</label><input id="nc_n" placeholder="Ej: Juan Pérez">
+ <label>WhatsApp</label><input id="nc_t" inputmode="tel" placeholder="11 1234-5678">
+ <label>Moto</label><input id="nc_m" placeholder="Ej: Honda CB 190R">
+ <div class="grid g2"><div><label>Patente</label><input id="nc_p" placeholder="A123BCD"></div><div><label>Año</label><input id="nc_a" inputmode="numeric" placeholder="2021"></div></div>
+ <label>Aceite que usa</label><select id="nc_ac">${Object.entries(ACEITES).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select>
+ <div class="row" style="margin-top:10px"><div class="grow"><b>Acepta avisos por WhatsApp</b><small>Preguntale: "¿Te avisamos cuando te toque el service?"</small></div><button class="switch on" id="nc_ok" onclick="this.classList.toggle('on')"></button></div>
+ <button class="btn full" style="margin-top:14px" onclick="guardarCliente()">Guardar cliente</button>`);
+}
+function guardarCliente(){
+ const v=(i)=>document.getElementById(i).value.trim();
+ if(!v("nc_n")||!v("nc_t")||!v("nc_m"))return toast("Completá nombre, WhatsApp y moto");
+ const c={id:uid(),nombre:v("nc_n"),tel:v("nc_t"),acepta:document.getElementById("nc_ok").classList.contains("on"),alta:iso(HOY),
+  motos:[{id:uid(),modelo:v("nc_m"),patente:v("nc_p").toUpperCase()||"—",anio:v("nc_a")||"—",aceite:v("nc_ac"),services:[]}]};
+ S.clientes.unshift(c);toast("Cliente guardado");go("service",c.motos[0].id);
+}
+
+R.service=(motoId)=>{
+ const motos=allMotos();
+ const sel=motoId||"";
+ app().innerHTML=`<div class="title"><h2 class="h">Cargar service</h2></div>
+ <div class="card">
+  <label style="margin-top:0">Moto</label>
+  <select id="sv_m" onchange="svMoto()"><option value="">Elegí la moto…</option>${motos.map(m=>`<option value="${m.id}" ${m.id===sel?"selected":""}>${esc(m.cliente.nombre)} · ${esc(m.modelo)} (${esc(m.patente)})</option>`).join("")}</select>
+  <p class="note">¿Cliente nuevo? <a href="#" style="color:var(--lime)" onclick="nuevoCliente();return false">Cargalo acá</a></p>
+  <div class="grid g2"><div><label>Kilómetros</label><input id="sv_km" inputmode="numeric" placeholder="Ej: 15400"></div>
+  <div><label>Fecha</label><input id="sv_f" type="date" value="${iso(HOY)}"></div></div>
+  <label>Aceite</label><div class="chips" id="sv_ac">${Object.entries(ACEITES).map(([k,v],i)=>`<span class="chip ${i===0?"on":""}" data-v="${k}" onclick="[...this.parentNode.children].forEach(x=>x.classList.remove('on'));this.classList.add('on')">${v}</span>`).join("")}</div>
+  <label>Trabajos realizados</label><div class="chips" id="sv_tr">${TRABAJOS.map((t,i)=>`<span class="chip ${i<2?"on":""}" onclick="this.classList.toggle('on')">${t}</span>`).join("")}</div>
+  <label>Notas (opcional)</label><textarea id="sv_n" rows="2" placeholder="Ej: recomendar cambio de cubierta trasera"></textarea>
+  <label>Precio (opcional)</label><input id="sv_p" inputmode="numeric" placeholder="Ej: 52000">
+  <button class="btn full" style="margin-top:16px" onclick="guardarService()">Guardar y generar imagen</button>
+ </div>`;
+ if(sel)svMoto();
+};
+function svMoto(){const m=motoById(document.getElementById("sv_m").value);if(!m)return;
+ document.querySelectorAll("#sv_ac .chip").forEach(x=>x.classList.toggle("on",x.dataset.v===m.aceite));
+ const u=ultimo(m);document.getElementById("sv_km").placeholder=u?`Último: ${u.km.toLocaleString("es-AR")} km`:"Ej: 15400";}
+function guardarService(){
+ const m0=motoById(document.getElementById("sv_m").value);if(!m0)return toast("Elegí la moto");
+ const km=parseInt(document.getElementById("sv_km").value.replace(/\D/g,""));if(!km)return toast("Cargá los kilómetros");
+ const u=ultimo(m0);if(u&&km<u.km)return toast(`Los km no pueden ser menos que el último service (${u.km.toLocaleString("es-AR")})`);
+ const tr=[...document.querySelectorAll("#sv_tr .chip.on")].map(x=>x.textContent);if(!tr.length)return toast("Marcá al menos un trabajo");
+ const aceite=document.querySelector("#sv_ac .chip.on").dataset.v;
+ const c=S.clientes.find(c=>c.motos.some(x=>x.id===m0.id));const m=c.motos.find(x=>x.id===m0.id);
+ m.aceite=aceite;m.services.push({id:uid(),fecha:document.getElementById("sv_f").value||iso(HOY),km,aceite,trabajos:tr,notas:document.getElementById("sv_n").value.trim(),precio:parseInt(document.getElementById("sv_p").value.replace(/\D/g,""))||0});
+ m.services.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+ toast("Service guardado");imagenService(m.id);
+}
+
+/* imagen del service (canvas) */
+async function dibujar(m){
+ try{await Promise.all([document.fonts.load("700 80px Oswald"),document.fonts.load("500 30px Oswald"),document.fonts.load("600 30px Inter")])}catch(e){}
+ const s=ultimo(m),p=proximo(m),W=1080,H=1350;
+ const cv=document.createElement("canvas");cv.width=W;cv.height=H;const x=cv.getContext("2d");
+ const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,"#16180f");g.addColorStop(1,"#070806");x.fillStyle=g;x.fillRect(0,0,W,H);
+ x.strokeStyle="rgba(184,212,50,.07)";x.lineWidth=2;for(let i=-H;i<W;i+=46){x.beginPath();x.moveTo(i,0);x.lineTo(i+H,H);x.stroke()}
+ const per0=Math.ceil(Math.min(12,s.trabajos.length)/(s.trabajos.length>6?2:1));const tot=575+per0*60+230+(s.notas?70:0)-50;const dy=Math.max(0,(H-130-tot)/2-50);x.save();x.translate(0,dy);
+ const logo=await new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.onerror=()=>r(null);im.src="logo.webp"});
+ if(logo)x.drawImage(logo,W/2-120,50,240,240);
+ x.textAlign="center";x.fillStyle="#b8d432";x.font="700 92px Oswald";x.fillText("SERVICE REALIZADO",W/2,385);
+ x.fillStyle="#f1f2ea";x.font="500 46px Oswald";x.fillText((m.modelo+" · "+m.patente).toUpperCase(),W/2,455);
+ x.fillStyle="#9aa08a";x.font="500 32px Inter";x.fillText(`${fmtL(s.fecha)} · ${s.km.toLocaleString("es-AR")} km · Aceite ${ACEITES[s.aceite].toLowerCase()}`,W/2,505);
+ // lista
+ x.textAlign="left";const y0=575,lh=60;const cols=s.trabajos.length>6?2:1;const per=Math.ceil(s.trabajos.length/cols);
+ s.trabajos.slice(0,12).forEach((t,i)=>{const col=Math.floor(i/per),row=i%per;const X=cols===1?260:110+col*450,Y=y0+row*lh;
+  x.fillStyle="#b8d432";x.beginPath();x.arc(X+16,Y-12,18,0,7);x.fill();x.strokeStyle="#111";x.lineWidth=5;x.beginPath();x.moveTo(X+7,Y-12);x.lineTo(X+14,Y-4);x.lineTo(X+26,Y-20);x.stroke();
+  x.fillStyle="#f1f2ea";x.font="600 34px Inter";x.fillText(t,X+50,Y)});
+ // próximo
+ const by=y0+per*lh+40;x.fillStyle="#b8d432";x.fillRect(90,by,W-180,190);
+ x.fillStyle="#111";x.textAlign="center";x.font="700 40px Oswald";x.fillText("PRÓXIMO SERVICE",W/2,by+60);
+ x.font="700 58px Oswald";x.fillText(`${p.km.toLocaleString("es-AR")} KM  ·  ${fmt(p.fecha).toUpperCase()}`,W/2,by+130);
+ x.font="500 26px Inter";x.fillText("lo que llegue primero · te avisamos por WhatsApp",W/2,by+170);
+ if(s.notas){x.fillStyle="#f2b33d";x.font="600 28px Inter";x.fillText("Nota: "+s.notas.slice(0,60),W/2,by+245)}
+ x.restore();x.fillStyle="#9aa08a";x.font="500 30px Inter";x.textAlign="center";x.fillText(`${S.config.direccion} · ${S.config.tel}`,W/2,H-60);
+ return cv.toDataURL("image/jpeg",.9);
+}
+let ultimaImg="";
+async function imagenService(id){
+ const m=motoById(id);if(!m||!m.services.length)return;
+ openMod(`<h3 class="h">Imagen del service</h3><p class="empty">Generando…</p>`);
+ ultimaImg=await dibujar(m);
+ const nom=m.cliente.nombre.split(" ")[0];
+ openMod(`<h3 class="h">Imagen del service</h3><p class="note" style="margin:0 0 10px">Se le manda al cliente por WhatsApp al entregar la moto.</p>
+ <img src="${ultimaImg}" style="width:100%;border-radius:12px">
+ <div class="grid g2" style="margin-top:12px"><a class="btn sec2" download="service-${m.patente}.jpg" href="${ultimaImg}">Descargar</a><button class="btn wa" onclick="enviarImg('${m.id}')">Enviar por WhatsApp</button></div>`);
+}
+function enviarImg(id){const m=motoById(id);const nom=m.cliente.nombre.split(" ")[0];
+ openMod(`<h3 class="h">Así le llega a ${esc(nom)}</h3>${waPreview(`¡Listo ${nom}! Este es el resumen del service de tu ${m.modelo}. Te vamos a avisar por acá cuando te toque el próximo 🔧`,["⭐ Dejanos tu opinión"],ultimaImg)}<p class="note">En la versión final se envía sola desde el WhatsApp del taller.</p><button class="btn full" style="margin-top:10px" onclick="closeMod();toast('Enviado (demo)')">Listo</button>`)}
+function verAviso(id){const m=motoById(id);const p=proximo(m);
+ openMod(`<h3 class="h">Aviso de service</h3><p class="note" style="margin:0">${p.estado==="ok"?`Se envía solo el ${fmtL(new Date(p.fecha.getTime()-S.config.diasAntes*DIA))}`:"Listo para enviar"} a ${esc(m.cliente.nombre)}.</p>
+ ${waPreview(msgRecordatorio(m),["📅 Sí, quiero turno","⏰ Avisame la semana que viene","📍 ¿Dónde están?"])}
+ <p class="note">Si toca "Sí, quiero turno", el bot le ofrece los días con lugar y lo anota solo en Turnos. Si escribe cualquier otra cosa, la IA le responde como si fuera el taller.</p>
+ ${m.cliente.acepta?`<button class="btn wa full" style="margin-top:12px" onclick="S.avisos.unshift({id:uid(),moto:'${m.id}',fecha:iso(HOY),tipo:'Recordatorio de service',estado:'enviado'});closeMod();toast('Aviso enviado (demo)')">Enviar ahora</button>`:'<p class="tag t-red" style="display:inline-block;margin-top:10px">Este cliente no aceptó avisos</p>'}`)}
+
+R.taller=()=>{
+ const col=(st,tit)=>`<h3 class="sec h">${tit}</h3><div class="card">${S.taller.filter(t=>t.estado===st).map(t=>{const m=motoById(t.moto);return `<div class="row"><div class="av">${ini(m.cliente.nombre)}</div><div class="grow"><b>${esc(m.modelo)} · ${esc(m.cliente.nombre)}</b><small>${esc(t.trabajo)} · ingresó ${fmt(t.ingreso)}</small></div>${st==="en_taller"?`<button class="btn sm" onclick="motoLista('${t.id}')">Está lista</button>`:`<button class="btn sm sec2" onclick="entregada('${t.id}')">Entregada</button>`}</div>`}).join("")||'<div class="empty">Ninguna</div>'}</div>`;
+ app().innerHTML=`<div class="title"><h2 class="h">En el taller</h2><button class="btn sm" onclick="ingresoMoto()">+ Ingreso</button></div>${col("en_taller","Trabajando")}${col("lista","Listas para retirar")}`;
+};
+function motoLista(tid){const t=S.taller.find(x=>x.id===tid);const m=motoById(t.moto);const nom=m.cliente.nombre.split(" ")[0];
+ openMod(`<h3 class="h">Avisar que está lista</h3>${waPreview(`¡Hola ${nom}! Tu ${m.modelo} ya está lista para retirar 🏍️\n${S.config.direccion}\n${S.config.horario}`,["👍 Paso hoy","📅 Paso mañana"])}
+ <button class="btn wa full" onclick="S.taller.find(x=>x.id==='${tid}').estado='lista';closeMod();R.taller();toast('Aviso enviado a ${esc(nom)} (demo)')">Marcar lista y avisar</button>`)}
+function entregada(tid){const t=S.taller.find(x=>x.id===tid);S.taller=S.taller.filter(x=>x.id!==tid);R.taller();
+ const m=motoById(t.moto);toast("Entregada · mañana se le pide la reseña");}
+function ingresoMoto(){openMod(`<h3 class="h">Ingreso de moto</h3><label>Moto</label><select id="im_m">${allMotos().map(m=>`<option value="${m.id}">${esc(m.cliente.nombre)} · ${esc(m.modelo)}</option>`).join("")}</select><label>Qué hay que hacer</label><input id="im_t" placeholder="Ej: service + revisar frenos"><button class="btn full" style="margin-top:14px" onclick="S.taller.unshift({id:uid(),moto:document.getElementById('im_m').value,estado:'en_taller',ingreso:iso(HOY),trabajo:document.getElementById('im_t').value||'Revisión'});closeMod();R.taller();toast('Moto ingresada')">Guardar</button>`)}
+
+let DSEL=iso(d(1));
+R.turnos=()=>{
+ const dias=[...Array(14)].map((_,i)=>d(i)).filter(x=>x.getDay()!==0);
+ const del=S.turnos.filter(t=>t.fecha===DSEL);
+ app().innerHTML=`<div class="title"><h2 class="h">Turnos</h2><button class="btn sm" onclick="nuevoTurno()">+ Turno</button></div>
+ <div class="card row" style="padding:12px 14px;margin-bottom:12px"><div class="grow"><b>Turnos por WhatsApp</b><small>${S.config.turnosOn?`El bot da turnos solo · ${S.config.cupos} motos por día`:"Apagado: el bot solo toma la consulta y te avisa"}</small></div><button class="switch ${S.config.turnosOn?"on":""}" onclick="S.config.turnosOn=!S.config.turnosOn;R.turnos()"></button></div>
+ <div class="cal">${dias.map(x=>{const k=iso(x),n=S.turnos.filter(t=>t.fecha===k).length;return `<div class="day ${k===DSEL?"on":""}" onclick="DSEL='${k}';R.turnos()">${x.toLocaleDateString("es-AR",{weekday:"short"})}<b>${x.getDate()}</b><div class="bar"><i style="width:${Math.min(100,n/S.config.cupos*100)}%"></i></div></div>`}).join("")}</div>
+ <h3 class="sec h">${fmtL(DSEL)} · ${del.length}/${S.config.cupos}</h3>
+ <div class="card">${del.map(t=>{const m=motoById(t.moto);return `<div class="row"><div class="av">${ini(m.cliente.nombre)}</div><div class="grow"><b>${esc(m.cliente.nombre)}</b><small>${esc(m.modelo)} · ${esc(t.motivo)}</small></div>${t.origen==="bot"?'<span class="tag t-lime">Por el bot</span>':'<span class="tag t-mut">Manual</span>'}</div>`}).join("")||'<div class="empty">Sin turnos este día</div>'}</div>`;
+};
+function nuevoTurno(){openMod(`<h3 class="h">Nuevo turno</h3><label>Moto</label><select id="nt_m">${allMotos().map(m=>`<option value="${m.id}">${esc(m.cliente.nombre)} · ${esc(m.modelo)}</option>`).join("")}</select><label>Día</label><input type="date" id="nt_f" value="${DSEL}"><label>Motivo</label><input id="nt_t" placeholder="Ej: cambio de aceite"><button class="btn full" style="margin-top:14px" onclick="S.turnos.push({id:uid(),moto:document.getElementById('nt_m').value,fecha:document.getElementById('nt_f').value,motivo:document.getElementById('nt_t').value||'Service',origen:'taller'});DSEL=document.getElementById('nt_f').value;closeMod();R.turnos();toast('Turno guardado')">Guardar</button>`)}
+
+R.presupuestos=()=>{
+ const tot=(p)=>p.items.reduce((a,b)=>a+b[1],0);
+ const tg={enviado:'<span class="tag t-amb">Esperando respuesta</span>',aprobado:'<span class="tag t-ok">Aprobado</span>',rechazado:'<span class="tag t-red">Rechazado</span>'};
+ app().innerHTML=`<div class="title"><h2 class="h">Presupuestos</h2><button class="btn sm" onclick="nuevoPres()">+ Nuevo</button></div>
+ <div class="card">${S.presupuestos.map(p=>{const m=motoById(p.moto);return `<div class="row" style="cursor:pointer" onclick="verPres('${p.id}')"><div class="grow"><b>${esc(m.cliente.nombre)} · ${esc(m.modelo)}</b><small>${fmt(p.fecha)} · ${money(tot(p))}</small></div>${tg[p.estado]}</div>`}).join("")||'<div class="empty">No hay presupuestos</div>'}</div>
+ <p class="note">El cliente recibe el presupuesto por WhatsApp y lo aprueba con un botón. Te llega el aviso acá.</p>`;
+};
+function verPres(id){const p=S.presupuestos.find(x=>x.id===id);const m=motoById(p.moto);const tot=p.items.reduce((a,b)=>a+b[1],0);
+ openMod(`<h3 class="h">Presupuesto</h3>${waPreview(`Hola ${m.cliente.nombre.split(" ")[0]}, este es el presupuesto para tu ${m.modelo}:\n\n${p.items.map(i=>`• ${i[0]}: ${money(i[1])}`).join("\n")}\n\nTotal: ${money(tot)}`,["✅ Aprobar","💬 Tengo una consulta"])}
+ ${p.estado==="enviado"?`<div class="grid g2"><button class="btn" onclick="S.presupuestos.find(x=>x.id==='${id}').estado='aprobado';closeMod();R.presupuestos();toast('Aprobado')">Simular aprobación</button><button class="btn sec2" onclick="closeMod()">Cerrar</button></div>`:""}`)}
+function nuevoPres(){openMod(`<h3 class="h">Nuevo presupuesto</h3><label>Moto</label><select id="np_m">${allMotos().map(m=>`<option value="${m.id}">${esc(m.cliente.nombre)} · ${esc(m.modelo)}</option>`).join("")}</select>
+ <div id="np_items">${[0,1].map(()=>itemRow()).join("")}</div><button class="btn sm sec2" style="margin-top:8px" onclick="document.getElementById('np_items').insertAdjacentHTML('beforeend',itemRow())">+ Ítem</button>
+ <button class="btn wa full" style="margin-top:14px" onclick="guardarPres()">Enviar por WhatsApp</button>`)}
+const itemRow=()=>`<div class="grid" style="grid-template-columns:1fr 120px;gap:8px;margin-top:8px"><input placeholder="Repuesto o trabajo"><input inputmode="numeric" placeholder="$"></div>`;
+function guardarPres(){const items=[...document.querySelectorAll("#np_items > div")].map(r=>{const [a,b]=r.querySelectorAll("input");return [a.value.trim(),parseInt(b.value.replace(/\D/g,""))||0]}).filter(i=>i[0]);
+ if(!items.length)return toast("Agregá al menos un ítem");S.presupuestos.unshift({id:uid(),moto:document.getElementById("np_m").value,fecha:iso(HOY),estado:"enviado",items});closeMod();R.presupuestos();toast("Presupuesto enviado (demo)")}
+
+R.avisos=()=>{
+ const prog=allMotos().filter(m=>m.cliente.acepta).map(m=>({m,p:proximo(m)})).filter(x=>x.p&&x.p.dias>S.config.diasAntes).sort((a,b)=>a.p.dias-b.p.dias).slice(0,8);
+ const tg={enviado:'<span class="tag t-mut">Enviado</span>',respondio:'<span class="tag t-amb">Respondió</span>',volvio:'<span class="tag t-ok">Volvió al taller</span>'};
+ app().innerHTML=`<div class="title"><h2 class="h">Avisos de WhatsApp</h2></div>
+ <h3 class="sec h" style="margin-top:0">Programados</h3>
+ <div class="card">${prog.map(({m,p})=>`<div class="row" style="cursor:pointer" onclick="verAviso('${m.id}')"><div class="av" style="font-size:12px">${fmt(new Date(p.fecha.getTime()-S.config.diasAntes*DIA)).replace(" ","<br>")}</div><div class="grow"><b>${esc(m.cliente.nombre)}</b><small>${esc(m.modelo)} · por ${p.motivo==="km"?"kilómetros":"tiempo"}</small></div><span class="tag t-lime">Automático</span></div>`).join("")}</div>
+ <h3 class="sec h">Enviados</h3>
+ <div class="card">${S.avisos.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(a=>{const m=motoById(a.moto);return `<div class="row"><div class="grow"><b>${esc(m.cliente.nombre)}</b><small>${fmt(a.fecha)} · ${a.tipo}</small></div>${tg[a.estado]}</div>`}).join("")}</div>
+ <p class="note">Además de los recordatorios, el bot manda: moto lista, imagen del service, presupuestos y el pedido de reseña en Google.</p>`;
+};
+
+R.ajustes=()=>{const c=S.config;
+ app().innerHTML=`<div class="title"><h2 class="h">Ajustes</h2></div>
+ <div class="card"><b class="h" style="font-size:18px">Cada cuánto cambiar el aceite</b><p class="note">Se avisa por lo que llegue primero: los km o el tiempo.</p>
+ ${Object.entries(ACEITES).map(([k,v])=>`<label>${v} (km)</label><input inputmode="numeric" value="${c.intervalos[k]}" onchange="S.config.intervalos.${k}=parseInt(this.value)||S.config.intervalos.${k}">`).join("")}
+ <label>Máximo de meses entre services</label><input inputmode="numeric" value="${c.meses}" onchange="S.config.meses=parseInt(this.value)||6">
+ <label>Avisar cuántos días antes</label><input inputmode="numeric" value="${c.diasAntes}" onchange="S.config.diasAntes=parseInt(this.value)||7"></div>
+ <div class="card" style="margin-top:12px"><b class="h" style="font-size:18px">Datos del taller</b><p class="note">El bot usa esto para responder.</p>
+ <label>Dirección</label><input value="${esc(c.direccion)}" onchange="S.config.direccion=this.value">
+ <label>Horario</label><input value="${esc(c.horario)}" onchange="S.config.horario=this.value">
+ <label>Motos por día (turnos)</label><input inputmode="numeric" value="${c.cupos}" onchange="S.config.cupos=parseInt(this.value)||4">
+ <label>Link para reseñas de Google</label><input value="${esc(c.resena)}" onchange="S.config.resena=this.value"></div>
+ <button class="btn full" style="margin-top:14px" onclick="toast('Ajustes guardados')">Guardar</button>
+ <p class="note" style="text-align:center;margin-top:20px">Hecho por <b style="color:var(--lime)">kionda IA</b> · kiondaia.com</p>`;
+};
+
+navs();go("inicio");
+</script>
+</body>
+</html>
