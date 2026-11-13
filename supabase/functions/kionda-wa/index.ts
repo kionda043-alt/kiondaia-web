@@ -52,7 +52,13 @@ async function wa(payload: Record<string, unknown>) {
     headers: { Authorization: `Bearer ${WA_TOKEN}`, "Content-Type": "application/json" },
     body: JSON.stringify({ messaging_product: "whatsapp", ...payload }),
   });
-  if (!r.ok) console.error("WA error", r.status, await r.text());
+  if (!r.ok) {
+    const err = await r.text();
+    // Argentina: a veces Meta pide el número sin el 9 (549… → 54…)
+    const to = String(payload.to ?? "");
+    if (to.startsWith("549") && err.includes("131030")) return wa({ ...payload, to: "54" + to.slice(3) });
+    console.error("WA error", r.status, err);
+  }
   return r.ok;
 }
 const texto = (to: string, body: string) => wa({ to, type: "text", text: { body, preview_url: true } });
