@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prueba un bot con IA · kionda IA</title>
+<meta name="description" content="Prueba gratis un bot de WhatsApp con inteligencia artificial: turnos, avisos y consultas. kionda IA lo adapta a tu negocio.">
+<meta property="og:title" content="Prueba un bot con IA en 1 minuto · kionda IA">
+<meta property="og:description" content="Pide un turno, recibe un aviso o haz una consulta: así atendería tu negocio un bot con inteligencia artificial.">
+<meta name="theme-color" content="#14112B">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z' fill='%23FF5A36'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FFF4E6;--cream2:#FBE9D3;--navy:#14112B;--navy2:#1E1A3D;--coral:#FF5A36;--coral-d:#E8461F;--muted:#5B5670;--wa:#0b141a;--wa2:#202c33;--wab:#005c4b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--cream);color:var(--navy);font:16px/1.5 "DM Sans",system-ui,sans-serif}
+button,input{font:inherit;color:inherit}
+h1,h2,.sg{font-family:"Space Grotesk",sans-serif;letter-spacing:-.02em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--navy);font:700 21px "Space Grotesk"}
+.logo svg{width:34px;height:34px}.logo .ia{color:var(--coral)}
+.lang{display:flex;background:var(--cream2);border-radius:99px;padding:3px}
+.lang button{border:0;background:none;padding:5px 11px;border-radius:99px;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted)}
+.lang button.on{background:var(--navy);color:var(--cream)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr);gap:34px;padding:18px 0 60px;align-items:start}.hero>div{min-width:0}
+.kick{display:inline-block;background:var(--navy);color:var(--cream);font-weight:700;font-size:13px;padding:6px 12px;border-radius:99px;margin-bottom:14px}
+h1{font-size:clamp(34px,7vw,54px);line-height:1.04}
+h1 em{font-style:normal;color:var(--coral)}
+.sub{color:var(--muted);font-size:18px;margin:14px 0 22px;max-width:480px}
+.modos{display:grid;gap:10px}
+.modo{display:flex;gap:14px;align-items:center;text-align:left;background:#fff;border:2px solid transparent;border-radius:16px;padding:14px 16px;cursor:pointer;box-shadow:0 2px 0 rgba(20,17,43,.06);transition:.15s}
+.modo:hover{transform:translateY(-1px)}
+.modo.on{border-color:var(--coral);box-shadow:0 6px 20px rgba(255,90,54,.18)}
+.modo .ic{width:44px;height:44px;border-radius:12px;background:var(--cream2);display:grid;place-items:center;font-size:22px;flex:none}
+.modo.on .ic{background:var(--coral)}
+.modo b{display:block;font-family:"Space Grotesk";font-size:17px}.modo small{color:var(--muted);font-size:14px}
+/* teléfono */
+.phone{background:var(--navy);border-radius:38px;padding:12px;box-shadow:0 30px 60px rgba(20,17,43,.25);max-width:400px;width:100%;margin:0 auto}
+.screen{background:var(--wa);border-radius:28px;overflow:hidden;display:flex;flex-direction:column;height:min(640px,78vh)}
+.wahd{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--wa2);color:#e9edef}
+.slot{width:42px;height:42px;border-radius:50%;border:2px dashed #8696a0;display:grid;place-items:center;font-size:8.5px;line-height:1.05;text-align:center;color:#aebac1;font-weight:700;flex:none;text-transform:uppercase}
+.wahd b{display:block;font-size:15.5px}.wahd small{color:#8696a0;font-size:12px}
+.msgs{flex:1;overflow:auto;padding:14px 12px;display:flex;flex-direction:column;gap:6px;background:#0b141a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Ccircle cx='10' cy='10' r='1.2' fill='%23ffffff10'/%3E%3Ccircle cx='40' cy='35' r='1.2' fill='%23ffffff10'/%3E%3C/svg%3E")}
+.m{max-width:84%;padding:7px 10px 6px;border-radius:9px;font-size:14.5px;line-height:1.38;color:#e9edef;white-space:pre-wrap;word-wrap:break-word;animation:in .2s ease}
+.m.b{background:var(--wa2);align-self:flex-start;border-top-left-radius:2px}
+.m.u{background:var(--wab);align-self:flex-end;border-top-right-radius:2px}
+.m .t{display:block;text-align:right;font-size:10.5px;color:#8696a0;margin-top:2px}
+.sys{align-self:center;background:#182229;color:#8696a0;font-size:12px;padding:5px 10px;border-radius:7px;margin:4px 0;text-align:center}
+.typing{display:flex;gap:4px;padding:12px}.typing i{width:7px;height:7px;border-radius:50%;background:#8696a0;animation:dot 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,60%,100%{opacity:.3}30%{opacity:1}}
+@keyframes in{from{opacity:0;transform:translateY(4px)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 8px;background:var(--wa)}
+.chip{background:transparent;border:1px solid #2a3942;color:#53bdeb;border-radius:99px;padding:6px 12px;font-size:13.5px;cursor:pointer}
+.chip:hover{background:#182229}
+.bar{display:flex;gap:8px;padding:8px 10px 10px;background:var(--wa)}
+.bar input{flex:1;background:var(--wa2);border:0;border-radius:99px;padding:11px 16px;color:#e9edef;outline:none}
+.bar input::placeholder{color:#8696a0}
+.send{width:44px;height:44px;border-radius:50%;border:0;background:#00a884;display:grid;place-items:center;cursor:pointer;flex:none}
+.send svg{width:20px;height:20px}
+.send:disabled{opacity:.5}
+.nota{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+/* cierre */
+.cta{background:var(--navy);color:var(--cream);border-radius:24px;padding:28px 22px;margin:0 0 60px;display:grid;gap:18px}
+.cta h2{font-size:clamp(26px,5vw,36px);line-height:1.1}.cta h2 em{font-style:normal;color:var(--coral)}
+.cta p{color:#B9B4CC}
+.form{display:grid;gap:10px}
+.form input{background:var(--navy2);border:1px solid #37315f;border-radius:12px;padding:13px 14px;color:var(--cream);outline:none}
+.form input:focus{border-color:var(--coral)}
+.btn{background:var(--coral);color:#fff;border:0;border-radius:12px;padding:14px 18px;font-weight:700;cursor:pointer;font-size:16px}
+.btn:hover{background:var(--coral-d)}.btn:disabled{opacity:.6}
+.ok{background:#1f3b2c;color:#b9f5cf;border-radius:12px;padding:14px;display:none}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--coral);margin-right:6px;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.35}}
+footer{padding:0 0 40px;color:var(--muted);font-size:14px;text-align:center}footer a{color:var(--navy)}
+@media(min-width:900px){
+ .hero{grid-template-columns:minmax(0,1fr) 420px;gap:56px;padding-top:40px}
+ .cta{grid-template-columns:1.1fr 1fr;align-items:center;padding:40px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <a href="/" class="logo" aria-label="kionda IA"><svg viewBox="0 0 100 100"><path d="M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z" fill="#FF5A36"/><path d="M10 44C17 44 19 47 24 47C30 47 31 34 37 34C43 34 44 55 50 55C56 55 57 36 63 36C68 36 70 46 76 46C82 46 84 44 90 44" fill="none" stroke="#FFF4E6" stroke-width="7" stroke-linecap="round"/></svg><span>kionda <span class="ia">IA</span></span></a>
+  <div class="lang" role="group" aria-label="Idioma"><button data-lang="es" class="on">ES</button><button data-lang="en">EN</button></div>
+</nav>
+
+<section class="hero">
+  <div>
+    <span class="kick" data-i="kick"><span class="dot"></span>Demo en vivo · con IA real</span>
+    <h1 data-i="h1" data-html>Prueba un bot<br>para tu negocio <em>ahora</em>.</h1>
+    <p class="sub" data-i="sub">Elige qué quieres ver y escríbele como si fueras un cliente. Así atendería tu negocio por WhatsApp, las 24 horas.</p>
+    <div class="modos" id="modos">
+      <button class="modo on" data-modo="turno"><span class="ic">📅</span><span><b data-i="m1">Pedir un turno</b><small data-i="m1s">Reserva, elige horario y confirma.</small></span></button>
+      <button class="modo" data-modo="aviso"><span class="ic">🔔</span><span><b data-i="m2">Recibir un aviso</b><small data-i="m2s">El bot te recuerda tu turno y tú respondes.</small></span></button>
+      <button class="modo" data-modo="consulta"><span class="ic">💬</span><span><b data-i="m3">Hacer una consulta</b><small data-i="m3s">Pregunta precios, horarios o dirección.</small></span></button>
+    </div>
+  </div>
+  <div>
+    <div class="phone">
+      <div class="screen">
+        <div class="wahd"><div class="slot" data-i="slot" data-html>Tu<br>logo<br>aquí</div><div><b data-i="neg">Tu negocio</b><small data-i="online">en línea</small></div></div>
+        <div class="msgs" id="msgs"></div>
+        <div class="chips" id="chips"></div>
+        <form class="bar" id="bar"><input id="inp" autocomplete="off" maxlength="500" data-ph="ph" placeholder="Escribe un mensaje"><button class="send" id="send" aria-label="Enviar"><svg viewBox="0 0 24 24" fill="#fff"><path d="M3 20.5 21 12 3 3.5 3 10l12 2-12 2z"/></svg></button></form>
+      </div>
+    </div>
+    <p class="nota" data-i="nota">Negocio de ejemplo con datos inventados. El tuyo va con tu logo, tus servicios y tus horarios.</p>
+  </div>
+</section>
+
+<section class="cta" id="cta">
+  <div>
+    <h2 data-i="ctah" data-html>¿Lo quieres <em>con tu logo y tus datos</em>?</h2>
+    <p data-i="ctap">Te armamos una demo con tu negocio y te la mostramos funcionando. Sin compromiso.</p>
+  </div>
+  <div>
+    <form class="form" id="lead">
+      <input id="ln" required maxlength="120" data-ph="phn" placeholder="Tu nombre">
+      <input id="lc" required maxlength="160" inputmode="tel" data-ph="phc" placeholder="Tu WhatsApp">
+      <input id="lb" maxlength="160" data-ph="phb" placeholder="Tu negocio o rubro (opcional)">
+      <button class="btn" id="lbtn" data-i="lbtn">Quiero mi bot</button>
+    </form>
+    <div class="ok" id="lok" data-i="lok">¡Listo! Te escribimos por WhatsApp muy pronto. 🙌</div>
+  </div>
+</section>
+<footer><a href="/">kiondaia.com</a> · <span data-i="foot">Soluciones con inteligencia artificial para tu negocio</span></footer>
+</div>
+
+<script>
+const API="https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/kionda-probar";
+const KEY="sb_publishable_jJ7O9A5iqqLoeyWF1SYZZQ_LQpd4vLK";
+const TX={
+ es:{kick:'<span class="dot"></span>Demo en vivo · con IA real',h1:'Prueba un bot<br>para tu negocio <em>ahora</em>.',sub:"Elige qué quieres ver y escríbele como si fueras un cliente. Así atendería tu negocio por WhatsApp, las 24 horas.",
+  m1:"Pedir un turno",m1s:"Reserva, elige horario y confirma.",m2:"Recibir un aviso",m2s:"El bot te recuerda tu turno y tú respondes.",m3:"Hacer una consulta",m3s:"Pregunta precios, horarios o dirección.",
+  slot:"Tu<br>logo<br>aquí",neg:"Tu negocio",online:"en línea",ph:"Escribe un mensaje",nota:"Negocio de ejemplo con datos inventados. El tuyo va con tu logo, tus servicios y tus horarios.",
+  ctah:"¿Lo quieres <em>con tu logo y tus datos</em>?",ctap:"Te armamos una demo con tu negocio y te la mostramos funcionando. Sin compromiso.",phn:"Tu nombre",phc:"Tu WhatsApp",phb:"Tu negocio o rubro (opcional)",lbtn:"Quiero mi bot",lok:"¡Listo! Te escribimos por WhatsApp muy pronto. 🙌",foot:"Soluciones con inteligencia artificial para tu negocio",
+  hoy:"HOY",err:"No pude conectarme. Prueba de nuevo.",
+  start:{turno:["¡Hola! 👋 Soy el asistente de Tu negocio. ¿Para qué servicio quieres sacar turno?",["Servicio completo","Atención estándar","¿Qué servicios tienen?"]],
+   aviso:["¡Hola! 👋 Te escribimos de Tu negocio para recordarte tu turno de mañana a las 10:30 (servicio completo). ¿Confirmas que vienes?",["Sí, confirmo","Quiero cambiar el horario","No puedo ir"]],
+   consulta:["¡Hola! 👋 Soy el asistente de Tu negocio. ¿En qué te puedo ayudar?",["¿Qué horarios tienen?","¿Cuánto sale?","¿Dónde están?"]]},
+  sys:{turno:"Modo: pedir un turno",aviso:"El negocio te envió un aviso automático",consulta:"Modo: hacer una consulta"}},
+ en:{kick:'<span class="dot"></span>Live demo · real AI',h1:'Try a bot<br>for your business <em>now</em>.',sub:"Pick what you want to see and text it like a customer would. This is how your business could answer on WhatsApp, 24/7.",
+  m1:"Book an appointment",m1s:"Book, pick a time and confirm.",m2:"Get a reminder",m2s:"The bot reminds you and you reply.",m3:"Ask a question",m3s:"Ask about prices, hours or location.",
+  slot:"Your<br>logo<br>here",neg:"Your business",online:"online",ph:"Type a message",nota:"Sample business with made-up details. Yours comes with your logo, services and hours.",
+  ctah:"Want it <em>with your logo and details</em>?",ctap:"We'll build a demo with your business and show it to you working. No commitment.",phn:"Your name",phc:"Your WhatsApp",phb:"Your business or industry (optional)",lbtn:"I want my bot",lok:"Done! We'll message you on WhatsApp very soon. 🙌",foot:"AI solutions for your business",
+  hoy:"TODAY",err:"Couldn't connect. Please try again.",
+  start:{turno:["Hi! 👋 I'm the assistant for Your business. Which service would you like to book?",["Full service","Standard visit","What services do you offer?"]],
+   aviso:["Hi! 👋 This is Your business reminding you about your appointment tomorrow at 10:30 (full service). Can you confirm?",["Yes, confirmed","I need another time","I can't make it"]],
+   consulta:["Hi! 👋 I'm the assistant for Your business. How can I help you?",["What are your hours?","How much is it?","Where are you?"]]},
+  sys:{turno:"Mode: book an appointment",aviso:"The business sent you an automatic reminder",consulta:"Mode: ask a question"}}
+};
+let lang="es";try{const s=localStorage.getItem("k-lang");if(s==="en")lang="en"}catch(e){}
+let modo="turno",hist=[],busy=false;const usados=new Set();
+const $=(id)=>document.getElementById(id);
+const hora=()=>new Date().toLocaleTimeString(lang==="en"?"en-US":"es-AR",{hour:"2-digit",minute:"2-digit"});
+
+function aplicarIdioma(){
+ document.documentElement.lang=lang;
+ document.querySelectorAll("[data-i]").forEach(e=>{const v=TX[lang][e.dataset.i];if(v==null)return;e.hasAttribute("data-html")||e.dataset.i==="kick"?e.innerHTML=v:e.textContent=v});
+ document.querySelectorAll("[data-ph]").forEach(e=>e.placeholder=TX[lang][e.dataset.ph]);
+ document.querySelectorAll(".lang button").forEach(b=>b.classList.toggle("on",b.dataset.lang===lang));
+}
+function burbuja(texto,quien){const d=document.createElement("div");d.className="m "+quien;d.textContent=texto;const t=document.createElement("span");t.className="t";t.textContent=hora()+(quien==="u"?" ✓✓":"");d.appendChild(t);$("msgs").appendChild(d);$("msgs").scrollTop=1e6}
+function sistema(t){const d=document.createElement("div");d.className="sys";d.textContent=t;$("msgs").appendChild(d)}
+function chips(lista){$("chips").innerHTML="";(lista||[]).forEach(c=>{const b=document.createElement("button");b.className="chip";b.type="button";b.textContent=c;b.onclick=()=>enviar(c);$("chips").appendChild(b)})}
+function escribiendo(on){let t=document.querySelector(".typing");if(on&&!t){t=document.createElement("div");t.className="m b typing";t.innerHTML="<i></i><i></i><i></i>";$("msgs").appendChild(t);$("msgs").scrollTop=1e6}else if(!on&&t)t.remove()}
+
+function empezar(m){
+ modo=m;usados.add(m);hist=[];busy=false;$("msgs").innerHTML="";
+ document.querySelectorAll(".modo").forEach(b=>b.classList.toggle("on",b.dataset.modo===m));
+ sistema(TX[lang].hoy);sistema(TX[lang].sys[m]);
+ const [txt,ch]=TX[lang].start[m];
+ escribiendo(true);chips([]);
+ setTimeout(()=>{escribiendo(false);burbuja(txt,"b");hist.push({role:"model",text:txt});chips(ch)},m==="aviso"?900:600);
+}
+async function enviar(texto){
+ texto=(texto||"").trim();if(!texto||busy)return;
+ busy=true;$("send").disabled=true;chips([]);burbuja(texto,"u");hist.push({role:"user",text:texto});$("inp").value="";
+ setTimeout(()=>escribiendo(true),300);
+ try{
+  const r=await fetch(API,{method:"POST",headers:{"content-type":"application/json",apikey:KEY},body:JSON.stringify({action:"chat",modo,lang,history:hist})});
+  const j=await r.json();escribiendo(false);
+  const rep=j.reply||TX[lang].err;burbuja(rep,"b");hist.push({role:"model",text:rep});chips(j.chips);
+  if(j.fin)document.getElementById("cta").scrollIntoView({behavior:"smooth"});
+ }catch(e){escribiendo(false);burbuja(TX[lang].err,"b")}
+ busy=false;$("send").disabled=false;
+}
+$("bar").addEventListener("submit",e=>{e.preventDefault();enviar($("inp").value)});
+document.querySelectorAll(".modo").forEach(b=>b.onclick=()=>{empezar(b.dataset.modo);if(innerWidth<900)document.querySelector(".phone").scrollIntoView({behavior:"smooth",block:"center"})});
+document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{lang=b.dataset.lang;try{localStorage.setItem("k-lang",lang)}catch(e){}aplicarIdioma();empezar(modo)});
+$("lead").addEventListener("submit",async e=>{
+ e.preventDefault();const b=$("lbtn");b.disabled=true;
+ try{
+  const r=await fetch(API,{method:"POST",headers:{"content-type":"application/json",apikey:KEY},body:JSON.stringify({action:"lead",lang,name:$("ln").value,contact:$("lc").value,business:$("lb").value,modos:[...usados]})});
+  if(!r.ok)throw 0;$("lead").style.display="none";$("lok").style.display="block";
+ }catch(err){b.disabled=false;alert(TX[lang].err)}
+});
+aplicarIdioma();empezar("turno");
+</script>
+</body>
+</html>
