@@ -478,6 +478,10 @@ footer .wrap{position:relative;z-index:2}
  .hv{border-radius:20px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.hero-cta{margin:24px 0 8px}.btn-big{font-size:18px;padding:17px 30px}.hero-cta .btn{width:auto}
+.nav-demo{color:var(--coral)!important;font-weight:700}
+.demo-band{padding:20px 0 50px}.db-in{background:var(--navy);color:var(--cream);border-radius:28px;padding:30px 24px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
+.db-in h3{font:700 clamp(24px,4vw,34px)/1.1 'Space Grotesk';letter-spacing:-.02em;margin-bottom:8px}.db-in p{color:#B9B4CC}.db-in .btn{width:auto}
 </style>
 </head>
 <body class="locked">
@@ -514,6 +518,7 @@ footer .wrap{position:relative;z-index:2}
       <a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a>
       <a href="#proceso" data-es="Cómo trabajamos" data-en="How we work">Cómo trabajamos</a>
       <a href="#contacto" data-es="Contacto" data-en="Contact">Contacto</a>
+      <a href="/probar/" class="nav-demo" data-es="Probar demo" data-en="Try the demo">Probar demo</a>
     </div>
     <div class="right">
       <div class="lang" role="group" aria-label="Idioma"><button class="on" data-lang="es">ES</button><button data-lang="en">EN</button></div>
@@ -521,6 +526,7 @@ footer .wrap{position:relative;z-index:2}
     </div>
   </nav>
   <div class="secnav" id="secnav">
+    <a href="/probar/" class="hot" data-es="Probar demo" data-en="Try the demo">Probar demo</a>
     <a href="#contacto" class="hot" data-es="Pedir presupuesto" data-en="Get a quote">Pedir presupuesto</a>
     <a href="#proyectos" data-es="Proyectos" data-en="Work">Proyectos</a>
     <a href="#por-que" data-es="Por qué ahora" data-en="Why now">Por qué ahora</a>
@@ -541,6 +547,7 @@ footer .wrap{position:relative;z-index:2}
         <span class="rot-line"><span class="rot" id="rot">más eficiente.</span></span>
         <svg class="uline" viewBox="0 0 420 16" preserveAspectRatio="none"><path d="M3 11C80 3 140 14 220 8S360 3 417 10" stroke="#FF5A36" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
       </h1>
+      <div class="hero-cta reveal d3"><a class="btn btn-coral btn-big" href="/probar/"><span aria-hidden="true">🤖</span> <span data-es="Prueba un bot gratis" data-en="Try a bot for free">Prueba un bot gratis</span></a></div>
       <a class="scroll-cue reveal d3" href="#proyectos"><span data-es="Mirá lo que hacemos" data-en="See what we do">Mirá lo que hacemos</span><svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
     </div>
 
@@ -801,6 +808,19 @@ footer .wrap{position:relative;z-index:2}
 </section>
 
 <!-- ================= CONTACTO ================= -->
+<!-- ================= FRANJA DEMO ================= -->
+<section class="demo-band">
+  <div class="wrap">
+    <div class="db-in reveal">
+      <div>
+        <h3 data-es="¿Quieres ver cómo atendería tu negocio?" data-en="Want to see how it would serve your business?">¿Quieres ver cómo atendería tu negocio?</h3>
+        <p data-es="Prueba un bot con IA en 1 minuto: turnos, avisos y consultas. Sin dejar datos." data-en="Try an AI bot in 1 minute: bookings, reminders and questions. No sign-up.">Prueba un bot con IA en 1 minuto: turnos, avisos y consultas. Sin dejar datos.</p>
+      </div>
+      <a class="btn btn-coral btn-big" href="/probar/"><span aria-hidden="true">🤖</span> <span data-es="Prueba un bot gratis" data-en="Try a bot for free">Prueba un bot gratis</span></a>
+    </div>
+  </div>
+</section>
+
 <section class="block contact" id="contacto">
   <div class="wrap">
     <div class="kicker reveal" data-es="Contacto" data-en="Contact">Contacto</div>

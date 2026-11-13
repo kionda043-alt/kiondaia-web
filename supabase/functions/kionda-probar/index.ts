@@ -120,19 +120,30 @@ Deno.serve(async (req) => {
   if ((count ?? 0) >= MAX_POR_HORA) return out({ reply: lang === "en" ? "Too many messages for now, try again later." : "Muchos mensajes por ahora, prueba de nuevo en un rato.", chips: [] });
   await db.from("demo_uso").insert({ ip_hash: ip });
 
-  try {
+  // Gemini a veces corta la respuesta (se queda sin tokens): reintenta una vez y, si igual viene rota, rescata el texto
+  async function preguntar() {
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": GEMINI_KEY },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: BASE(lang) + "\n\n" + MODOS[modo] }] },
         contents: ordenar(hist),
-        generationConfig: { temperature: 0.6, maxOutputTokens: 1024, responseMimeType: "application/json", responseSchema: SCHEMA },
+        generationConfig: { temperature: 0.6, maxOutputTokens: 4096, responseMimeType: "application/json", responseSchema: SCHEMA },
       }),
     });
     if (!r.ok) throw new Error(`gemini ${r.status}: ${(await r.text()).slice(0, 300)}`);
     const j = await r.json();
-    const ai = JSON.parse((j.candidates?.[0]?.content?.parts ?? []).map((x: { text?: string }) => x.text ?? "").join(""));
+    const txt = (j.candidates?.[0]?.content?.parts ?? []).map((x: { text?: string }) => x.text ?? "").join("");
+    try { return JSON.parse(txt); } catch {
+      const m = txt.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)/);
+      if (m && m[1].length > 40) return { reply: JSON.parse(`"${m[1]}"`) + "", chips: [], _parcial: true };
+      throw new Error("json cortado: " + txt.slice(0, 200));
+    }
+  }
+  try {
+    let ai = await preguntar().catch((e) => { console.error(e); return null; });
+    if (!ai || ai._parcial) ai = (await preguntar().catch((e) => { console.error(e); return null; })) ?? ai;
+    if (!ai) throw new Error("sin respuesta");
     const chips = (Array.isArray(ai.chips) ? ai.chips : []).map((c: unknown) => clean(c, 40)).filter(Boolean).slice(0, 3);
     return out({ reply: clean(ai.reply, 1200) || "…", chips });
   } catch (e) {
