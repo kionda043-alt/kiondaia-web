@@ -109,7 +109,7 @@ async function ia(sistema: string, historial: { r: string; t: string }[]) {
 }
 
 // ---------- Memoria de la charla ----------
-type Chat = { telefono: string; canal: string; modo: string; historial: { r: string; t: string }[]; nombre?: string; interes?: string };
+type Chat = { telefono: string; canal: string; modo: string; historial: { r: string; t: string }[]; nombre?: string; interes?: string; actualizado?: string };
 const CANAL = "green";
 async function cargar(tel: string): Promise<Chat> {
   const { data } = await db.from("chats").select("*").eq("telefono", tel).eq("canal", CANAL).maybeSingle();
@@ -179,8 +179,9 @@ async function libre(c: Cfg, ch: Chat, msg: string) {
 
 function votoDe(md: any, quien: string): string | null {
   const p = md?.pollMessageData;
-  if (!p?.options) return null;
-  const elegida = p.options.find((o: any) => (o.optionVoters ?? []).some((v: string) => v === quien || v.split("@")[0] === quien.split("@")[0]));
+  const lista = p?.votes ?? p?.options;
+  if (!lista) return null;
+  const elegida = lista.find((o: any) => (o.optionVoters ?? []).some((v: string) => v === quien || v.split("@")[0] === quien.split("@")[0]));
   return elegida?.optionName ?? null;
 }
 
@@ -194,7 +195,10 @@ async function privado(c: Cfg, b: any) {
   const md = b.messageData ?? {};
   if (md.typeMessage === "pollUpdateMessage") {
     const op = votoDe(md, sd.sender ?? chatId);
-    if (op) await opcion(c, ch, op);
+    // Green a veces manda el mismo voto dos veces: si es igual al último y fue hace menos de 90 s, se ignora
+    const ult = [...ch.historial].reverse().find((m) => m.r === "u");
+    const reciente = ch.actualizado && Date.now() - new Date(ch.actualizado).getTime() < 90_000;
+    if (op && !(reciente && ult?.t === `[eligió: ${op}]`)) await opcion(c, ch, op);
   } else {
     const t = (md.textMessageData?.textMessage ?? md.extendedTextMessageData?.text ?? "").trim();
     if (t) await libre(c, ch, t);
@@ -216,6 +220,12 @@ Deno.serve(async (req) => {
     }
     const a = url.searchParams.get("iniciar");
     if (a && PERMITIDOS[a]) { await iniciar(c, a); return new Response("iniciado"); }
+    const elegir = url.searchParams.get("opcion"), quien = url.searchParams.get("chat");
+    if (elegir && quien && PERMITIDOS[quien]) {
+      const ch = await cargar(quien);
+      const op = (O as Record<string, string>)[elegir];
+      if (op) { await opcion(c, ch, op); await guardar(ch); return new Response("opcion ok"); }
+    }
     const h = url.searchParams.get("reactivar");
     if (h) { await db.from("chats").update({ modo: "vendedor" }).eq("telefono", h).eq("canal", CANAL); return new Response("reactivado"); }
     return new Response("kionda-wa vivo");
