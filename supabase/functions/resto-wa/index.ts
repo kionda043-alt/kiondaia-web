@@ -192,18 +192,21 @@ function ordenar(h: { r: string; t: string }[]) {
   }
   return out;
 }
-async function ia(sys: string, hist: { r: string; t: string }[], audio?: { b64: string; mime: string }) {
+async function ia(sys: string, hist: { r: string; t: string }[], audios: { b64: string; mime: string }[] = []) {
   const contents = ordenar(hist);
-  if (audio) {
+  if (audios.length) {
+    const parts = audios.map((a) => ({ inlineData: { mimeType: a.mime, data: a.b64 } }));
     const last = contents[contents.length - 1];
-    const part = { inlineData: { mimeType: audio.mime, data: audio.b64 } };
-    if (last?.role === "user") last.parts.push(part); else contents.push({ role: "user", parts: [{ text: "[audio]" }, part] });
+    if (last?.role === "user") last.parts.push(...parts); else contents.push({ role: "user", parts: [{ text: "[audio]" }, ...parts] });
   }
-  for (let intento = 0; intento < 2; intento++) {
+  for (let intento = 0; intento < 3; intento++) {
+    // Sin "pensar" responde en 1-3 s; si el modelo no lo acepta, se reintenta normal
+    const gen: Record<string, unknown> = { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: "application/json" };
+    if (intento === 0) gen.thinkingConfig = { thinkingBudget: 0 };
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": GEMINI_KEY },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: sys }] }, contents, generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: "application/json" } }),
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: sys }] }, contents, generationConfig: gen }),
     });
     if (!r.ok) { console.error("Gemini", r.status, (await r.text()).slice(0, 300)); continue; }
     const j = await r.json();
@@ -222,28 +225,39 @@ async function bajarAudio(url: string, mime?: string) {
   return { b64: btoa(bin), mime: (mime ?? "audio/ogg").split(";")[0] };
 }
 
-async function procesar(neg: Neg, b: any) {
+// Cola: si el cliente manda varios mensajes seguidos (texto + audio), se esperan 2 s y se responden juntos.
+async function entrada(neg: Neg, b: any) {
+  const chatId: string = b?.senderData?.chatId ?? "";
+  if (!(neg.config.permitidos ?? []).includes(chatId)) return; // demo cerrada: solo números de prueba
+  const { data: fila, error } = await db.from("resto_cola").insert({ negocio: neg.id, telefono: chatId, id_mensaje: b.idMessage ?? null, payload: b }).select("id").single();
+  if (error || !fila) return; // repetido (Green a veces reenvía)
+  await new Promise((r) => setTimeout(r, 2000));
+  const { data: nuevo } = await db.from("resto_cola").select("id").eq("negocio", neg.id).eq("telefono", chatId).eq("procesado", false).gt("id", fila.id).limit(1);
+  if (nuevo?.length) return; // llegó otro después: lo procesa ese
+  const { data: lote } = await db.from("resto_cola").update({ procesado: true }).eq("negocio", neg.id).eq("telefono", chatId).eq("procesado", false).lte("id", fila.id).select("payload,id");
+  if (!lote?.length) return;
+  await procesar(neg, chatId, lote.sort((x, y) => x.id - y.id).map((x) => x.payload));
+}
+
+async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
   const cfg = neg.config;
-  const sd = b.senderData ?? {};
-  const chatId: string = sd.chatId ?? "";
-  if (!(cfg.permitidos ?? []).includes(chatId)) return; // demo cerrada: solo números de prueba
-  const md = b.messageData ?? {};
   const ch = await cargarChat(neg.id, chatId);
-  if (b.idMessage && ch.ids_procesados.includes(b.idMessage)) return; // Green a veces reenvía
-  if (b.idMessage) ch.ids_procesados.push(b.idMessage);
 
   // Charla vieja (más de 4 h sin actividad) → carrito nuevo
   if (ch.actualizado && Date.now() - new Date(ch.actualizado).getTime() > 4 * 3600_000) {
     ch.carrito = {}; ch.esperando_confirmacion = false; ch.historial = ch.historial.slice(-6);
   }
 
-  let texto = "", audio: { b64: string; mime: string } | null = null;
+  const textos: string[] = [], audios: { b64: string; mime: string }[] = [];
+  for (const b of mensajes) {
+  const md = b.messageData ?? {};
+  let texto = "";
   const tipo = md.typeMessage;
   if (tipo === "textMessage") texto = md.textMessageData?.textMessage ?? "";
   else if (tipo === "extendedTextMessage" || tipo === "quotedMessage") texto = md.extendedTextMessageData?.text ?? "";
   else if (tipo === "audioMessage") {
-    audio = await bajarAudio(md.fileMessageData?.downloadUrl, md.fileMessageData?.mimeType);
-    texto = "[mandó un audio]";
+    const a = await bajarAudio(md.fileMessageData?.downloadUrl, md.fileMessageData?.mimeType);
+    if (a) { audios.push(a); texto = "[mandó un audio]"; }
   } else if (tipo === "imageMessage" || tipo === "documentMessage") {
     // Probablemente el comprobante de la transferencia
     const { data: ult } = await db.from("resto_pedidos").select("id,numero,pago").eq("negocio", neg.id).eq("telefono", chatId)
@@ -252,14 +266,18 @@ async function procesar(neg: Neg, b: any) {
       await db.from("resto_pedidos").update({ comprobante_url: md.fileMessageData?.downloadUrl ?? "recibido", actualizado: new Date().toISOString() }).eq("id", ult.id);
       const m = `¡Gracias! 🙌 Recibimos el comprobante del pedido *#${ult.numero}*. Ya lo ve el local.`;
       ch.historial.push({ r: "u", t: "[mandó el comprobante]" }, { r: "b", t: m });
-      await enviar(cfg, chatId, m); await guardarChat(ch); return;
+      await enviar(cfg, chatId, m); continue;
     }
     texto = `[mandó una ${tipo === "imageMessage" ? "imagen" : "archivo"}${md.fileMessageData?.caption ? `: ${md.fileMessageData.caption}` : ""}]`;
   } else if (tipo === "locationMessage") {
     const l = md.locationMessageData ?? {};
     texto = `[mandó su ubicación: ${l.nameLocation ?? ""} ${l.address ?? ""} (${l.latitude}, ${l.longitude})]`;
-  } else return;
-  if (!texto.trim()) return;
+  }
+  if (texto.trim()) textos.push(texto.trim());
+  }
+  if (!textos.length) { await guardarChat(ch); return; }
+  const texto = textos.join("\n");
+  const audio = audios.length ? audios : null;
 
   const items = await menu(neg.id);
   const { data: cliente } = await db.from("resto_clientes").select("*").eq("negocio", neg.id).eq("telefono", chatId).maybeSingle();
@@ -268,9 +286,9 @@ async function procesar(neg: Neg, b: any) {
   const actual = validar(ch.carrito.lineas ?? [], items).ok;
 
   ch.historial.push({ r: "u", t: texto });
-  const out = await ia(sistema(neg, items, ch, cliente, activos ?? [], actual), ch.historial.slice(-24), audio ?? undefined);
+  const out = await ia(sistema(neg, items, ch, cliente, activos ?? [], actual), ch.historial.slice(-24), audios);
   if (!out) { await enviar(cfg, chatId, "Perdón, se me trabó el sistema un segundo 😅 ¿Me lo repetís?"); await guardarChat(ch); return; }
-  if (audio && out.transcripcion) ch.historial[ch.historial.length - 1].t = `[audio] ${out.transcripcion}`;
+  if (audio && out.transcripcion) ch.historial[ch.historial.length - 1].t = texto.replace(/\[mandó un audio\]/, `[audio] ${out.transcripcion}`);
 
   const datos: Datos = { ...(ch.carrito.datos ?? {}), ...Object.fromEntries(Object.entries(out.datos ?? {}).filter(([, v]) => v !== null && v !== "")) };
   const { ok: lineas, problemas } = validar(out.carrito ?? [], items);
@@ -376,7 +394,7 @@ async function panel(neg: Neg, body: any) {
     const est = String(body.estado);
     if (!AVISOS[est] && est !== "nuevo") return { error: "estado inválido" };
     const { data: p } = await db.from("resto_pedidos").update({ estado: est, actualizado: new Date().toISOString() }).eq("negocio", neg.id).eq("id", body.id).select().maybeSingle();
-    if (p && AVISOS[est] && body.avisar !== false) {
+    if (p && AVISOS[est] && body.avisar !== false && !p.ejemplo && (cfg.permitidos ?? []).includes(p.telefono)) {
       const m = AVISOS[est](p, cfg);
       await enviar(cfg, p.telefono, m);
       const ch = await cargarChat(neg.id, p.telefono); ch.historial.push({ r: "b", t: m }); await guardarChat(ch);
@@ -397,6 +415,12 @@ async function panel(neg: Neg, body: any) {
     await db.from("resto_menu").update(cambios).eq("negocio", neg.id).eq("id", body.id);
     return { ok: true };
   }
+  if (a === "ejemplos") { await cargarEjemplos(neg); return { ok: true }; }
+  if (a === "borrar_ejemplos") {
+    await db.from("resto_pedidos").delete().eq("negocio", neg.id).eq("ejemplo", true);
+    await db.from("resto_clientes").delete().eq("negocio", neg.id).eq("ejemplo", true);
+    return { ok: true };
+  }
   if (a === "clientes") {
     const { data } = await db.from("resto_clientes").select("*").eq("negocio", neg.id).order("actualizado", { ascending: false }).limit(200);
     return { clientes: data ?? [] };
@@ -408,6 +432,46 @@ async function panel(neg: Neg, body: any) {
     menu(neg.id),
   ]);
   return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, desde };
+}
+
+// ---------- Pedidos de ejemplo (para mostrar el panel lleno) ----------
+async function cargarEjemplos(neg: Neg) {
+  await db.from("resto_pedidos").delete().eq("negocio", neg.id).eq("ejemplo", true);
+  await db.from("resto_clientes").delete().eq("negocio", neg.id).eq("ejemplo", true);
+  const items = await menu(neg.id);
+  const id = (n: string) => items.find((i) => i.nombre === n)!.id;
+  const L = (n: string, op: string, cant = 1, mitad?: string, nota = ""): Linea => ({ item_id: id(n), opcion: op, cantidad: cant, mitad_id: mitad ? id(mitad) : null, nota });
+  const ej: { min: number; est: string; nom: string; tel: string; d: Datos; l: Linea[]; conocido?: boolean; comp?: boolean }[] = [
+    { min: 2, est: "nuevo", nom: "Martina Gómez", tel: "1", d: { tipo: "delivery", direccion: "Colectora Este 2150, Barrio El Cazador", entre_calles: "entre Mendoza y Colón", referencia: "Portón negro, tocar timbre 2", pago: "efectivo", paga_con: 80000 }, l: [L("Muzzarella", "8 porciones", 1, "Calabresa"), L("Empanada", "Media docena", 1, undefined, "3 carne, 2 pollo, 1 jamón y queso"), L("Coca-Cola", "1,75 L")] },
+    { min: 5, est: "nuevo", nom: "Diego Fernández", tel: "2", d: { tipo: "retiro", pago: "transferencia" }, l: [L("Fugazzetta rellena", "Entera"), L("Fainá", "Porción", 2)], conocido: true, comp: true },
+    { min: 14, est: "preparacion", nom: "Sofía Ruiz", tel: "3", d: { tipo: "delivery", direccion: "Av. Villanueva 1420, Escobar", entre_calles: "y Belgrano", pago: "transferencia", notas: "Sin aceitunas en la napolitana" }, l: [L("Napolitana", "8 porciones"), L("Heineken", "Litro", 2)], comp: true },
+    { min: 19, est: "preparacion", nom: "Juan Pablo Ortiz", tel: "4", d: { tipo: "retiro", pago: "efectivo", paga_con: 50000 }, l: [L("Cuatro quesos con miel y nueces", "8 porciones")], conocido: true },
+    { min: 31, est: "listo", nom: "Carla Benítez", tel: "5", d: { tipo: "retiro", pago: "efectivo" }, l: [L("Jamón crudo Las Dinas", "Individual"), L("Agua sin gas", "Botella")] },
+    { min: 38, est: "en_camino", nom: "Federico Luna", tel: "6", d: { tipo: "delivery", direccion: "Los Ceibos 845, Maschwitz", referencia: "Casa con rejas verdes", pago: "efectivo", paga_con: 100000 }, l: [L("Panceta y verdeo", "8 porciones", 1, "Provolone"), L("Empanada", "Docena", 1, undefined, "6 bondiola, 6 carne"), L("Flan casero", "Con crema o dulce de leche", 2)], conocido: true },
+    { min: 64, est: "entregado", nom: "Valentina Sosa", tel: "7", d: { tipo: "delivery", direccion: "Mendoza 1980, Maschwitz", pago: "transferencia" }, l: [L("Muzzarella", "8 porciones", 2), L("Coca-Cola", "1,75 L")], comp: true },
+    { min: 82, est: "entregado", nom: "Martín Acosta", tel: "8", d: { tipo: "retiro", pago: "efectivo" }, l: [L("Pepperoni", "8 porciones"), L("Imperial", "Lata", 2)] },
+    { min: 95, est: "entregado", nom: "Lucía Herrera", tel: "9", d: { tipo: "delivery", direccion: "Independencia 455, Garín", pago: "efectivo", paga_con: 40000 }, l: [L("Espinaca con salsa blanca", "Individual"), L("Empanada", "Unidad", 2, undefined, "verdura")] },
+    { min: 70, est: "cancelado", nom: "Nicolás Pereyra", tel: "10", d: { tipo: "delivery", direccion: "Ruta 26 km 3, Barrio Los Robles", pago: "efectivo" }, l: [L("Palmitos", "8 porciones")] },
+  ];
+  let num = (await db.rpc("resto_nuevo_numero", { p_negocio: neg.id })).data ?? 1;
+  const ord = [...ej].sort((a, b) => b.min - a.min);
+  for (const e of ord) {
+    const { ok } = validar(e.l, items);
+    const t = totales(ok, e.d, neg.config);
+    const tel = `ejemplo-${e.tel}`;
+    const creado = new Date(Date.now() - e.min * 60_000).toISOString();
+    await db.from("resto_pedidos").insert({
+      negocio: neg.id, numero: num++, telefono: tel, cliente_nombre: e.nom, items: ok, subtotal: t.subtotal, envio: t.envio, total: t.total,
+      tipo: e.d.tipo, direccion: e.d.direccion ?? null, entre_calles: e.d.entre_calles ?? null, referencia: e.d.referencia ?? null,
+      pago: e.d.pago, paga_con: e.d.paga_con ?? null, notas: e.d.notas ?? null, estado: e.est,
+      demora_min: e.d.tipo === "delivery" ? neg.config.demora_delivery : neg.config.demora_retiro,
+      cliente_conocido: !!e.conocido, comprobante_url: e.comp ? "ejemplo" : null, ejemplo: true, creado, actualizado: creado,
+    });
+    await db.from("resto_clientes").upsert({
+      negocio: neg.id, telefono: tel, nombre: e.nom, direccion: e.d.direccion ?? null, entre_calles: e.d.entre_calles ?? null, referencia: e.d.referencia ?? null,
+      pedidos: e.conocido ? 3 + (e.min % 5) : 1, ultimo_pedido: { items: ok, total: t.total }, ejemplo: true, actualizado: creado,
+    });
+  }
 }
 
 // ---------- Servidor ----------
@@ -437,12 +501,17 @@ Deno.serve(async (req) => {
       const r = await fetch(`${c.green_url}/waInstance${c.green_id}/getStateInstance/${tk}`);
       return new Response(`${r.status} ${await r.text()} · token cargado: ${tk ? "sí" : "NO"}`);
     }
+    if (url.searchParams.get("ultimos")) {
+      const c = neg.config, tk = Deno.env.get(c.green_token_secret) ?? "";
+      const r = await fetch(`${c.green_url}/waInstance${c.green_id}/lastOutgoingMessages/${tk}?minutes=120`);
+      return new Response(await r.text());
+    }
     return new Response("resto-wa vivo");
   }
   let b: any; try { b = await req.json(); } catch { return new Response("ok"); }
   if (b?.typeWebhook === "incomingMessageReceived" && String(b?.senderData?.chatId ?? "").endsWith("@c.us")) {
     // @ts-ignore EdgeRuntime existe en Supabase
-    EdgeRuntime.waitUntil(procesar(neg, b).catch((e) => console.error("procesar", e)));
+    EdgeRuntime.waitUntil(entrada(neg, b).catch((e) => console.error("procesar", e)));
   }
   return new Response("ok");
 });

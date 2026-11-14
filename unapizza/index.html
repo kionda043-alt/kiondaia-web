@@ -115,6 +115,10 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
 </header>
 <main>
   <section id="tComandas">
+    <div class="ctl" style="margin-bottom:12px;justify-content:space-between;flex-wrap:wrap;white-space:normal">
+      <span style="color:var(--mut)">🧪 Pedidos de ejemplo para ver cómo funciona (no le escriben a nadie)</span>
+      <span style="display:flex;gap:6px"><button class="btn sec" id="ejCargar">Cargar ejemplos</button><button class="btn sec" id="ejBorrar">Borrar</button></span>
+    </div>
     <div class="chips" id="filtros">
       <button class="chip act" data-f="activas">Activas</button>
       <button class="chip" data-f="nuevo">Nuevas</button>
@@ -213,15 +217,15 @@ function pintarComandas() {
   if (!lista.length) { el.innerHTML = `<div class="empty">${filtro === "activas" ? "No hay pedidos activos.<br>Cuando alguien pida por WhatsApp, aparece acá con un sonido 🔔" : "Nada por acá."}</div>`; return; }
   el.innerHTML = lista.map((p) => {
     const [et, col] = ESTADOS[p.estado]; const sig = siguiente(p);
-    const tel = p.telefono.split("@")[0];
+    const tel = p.telefono.split("@")[0], ej = p.ejemplo;
     const vuelto = p.pago === "efectivo" && p.paga_con > p.total ? ` · paga con ${$(p.paga_con)} → vuelto <b>${$(p.paga_con - p.total)}</b>` : "";
     return `<article class="ped ${p.estado}" id="p${p.id}">
-      <div class="ph"><span class="num">#${p.numero}</span><span class="tag ${p.tipo === "delivery" ? "del" : "ret"}">${p.tipo === "delivery" ? "🛵 DELIVERY" : "🏃 RETIRA"}</span><span class="est" style="color:${col}">${et}</span></div>
-      <div class="cli"><b>${esc(p.cliente_nombre)}</b>${p.cliente_conocido ? " ⭐" : ""} · <a href="https://wa.me/${tel}" target="_blank">+${tel}</a><br><small style="color:var(--mut)">${hora(p.creado)} · ${hace(p.creado)} · demora prometida ${p.demora_min}'</small></div>
+      <div class="ph"><span class="num">#${p.numero}</span><span class="tag ${p.tipo === "delivery" ? "del" : "ret"}">${p.tipo === "delivery" ? "🛵 DELIVERY" : "🏃 RETIRA"}</span>${ej ? '<span class="tag">EJEMPLO</span>' : ""}<span class="est" style="color:${col}">${et}</span></div>
+      <div class="cli"><b>${esc(p.cliente_nombre)}</b>${p.cliente_conocido ? " ⭐" : ""} ${ej ? "" : ` · <a href="https://wa.me/${tel}" target="_blank">+${tel}</a>`}<br><small style="color:var(--mut)">${hora(p.creado)} · ${hace(p.creado)} · demora prometida ${p.demora_min}'</small></div>
       <div class="items">${p.items.map((l) => `<div><span class="q">${l.cantidad}x</span><span>${esc(l.nombre)}</span></div>${l.nota ? `<span class="nt">↳ ${esc(l.nota)}</span>` : ""}`).join("")}</div>
       <div class="info">
         ${p.tipo === "delivery" ? `<span>📍 <b>${esc(p.direccion)}</b>${p.entre_calles ? ` (${esc(p.entre_calles)})` : ""}${p.referencia ? `<br>&nbsp;&nbsp;&nbsp;&nbsp;Ref: ${esc(p.referencia)}` : ""}</span>` : ""}
-        <span>${p.pago === "transferencia" ? `🏦 Transferencia ${p.comprobante_url ? `· <a href="${esc(p.comprobante_url)}" target="_blank" style="color:var(--ok)">✔ ver comprobante</a>` : "· <span style='color:var(--amber)'>esperando comprobante</span>"}` : `💵 Efectivo${vuelto}`}</span>
+        <span>${p.pago === "transferencia" ? `🏦 Transferencia ${p.comprobante_url ? (ej ? `· <span style="color:var(--ok)">✔ comprobante recibido</span>` : `· <a href="${esc(p.comprobante_url)}" target="_blank" style="color:var(--ok)">✔ ver comprobante</a>`) : "· <span style='color:var(--amber)'>esperando comprobante</span>"}` : `💵 Efectivo${vuelto}`}</span>
         ${p.notas ? `<span>🗒️ ${esc(p.notas)}</span>` : ""}
       </div>
       <div class="tot"><span style="color:var(--mut);font-size:13px">${p.envio ? `Subtotal ${$(p.subtotal)} + envío ${$(p.envio)}` : ""}</span><b>${$(p.total)}</b></div>
@@ -292,7 +296,7 @@ async function pintarClientes() {
   const el = document.getElementById("clientes"); el.innerHTML = `<div class="empty">Cargando…</div>`;
   try {
     const { clientes } = await api("clientes");
-    el.innerHTML = clientes.length ? `<table><tr><th>Cliente</th><th>Pedidos</th><th>Dirección</th></tr>${clientes.map((c) => `<tr><td><b>${esc(c.nombre)}</b><br><a style="color:var(--mut);font-size:12.5px" href="https://wa.me/${c.telefono.split("@")[0]}" target="_blank">+${c.telefono.split("@")[0]}</a></td><td>${c.pedidos}<br><small style="color:var(--mut)">${c.ultimo_pedido ? $(c.ultimo_pedido.total) : ""}</small></td><td>${esc(c.direccion || "—")}${c.entre_calles ? `<br><small style="color:var(--mut)">${esc(c.entre_calles)}</small>` : ""}</td></tr>`).join("")}</table>` : `<div class="empty">Todavía no hay clientes. Se guardan solos con cada pedido.</div>`;
+    el.innerHTML = clientes.length ? `<table><tr><th>Cliente</th><th>Pedidos</th><th>Dirección</th></tr>${clientes.map((c) => `<tr><td><b>${esc(c.nombre)}</b><br>${c.ejemplo ? '<small style="color:var(--mut)">ejemplo</small>' : `<a style="color:var(--mut);font-size:12.5px" href="https://wa.me/${c.telefono.split("@")[0]}" target="_blank">+${c.telefono.split("@")[0]}</a>`}</td><td>${c.pedidos}<br><small style="color:var(--mut)">${c.ultimo_pedido ? $(c.ultimo_pedido.total) : ""}</small></td><td>${esc(c.direccion || "—")}${c.entre_calles ? `<br><small style="color:var(--mut)">${esc(c.entre_calles)}</small>` : ""}</td></tr>`).join("")}</table>` : `<div class="empty">Todavía no hay clientes. Se guardan solos con cada pedido.</div>`;
   } catch (e) { el.innerHTML = `<div class="empty">Error: ${esc(e.message)}</div>`; }
 }
 
@@ -309,6 +313,8 @@ function pintarHoy() {
   document.getElementById("top").innerHTML = top.length ? top.map(([n, c]) => `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><span>${esc(n)}</span><b>${c}</b></div><div class="bar"><i style="width:${c / max * 100}%"></i></div></div>`).join("") : `<div class="empty">Sin pedidos todavía.</div>`;
 }
 setInterval(() => { if (tab === "comandas") pintarComandas(); }, 30000);
+document.getElementById("ejCargar").onclick = async (e) => { e.target.disabled = true; try { await api("ejemplos"); vistos = null; await cargar(); toast("🧪 Ejemplos cargados"); } catch (er) { toast("Error: " + er.message); } e.target.disabled = false; };
+document.getElementById("ejBorrar").onclick = async (e) => { try { await api("borrar_ejemplos"); await cargar(); toast("Ejemplos borrados"); } catch (er) { toast("Error: " + er.message); } };
 </script>
 </body>
 </html>
