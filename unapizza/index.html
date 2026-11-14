@@ -78,6 +78,26 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
 .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--cream);color:#1a1310;font-weight:700;padding:10px 16px;border-radius:12px;z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.4);transition:.3s;opacity:0;pointer-events:none}
 .toast.show{opacity:1}
 .hide{display:none!important}
+.al{background:var(--card);border:1px solid #6b2a1f;border-left:5px solid var(--red);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.al.res{border-color:var(--line);border-left-color:var(--ok);opacity:.7}
+.al .res-txt{background:var(--card2);border-radius:10px;padding:8px 10px;font-size:14px}
+.tag.rec{background:#5a2018;color:#ffd1c8}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);border:1px solid var(--line);width:100%;max-width:560px;height:88vh;border-radius:18px 18px 0 0;display:flex;flex-direction:column}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:18px;height:80vh}}
+.sh{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center}
+.sh .x{margin-left:auto;background:var(--card2);border:0;border-radius:10px;width:36px;height:36px;font-size:18px;cursor:pointer}
+.hilo{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;background:#140e0b}
+.msg{max-width:82%;padding:7px 10px;border-radius:12px;font-size:14px;white-space:pre-wrap;word-wrap:break-word}
+.msg.u{background:var(--card2);align-self:flex-start;border-top-left-radius:4px}
+.msg.b{background:#2b3b2c;align-self:flex-end;border-top-right-radius:4px}
+.msg.l{background:#3b2b52;align-self:flex-end;border-top-right-radius:4px}
+.msg small{display:block;font-size:10.5px;color:var(--mut);margin-bottom:2px;font-weight:700}
+.msg.sys{align-self:center;background:transparent;color:var(--mut);font-size:12px;font-style:italic}
+.rapidas{display:flex;gap:6px;overflow-x:auto;padding:8px 12px 0;scrollbar-width:none}
+.rapidas button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:5px 10px;font-size:12.5px;cursor:pointer}
+.env{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+.env textarea{flex:1;resize:none;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);padding:10px;font:inherit;color:inherit}
 @media print{body{background:#fff;color:#000}header,.demo,nav,.chips,.acts,.toast{display:none!important}.ped{border:1px solid #000;color:#000;background:#fff;page-break-inside:avoid}.ped:not(.print){display:none}.items{background:#eee}.info,.cli a{color:#000}}
 </style>
 </head>
@@ -108,6 +128,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
   </div>
   <nav>
     <button data-t="comandas" class="act">Comandas<span class="badge hide" id="bNuevos"></span></button>
+    <button data-t="mensajes">⚠️ Mensajes<span class="badge hide" id="bAlertas"></span></button>
     <button data-t="carta">Carta</button>
     <button data-t="clientes">Clientes</button>
     <button data-t="hoy">Hoy</button>
@@ -128,18 +149,44 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
     </div>
     <div class="grid" id="lista"></div>
   </section>
+  <section id="tMensajes" class="hide">
+    <div class="ctl" style="margin-bottom:12px;flex-wrap:wrap;white-space:normal">
+      <span>📞 Avisar reclamos también al WhatsApp</span>
+      <input id="celRec" inputmode="tel" placeholder="ej. 5491112345678" style="flex:1;min-width:150px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:6px 8px">
+      <button class="btn sec" id="celGuardar">Guardar</button>
+    </div>
+    <p style="color:var(--mut);font-size:13.5px;margin-bottom:12px">Cuando un cliente tiene un problema o pide hablar con alguien, el bot <b>deja de responderle</b> y aparece acá. Contestale desde el chat; cuando lo resuelvas, tocá <b>Resuelto</b> y el bot vuelve a atenderlo.</p>
+    <div class="grid" id="alertas"></div>
+  </section>
   <section id="tCarta" class="hide"><p style="color:var(--mut);font-size:13.5px">Tocá <b>Hay / Sin stock</b> para pausar un producto: el bot deja de ofrecerlo al instante y sigue atendiendo. Los precios se guardan al salir del casillero.</p><div id="carta"></div></section>
   <section id="tClientes" class="hide"><div id="clientes"></div></section>
   <section id="tHoy" class="hide"><div class="kpis" id="kpis"></div><h3 style="margin:20px 0 8px">Lo más pedido hoy</h3><div id="top"></div></section>
 </main>
 </div>
 <div class="toast" id="toast"></div>
+<div class="modal hide" id="modal">
+  <div class="sheet">
+    <div class="sh"><div><b id="mNom"></b><br><small style="color:var(--mut)" id="mSub"></small></div><button class="x" id="mCerrar">✕</button></div>
+    <div class="hilo" id="hilo"></div>
+    <div id="mResp">
+      <div class="rapidas" id="rapidas">
+        <button>Hola, soy el encargado 👋 Ya estoy viendo lo que pasó.</button>
+        <button>Perdón por el error 🙏 Ya te mandamos lo que faltaba, llega en unos 20 min.</button>
+        <button>Te lo descontamos del próximo pedido, avisanos cuando pidas 🙌</button>
+        <button>Tu pedido ya está en camino, llega en unos minutos 🛵</button>
+        <button>¡Listo, cancelamos el pedido! Cualquier cosa escribinos.</button>
+      </div>
+      <div class="env"><textarea id="mTxt" placeholder="Escribile al cliente…"></textarea><button class="btn" style="flex:0 0 auto" id="mEnviar">Enviar</button></div>
+      <div style="padding:0 12px 12px"><button class="btn" style="width:100%;background:var(--ok)" id="mResolver">✅ Resuelto — el bot vuelve a atenderlo</button></div>
+    </div>
+  </div>
+</div>
 
 <script>
 const API = "https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/resto-wa?n=unapizza&panel=1";
 const $ = (n) => "$" + Math.round(n || 0).toLocaleString("es-AR");
 const ESTADOS = { nuevo: ["Nuevo", "var(--red2)"], preparacion: ["En preparación", "var(--amber)"], listo: ["Listo", "var(--blue)"], en_camino: ["En camino", "#c7a6ff"], entregado: ["Entregado", "var(--ok)"], cancelado: ["Cancelado", "var(--mut)"] };
-let PIN = "", S = { pedidos: [], menu: [], config: {} }, vistos = null, filtro = "activas", tab = "comandas", confirmarCancel = null;
+let PIN = "", S = { pedidos: [], menu: [], config: {}, alertas: [] }, vistos = null, alertasVistas = null, chatAbierto = null, filtro = "activas", tab = "comandas", confirmarCancel = null;
 const store = { get(k) { try { return localStorage.getItem(k) } catch { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
 
 async function api(accion, extra = {}) {
@@ -178,6 +225,11 @@ async function cargar(primera) {
     const ids = new Set(d.pedidos.map((p) => p.id));
     if (vistos && d.pedidos.some((p) => !vistos.has(p.id) && p.estado === "nuevo")) { sonar(); toast("🔔 ¡Pedido nuevo!"); }
     vistos = ids;
+    const firma = d.alertas.filter((a) => a.estado === "abierta").map((a) => a.id + ":" + a.no_leidos).join(",");
+    const nuevasAl = d.alertas.filter((a) => a.estado === "abierta" && !a.ejemplo && (!alertasVistas || !alertasVistas.has(a.id + ":" + a.no_leidos)) && a.no_leidos > 0);
+    if (alertasVistas && nuevasAl.length) { sonar(); toast("⚠️ Un cliente necesita que le respondan"); }
+    alertasVistas = new Set(firma.split(","));
+    if (chatAbierto) refrescarChat();
     document.getElementById("dot").classList.remove("off"); document.getElementById("liveTxt").textContent = "En vivo";
     pintar();
   } catch (e) {
@@ -191,6 +243,10 @@ function pintar() {
   document.getElementById("swDelivery").classList.toggle("on", !!c.delivery_activo);
   document.getElementById("dRet").textContent = c.demora_retiro + "'";
   document.getElementById("dDel").textContent = c.demora_delivery + "'";
+  const nAl = S.alertas.filter((a) => a.estado === "abierta").length;
+  const ba = document.getElementById("bAlertas"); ba.textContent = nAl; ba.classList.toggle("hide", !nAl);
+  if (document.activeElement?.id !== "celRec") document.getElementById("celRec").value = c.celular_reclamos || "";
+  if (tab === "mensajes") pintarAlertas();
   const nuevos = S.pedidos.filter((p) => p.estado === "nuevo").length;
   const b = document.getElementById("bNuevos"); b.textContent = nuevos; b.classList.toggle("hide", !nuevos);
   document.title = (nuevos ? `(${nuevos}) ` : "") + "Una Pizza · Panel";
@@ -220,7 +276,7 @@ function pintarComandas() {
     const tel = p.telefono.split("@")[0], ej = p.ejemplo;
     const vuelto = p.pago === "efectivo" && p.paga_con > p.total ? ` · paga con ${$(p.paga_con)} → vuelto <b>${$(p.paga_con - p.total)}</b>` : "";
     return `<article class="ped ${p.estado}" id="p${p.id}">
-      <div class="ph"><span class="num">#${p.numero}</span><span class="tag ${p.tipo === "delivery" ? "del" : "ret"}">${p.tipo === "delivery" ? "🛵 DELIVERY" : "🏃 RETIRA"}</span>${ej ? '<span class="tag">EJEMPLO</span>' : ""}<span class="est" style="color:${col}">${et}</span></div>
+      <div class="ph"><span class="num">#${p.numero}</span><span class="tag ${p.tipo === "delivery" ? "del" : "ret"}">${p.tipo === "delivery" ? "🛵 DELIVERY" : "🏃 RETIRA"}</span>${ej ? '<span class="tag">EJEMPLO</span>' : ""}${abiertas(p.telefono).length ? '<span class="tag rec">⚠️ RECLAMO</span>' : ""}<span class="est" style="color:${col}">${et}</span></div>
       <div class="cli"><b>${esc(p.cliente_nombre)}</b>${p.cliente_conocido ? " ⭐" : ""} ${ej ? "" : ` · <a href="https://wa.me/${tel}" target="_blank">+${tel}</a>`}<br><small style="color:var(--mut)">${hora(p.creado)} · ${hace(p.creado)} · demora prometida ${p.demora_min}'</small></div>
       <div class="items">${p.items.map((l) => `<div><span class="q">${l.cantidad}x</span><span>${esc(l.nombre)}</span></div>${l.nota ? `<span class="nt">↳ ${esc(l.nota)}</span>` : ""}`).join("")}</div>
       <div class="info">
@@ -231,6 +287,7 @@ function pintarComandas() {
       <div class="tot"><span style="color:var(--mut);font-size:13px">${p.envio ? `Subtotal ${$(p.subtotal)} + envío ${$(p.envio)}` : ""}</span><b>${$(p.total)}</b></div>
       <div class="acts">
         ${sig ? `<button class="btn" data-id="${p.id}" data-e="${sig[1]}">${sig[0]}</button>` : ""}
+        <button class="btn sec" data-chat="${esc(p.telefono)}" data-nom="${esc(p.cliente_nombre)}" title="Ver la charla">💬</button>
         <button class="btn sec" data-print="${p.id}" title="Imprimir comanda">🖨️</button>
         ${!["entregado", "cancelado"].includes(p.estado) ? `<button class="btn sec ${confirmarCancel === p.id ? "warn" : ""}" data-cancel="${p.id}">${confirmarCancel === p.id ? "¿Cancelar?" : "✕"}</button>` : ""}
       </div>
@@ -239,6 +296,7 @@ function pintarComandas() {
 }
 document.getElementById("lista").onclick = async (e) => {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.chat) return abrirChat(b.dataset.chat, b.dataset.nom);
   if (b.dataset.print) { const el = document.getElementById("p" + b.dataset.print); el.classList.add("print"); window.print(); el.classList.remove("print"); return; }
   if (b.dataset.cancel) {
     const id = +b.dataset.cancel;
@@ -264,8 +322,8 @@ document.querySelectorAll(".step button").forEach((b) => b.onclick = () => { con
 document.querySelector("nav").onclick = (e) => {
   const b = e.target.closest("button"); if (!b) return; tab = b.dataset.t;
   document.querySelectorAll("nav button").forEach((x) => x.classList.toggle("act", x === b));
-  ["comandas", "carta", "clientes", "hoy"].forEach((t) => document.getElementById("t" + t[0].toUpperCase() + t.slice(1)).classList.toggle("hide", t !== tab));
-  if (tab === "carta") pintarCarta(); if (tab === "hoy") pintarHoy(); if (tab === "clientes") pintarClientes(); if (tab === "comandas") pintarComandas();
+  ["comandas", "mensajes", "carta", "clientes", "hoy"].forEach((t) => document.getElementById("t" + t[0].toUpperCase() + t.slice(1)).classList.toggle("hide", t !== tab));
+  if (tab === "carta") pintarCarta(); if (tab === "mensajes") pintarAlertas(); if (tab === "hoy") pintarHoy(); if (tab === "clientes") pintarClientes(); if (tab === "comandas") pintarComandas();
 };
 
 // ---- Carta ----
@@ -313,6 +371,57 @@ function pintarHoy() {
   document.getElementById("top").innerHTML = top.length ? top.map(([n, c]) => `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><span>${esc(n)}</span><b>${c}</b></div><div class="bar"><i style="width:${c / max * 100}%"></i></div></div>`).join("") : `<div class="empty">Sin pedidos todavía.</div>`;
 }
 setInterval(() => { if (tab === "comandas") pintarComandas(); }, 30000);
+
+// ---- Mensajes / reclamos ----
+const TIPOS = { reclamo: "⚠️ Reclamo", hablar_con_persona: "🙋 Quiere hablar con alguien", cancelar_pedido: "❌ Quiere cancelar", otro: "💬 Consulta" };
+function abiertas(tel) { return (S.alertas || []).filter((a) => a.telefono === tel && a.estado === "abierta"); }
+function pintarAlertas() {
+  const el = document.getElementById("alertas");
+  const l = [...S.alertas].sort((a, b) => (a.estado === b.estado ? new Date(b.actualizado) - new Date(a.actualizado) : a.estado === "abierta" ? -1 : 1));
+  if (!l.length) { el.innerHTML = `<div class="empty">No hay mensajes pendientes 👌<br>Si un cliente tiene un problema, aparece acá con un sonido.</div>`; return; }
+  el.innerHTML = l.map((a) => `<div class="al ${a.estado === "resuelta" ? "res" : ""}" data-tel="${esc(a.telefono)}" data-nom="${esc(a.cliente_nombre || "Cliente")}">
+    <div class="ph"><span class="tag rec">${TIPOS[a.tipo] || a.tipo}</span>${a.ejemplo ? '<span class="tag">EJEMPLO</span>' : ""}${a.no_leidos && a.estado === "abierta" ? `<span class="badge" style="position:static">${a.no_leidos} nuevos</span>` : ""}<span class="est" style="color:${a.estado === "abierta" ? "var(--red2)" : "var(--ok)"}">${a.estado === "abierta" ? "Sin resolver" : "Resuelto"}</span></div>
+    <div class="cli"><b>${esc(a.cliente_nombre || "Cliente")}</b>${a.pedido_numero ? ` · pedido #${a.pedido_numero}` : ""}<br><small style="color:var(--mut)">${hora(a.creado)} · ${hace(a.actualizado)}</small></div>
+    <div class="res-txt">${esc(a.resumen)}</div>
+    <button class="btn">${a.estado === "abierta" ? "💬 Abrir chat y responder" : "Ver chat"}</button>
+  </div>`).join("");
+}
+document.getElementById("alertas").onclick = (e) => { const c = e.target.closest(".al"); if (c) abrirChat(c.dataset.tel, c.dataset.nom); };
+document.getElementById("celGuardar").onclick = () => { const v = document.getElementById("celRec").value.replace(/\D/g, ""); config({ celular_reclamos: v }, v ? "📞 Los reclamos también llegan a +" + v : "Aviso por WhatsApp desactivado"); };
+
+async function abrirChat(tel, nom) {
+  chatAbierto = { tel, nom };
+  document.getElementById("mNom").textContent = nom || "Cliente";
+  document.getElementById("mSub").textContent = tel.startsWith("ejemplo") ? "Charla de ejemplo (no se envía nada)" : "+" + tel.split("@")[0];
+  document.getElementById("hilo").innerHTML = `<div class="msg sys">Cargando…</div>`;
+  document.getElementById("modal").classList.remove("hide");
+  await refrescarChat(true);
+}
+async function refrescarChat(bajar) {
+  if (!chatAbierto) return;
+  try {
+    const { historial, modo } = await api("chat", { telefono: chatAbierto.tel });
+    const h = document.getElementById("hilo"), abajo = bajar || h.scrollHeight - h.scrollTop - h.clientHeight < 60;
+    h.innerHTML = historial.map((m) => m.t.startsWith("[El local resolvió") ? `<div class="msg sys">${esc(m.t.slice(1, -1))}</div>` :
+      `<div class="msg ${m.r}"><small>${m.r === "u" ? esc(chatAbierto.nom) : m.r === "l" ? "Encargado" : "🤖 Bot"}</small>${esc(m.t)}</div>`).join("") || `<div class="msg sys">Sin mensajes</div>`;
+    if (modo === "humano") h.innerHTML += `<div class="msg sys">⏸️ El bot está pausado con este cliente: responde el local</div>`;
+    if (abajo) h.scrollTop = h.scrollHeight;
+    document.getElementById("mResolver").classList.toggle("hide", modo !== "humano");
+    S.alertas.forEach((a) => { if (a.telefono === chatAbierto.tel) a.no_leidos = 0; });
+  } catch (e) { toast("Error: " + e.message); }
+}
+document.getElementById("mCerrar").onclick = () => { chatAbierto = null; document.getElementById("modal").classList.add("hide"); pintar(); };
+document.getElementById("rapidas").onclick = (e) => { const b = e.target.closest("button"); if (b) { const t = document.getElementById("mTxt"); t.value = b.textContent; t.focus(); } };
+document.getElementById("mEnviar").onclick = async () => {
+  const t = document.getElementById("mTxt"), txt = t.value.trim(); if (!txt || !chatAbierto) return;
+  t.value = "";
+  try { await api("responder", { telefono: chatAbierto.tel, texto: txt }); await refrescarChat(true); toast(chatAbierto.tel.startsWith("ejemplo") ? "Guardado (ejemplo: no se envía)" : "Enviado por WhatsApp ✔"); }
+  catch (e) { toast("Error: " + e.message); t.value = txt; }
+};
+document.getElementById("mResolver").onclick = async () => {
+  if (!chatAbierto) return;
+  try { await api("resolver", { telefono: chatAbierto.tel }); toast("✅ Resuelto: el bot vuelve a atender"); await cargar(); await refrescarChat(true); } catch (e) { toast("Error: " + e.message); }
+};
 document.getElementById("ejCargar").onclick = async (e) => { e.target.disabled = true; try { await api("ejemplos"); vistos = null; await cargar(); toast("🧪 Ejemplos cargados"); } catch (er) { toast("Error: " + er.message); } e.target.disabled = false; };
 document.getElementById("ejBorrar").onclick = async (e) => { try { await api("borrar_ejemplos"); await cargar(); toast("Ejemplos borrados"); } catch (er) { toast("Error: " + er.message); } };
 </script>

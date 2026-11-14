@@ -23,7 +23,7 @@ type Neg = { id: string; nombre: string; config: Record<string, any> };
 type Linea = { item_id: number; opcion: string; cantidad: number; mitad_id?: number | null; nota?: string };
 type LineaOk = Linea & { nombre: string; precio_unit: number; subtotal: number };
 type Datos = { nombre?: string | null; tipo?: "retiro" | "delivery" | null; direccion?: string | null; entre_calles?: string | null; referencia?: string | null; pago?: "efectivo" | "transferencia" | null; paga_con?: number | null; notas?: string | null };
-type Chat = { negocio: string; telefono: string; historial: { r: string; t: string }[]; carrito: { lineas?: Linea[]; datos?: Datos }; esperando_confirmacion: boolean; ids_procesados: string[]; actualizado?: string };
+type Chat = { negocio: string; telefono: string; historial: { r: string; t: string }[]; carrito: { lineas?: Linea[]; datos?: Datos }; esperando_confirmacion: boolean; ids_procesados: string[]; modo?: string; actualizado?: string };
 
 const $ = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
 
@@ -129,10 +129,19 @@ function resumen(lineas: LineaOk[], d: Datos, cfg: Record<string, any>) {
     ? `🛵 Delivery a ${d.direccion}${d.entre_calles ? ` (${d.entre_calles})` : ""}${d.referencia ? `\n   Ref: ${d.referencia}` : ""}\n`
     : `🏃 Retiro en el local (${cfg.direccion})\n`;
   s += `👤 A nombre de ${d.nombre}\n`;
-  if (d.pago === "efectivo") s += `💵 Efectivo${d.paga_con && d.paga_con > t.total ? ` (pagás con ${$(d.paga_con)}, vuelto ${$(d.paga_con - t.total)})` : ""}\n`;
+  if (d.pago === "efectivo") s += d.paga_con && d.paga_con >= t.total ? `💵 Efectivo (pagás con ${$(d.paga_con)}, vuelto ${$(d.paga_con - t.total)})\n` : `💵 Efectivo — ¿con cuánto pagás? así te llevamos el vuelto\n`;
   else s += `🏦 Transferencia\n`;
   if (d.notas) s += `🗒️ ${d.notas}\n`;
   s += `⏱️ Demora estimada: ${d.tipo === "delivery" ? cfg.demora_delivery : cfg.demora_retiro} min\n\n¿Lo confirmamos? Respondé *sí* o decime qué cambio.`;
+  return s;
+}
+function subtotalTexto(lineas: LineaOk[], d: Datos, cfg: Record<string, any>) {
+  const t = totales(lineas, d, cfg);
+  let s = "🧾 *Tu pedido hasta ahora*\n";
+  for (const l of lineas) s += `${l.cantidad}x ${l.nombre} — ${$(l.subtotal)}${l.nota ? ` _(${l.nota})_` : ""}\n`;
+  s += `*Subtotal: ${$(t.subtotal)}*`;
+  if (d.tipo === "delivery") s += `\n+ envío ${$(t.envio)} = *${$(t.total)}*`;
+  else if (!d.tipo && cfg.delivery_activo) s += `\n_(si es delivery se suman ${$(cfg.envio_costo)} de envío)_`;
   return s;
 }
 
@@ -167,14 +176,17 @@ CÓMO TRABAJÁS:
 1. Ayudá a elegir: recomendá, explicá tamaños (individual o de 8 porciones), mitad y mitad (se cobra la mitad más cara, mismo tamaño), gustos de empanadas (van en "nota", ej. "3 carne, 3 pollo").
 2. Si piden algo SIN STOCK, decilo con amabilidad y ofrecé una alternativa parecida. Nunca lo agregues al carrito. Seguí atendiendo normal.
 3. Si piden algo que no está en la carta, decí que no lo tienen y sugerí algo de la carta.
-4. Para cerrar necesitás: productos, retiro o delivery, nombre, dirección (si es delivery; entre calles y referencia ayudan), forma de pago (si es efectivo, preguntá con cuánto paga). Pedí lo que falte de a una o dos cosas por mensaje, sin interrogatorio.
+4. Para cerrar necesitás: productos, retiro o delivery, nombre, dirección (si es delivery; entre calles y referencia ayudan) y forma de pago (efectivo o transferencia). Pedí lo que falte de a una o dos cosas por mensaje, sin interrogatorio. NO preguntes con cuánto paga en efectivo: eso se pregunta solo en el resumen final, cuando ya vio el total.
+4b. SUBTOTAL Y ALGO MÁS: cuando el cliente terminó de elegir la comida principal (dice "nada más", "eso", "listo", o ya pidió lo suyo), y también SIEMPRE que pregunte el precio del pedido, cuánto va o el total, poné "mostrar_subtotal": true. El sistema le manda el detalle con el subtotal ANTES de tu mensaje, así que en "respuesta" no escribas montos del pedido: preguntá si quiere sumar algo más o cerramos, con UNA sugerencia concreta de algo que no tenga (una bebida si no pidió, un flan casero o la torta del día de postre, o fainá para acompañar la pizza). Ofrecelo una sola vez por pedido y sin insistir.
 5. Cuando tengas TODO, usá accion "pedir_confirmacion": el sistema le manda solo el resumen con el total, así que en "respuesta" poné solo una frase corta (ej. "¡Perfecto! Te paso el resumen 👇"). NUNCA escribas totales vos: los calcula el sistema.
 6. Si pide la carta o el menú, poné "enviar_menu": true (el sistema manda la carta completa) y en respuesta algo corto.
-7. Si quiere cancelar lo que estaba armando: accion "cancelar". Un pedido ya confirmado no se cancela por acá: decí que avisás al local (respuesta) y listo.
+7. Si quiere cancelar lo que estaba armando (todavía sin confirmar): accion "cancelar". Si es un pedido YA confirmado, seguí la regla 9.
 8. Si manda un audio, entendelo y escribí qué dijo en "transcripcion".
+9. PROBLEMAS → PERSONA: si el cliente tiene un problema con un pedido (llegó mal o incompleto, frío, se demoró mucho, cobro equivocado), se queja, pide hablar con una persona o el encargado, quiere cancelar o cambiar un pedido YA confirmado, o pregunta algo que no podés resolver con lo que sabés: completá "derivar" con el tipo y un resumen claro para el encargado (qué pasó y qué pide, con el número de pedido si lo sabés). En "respuesta" pedí disculpas breve y decí que ya le pasaste el mensaje al encargado y que le responde por este mismo chat en unos minutos. NO prometas reenvíos, descuentos, reintegros ni tiempos: eso lo decide el local.
 
 Respondé SIEMPRE con este JSON y nada más:
-{"transcripcion": string|null, "respuesta": string, "enviar_menu": boolean,
+{"transcripcion": string|null, "respuesta": string, "enviar_menu": boolean, "mostrar_subtotal": boolean,
+ "derivar": null | {"tipo": "reclamo"|"hablar_con_persona"|"cancelar_pedido"|"otro", "resumen": string},
  "carrito": [{"item_id": number, "opcion": string, "cantidad": number, "mitad_id": number|null, "nota": string}],
  "datos": {"nombre": string|null, "tipo": "retiro"|"delivery"|null, "direccion": string|null, "entre_calles": string|null, "referencia": string|null, "pago": "efectivo"|"transferencia"|null, "paga_con": number|null, "notas": string|null},
  "accion": "seguir"|"pedir_confirmacion"|"confirmar"|"cancelar"}
@@ -185,10 +197,11 @@ function ordenar(h: { r: string; t: string }[]) {
   const out: { role: string; parts: any[] }[] = [];
   for (const m of h) {
     const role = m.r === "u" ? "user" : "model";
+    const t = m.r === "l" ? `[mensaje escrito por el encargado del local] ${m.t}` : m.t;
     if (!out.length && role === "model") continue;
     const last = out[out.length - 1];
-    if (last && last.role === role) last.parts[0].text += "\n" + m.t;
-    else out.push({ role, parts: [{ text: m.t }] });
+    if (last && last.role === role) last.parts[0].text += "\n" + t;
+    else out.push({ role, parts: [{ text: t }] });
   }
   return out;
 }
@@ -248,6 +261,19 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
     ch.carrito = {}; ch.esperando_confirmacion = false; ch.historial = ch.historial.slice(-6);
   }
 
+  // Un reclamo abierto: el bot no contesta, los mensajes van al panel para que responda el local
+  if (ch.modo === "humano") {
+    for (const b of mensajes) {
+      const md = b.messageData ?? {};
+      const t = md.textMessageData?.textMessage ?? md.extendedTextMessageData?.text ??
+        (md.typeMessage === "audioMessage" ? "[🎤 audio]" : md.typeMessage === "imageMessage" ? "[📷 imagen]" : `[${md.typeMessage}]`);
+      ch.historial.push({ r: "u", t });
+    }
+    const { data: al } = await db.from("resto_alertas").select("id,no_leidos").eq("negocio", neg.id).eq("telefono", chatId).eq("estado", "abierta").order("id", { ascending: false }).limit(1).maybeSingle();
+    if (al) await db.from("resto_alertas").update({ no_leidos: al.no_leidos + mensajes.length, actualizado: new Date().toISOString() }).eq("id", al.id);
+    return guardarChat(ch);
+  }
+
   const textos: string[] = [], audios: { b64: string; mime: string }[] = [];
   for (const b of mensajes) {
   const md = b.messageData ?? {};
@@ -298,6 +324,23 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
   let respuesta: string = (out.respuesta ?? "").trim();
   if (problemas.length) respuesta += `\n\n⚠️ Ojo: ${problemas.join("; ")}.`;
 
+  // Problema que tiene que ver una persona → alerta al local y el bot se corre
+  if (out.derivar && out.derivar.resumen) {
+    const { data: ult } = await db.from("resto_pedidos").select("numero").eq("negocio", neg.id).eq("telefono", chatId)
+      .gte("creado", new Date(Date.now() - 24 * 3600_000).toISOString()).order("creado", { ascending: false }).limit(1).maybeSingle();
+    const tipo = ["reclamo", "hablar_con_persona", "cancelar_pedido", "otro"].includes(out.derivar.tipo) ? out.derivar.tipo : "otro";
+    const nombre = datos.nombre ?? cliente?.nombre ?? null;
+    await db.from("resto_alertas").insert({ negocio: neg.id, telefono: chatId, cliente_nombre: nombre, pedido_numero: ult?.numero ?? null, tipo, resumen: String(out.derivar.resumen).slice(0, 500), no_leidos: 1 });
+    ch.modo = "humano"; ch.esperando_confirmacion = false;
+    await mandar(cfg, ch, respuesta || "Perdón por el inconveniente 🙏 Ya le pasé tu mensaje al encargado y te responde por acá en unos minutos.");
+    if (cfg.celular_reclamos) {
+      const tit = { reclamo: "⚠️ *Reclamo*", hablar_con_persona: "🙋 *Quiere hablar con alguien*", cancelar_pedido: "❌ *Quiere cancelar un pedido*", otro: "💬 *Consulta para el local*" }[tipo];
+      await enviar(cfg, `${String(cfg.celular_reclamos).replace(/\D/g, "")}@c.us`,
+        `${tit} · ${neg.nombre}\n👤 ${nombre ?? "Cliente"} (+${chatId.split("@")[0]})${ult ? `\n🧾 Pedido #${ult.numero}` : ""}\n\n"${out.derivar.resumen}"\n\nEl bot dejó de responderle. Contestale desde el panel: ${cfg.panel_url ?? "kiondaia.com/unapizza"}`);
+    }
+    return guardarChat(ch);
+  }
+
   if (out.enviar_menu) await enviar(cfg, chatId, `🍕 *Carta de ${neg.nombre}*\n${cartaTexto(items)}`);
 
   // Cancelar lo que se estaba armando
@@ -318,6 +361,7 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
       const t = totales(lineas, datos, cfg);
       let m = `✅ ¡Pedido confirmado! Es el *#${num}* 🍕\nTotal: *${$(t.total)}* · Demora estimada: ${datos.tipo === "delivery" ? cfg.demora_delivery : cfg.demora_retiro} min.\n`;
       if (datos.pago === "transferencia") m += `\n🏦 Transferí a *${cfg.alias}* (${cfg.titular_alias}) y mandá el comprobante por acá.\n`;
+      else if (datos.paga_con && datos.paga_con > t.total) m += `💵 Pagás con ${$(datos.paga_con)} → te llevamos ${$(datos.paga_con - t.total)} de vuelto.\n`;
       m += `\nTe aviso por acá cuando ${datos.tipo === "delivery" ? "salga para tu casa" : "esté listo para retirar"}. ¡Gracias!`;
       await mandar(cfg, ch, m);
       return guardarChat(ch);
@@ -340,6 +384,7 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
   }
 
   if (cambio) ch.esperando_confirmacion = false;
+  if (out.mostrar_subtotal && lineas.length) await mandar(cfg, ch, subtotalTexto(lineas, datos, cfg));
   await mandar(cfg, ch, respuesta || "¿En qué te puedo ayudar? 😊");
   await guardarChat(ch);
 }
@@ -402,7 +447,7 @@ async function panel(neg: Neg, body: any) {
     return { ok: true };
   }
   if (a === "config") {
-    const permitidas = ["abierto", "delivery_activo", "demora_retiro", "demora_delivery", "envio_costo"];
+    const permitidas = ["abierto", "delivery_activo", "demora_retiro", "demora_delivery", "envio_costo", "celular_reclamos"];
     const nuevo = { ...cfg };
     for (const k of permitidas) if (k in (body.cambios ?? {})) nuevo[k] = body.cambios[k];
     await db.from("resto_negocios").update({ config: nuevo }).eq("id", neg.id);
@@ -415,10 +460,35 @@ async function panel(neg: Neg, body: any) {
     await db.from("resto_menu").update(cambios).eq("negocio", neg.id).eq("id", body.id);
     return { ok: true };
   }
+  if (a === "chat") {
+    const ch = await cargarChat(neg.id, String(body.telefono));
+    await db.from("resto_alertas").update({ no_leidos: 0 }).eq("negocio", neg.id).eq("telefono", ch.telefono).eq("estado", "abierta");
+    return { historial: ch.historial, modo: ch.modo ?? "bot" };
+  }
+  if (a === "responder") {
+    const tel = String(body.telefono), txt = String(body.texto ?? "").trim().slice(0, 2000);
+    if (!txt) return { error: "mensaje vacío" };
+    const ch = await cargarChat(neg.id, tel);
+    ch.historial.push({ r: "l", t: txt }); ch.modo = "humano";
+    if (!tel.startsWith("ejemplo") && (cfg.permitidos ?? []).includes(tel)) await enviar(cfg, tel, txt);
+    await guardarChat(ch);
+    await db.from("resto_alertas").update({ no_leidos: 0, actualizado: new Date().toISOString() }).eq("negocio", neg.id).eq("telefono", tel).eq("estado", "abierta");
+    return { ok: true };
+  }
+  if (a === "resolver") {
+    const tel = String(body.telefono);
+    await db.from("resto_alertas").update({ estado: "resuelta", no_leidos: 0, resuelto: new Date().toISOString() }).eq("negocio", neg.id).eq("telefono", tel).eq("estado", "abierta");
+    const ch = await cargarChat(neg.id, tel); ch.modo = "bot"; ch.esperando_confirmacion = false; ch.carrito = { datos: ch.carrito.datos };
+    ch.historial.push({ r: "b", t: "[El local resolvió el tema y el bot vuelve a atender]" });
+    await guardarChat(ch);
+    return { ok: true };
+  }
   if (a === "ejemplos") { await cargarEjemplos(neg); return { ok: true }; }
   if (a === "borrar_ejemplos") {
     await db.from("resto_pedidos").delete().eq("negocio", neg.id).eq("ejemplo", true);
     await db.from("resto_clientes").delete().eq("negocio", neg.id).eq("ejemplo", true);
+    await db.from("resto_alertas").delete().eq("negocio", neg.id).eq("ejemplo", true);
+    await db.from("resto_chats").delete().eq("negocio", neg.id).like("telefono", "ejemplo-%");
     return { ok: true };
   }
   if (a === "clientes") {
@@ -427,17 +497,20 @@ async function panel(neg: Neg, body: any) {
   }
   // "datos" (por defecto): todo lo que necesita la pantalla
   const desde = inicioDia();
-  const [{ data: pedidos }, items] = await Promise.all([
+  const [{ data: pedidos }, items, { data: alertas }] = await Promise.all([
     db.from("resto_pedidos").select("*").eq("negocio", neg.id).gte("creado", desde).order("creado", { ascending: false }),
     menu(neg.id),
+    db.from("resto_alertas").select("*").eq("negocio", neg.id).or(`estado.eq.abierta,creado.gte.${desde}`).order("creado", { ascending: false }).limit(100),
   ]);
-  return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, desde };
+  return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, alertas: alertas ?? [], desde };
 }
 
 // ---------- Pedidos de ejemplo (para mostrar el panel lleno) ----------
 async function cargarEjemplos(neg: Neg) {
   await db.from("resto_pedidos").delete().eq("negocio", neg.id).eq("ejemplo", true);
   await db.from("resto_clientes").delete().eq("negocio", neg.id).eq("ejemplo", true);
+  await db.from("resto_alertas").delete().eq("negocio", neg.id).eq("ejemplo", true);
+  await db.from("resto_chats").delete().eq("negocio", neg.id).like("telefono", "ejemplo-%");
   const items = await menu(neg.id);
   const id = (n: string) => items.find((i) => i.nombre === n)!.id;
   const L = (n: string, op: string, cant = 1, mitad?: string, nota = ""): Linea => ({ item_id: id(n), opcion: op, cantidad: cant, mitad_id: mitad ? id(mitad) : null, nota });
@@ -471,6 +544,17 @@ async function cargarEjemplos(neg: Neg) {
       negocio: neg.id, telefono: tel, nombre: e.nom, direccion: e.d.direccion ?? null, entre_calles: e.d.entre_calles ?? null, referencia: e.d.referencia ?? null,
       pedidos: e.conocido ? 3 + (e.min % 5) : 1, ultimo_pedido: { items: ok, total: t.total }, ejemplo: true, actualizado: creado,
     });
+    if (e.tel === "7") {
+      // Reclamo de ejemplo sobre el pedido de Valentina
+      const hace = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+      await db.from("resto_alertas").insert({ negocio: neg.id, telefono: tel, cliente_nombre: e.nom, pedido_numero: num - 1, tipo: "reclamo", resumen: "Le llegaron las 2 muzzas pero faltó la Coca de 1,75 L. Pide que se la manden o que se la descuenten.", no_leidos: 2, ejemplo: true, creado: hace(9), actualizado: hace(6) });
+      await db.from("resto_chats").upsert({ negocio: neg.id, telefono: tel, modo: "humano", carrito: {}, esperando_confirmacion: false, ids_procesados: [], actualizado: hace(6), historial: [
+        { r: "b", t: `🛵 ¡Tu pedido *#${num - 1}* ya salió! En unos minutos está en tu casa.` },
+        { r: "u", t: "Hola, me llegaron las pizzas pero no vino la coca 😕" },
+        { r: "b", t: "¡Uh, perdón Valentina! 🙏 Ya le pasé tu mensaje al encargado y te responde por acá en unos minutos." },
+        { r: "u", t: "Dale, gracias. Si no me la pueden mandar descuéntenmela del próximo" },
+      ] });
+    }
   }
 }
 
