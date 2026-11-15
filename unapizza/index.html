@@ -30,8 +30,8 @@ header{position:sticky;top:0;z-index:20;background:rgba(26,19,16,.96);backdrop-f
 .step{display:flex;align-items:center;gap:4px}
 .step button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:var(--card2);cursor:pointer}
 .step b{min-width:46px;text-align:center}
-nav{display:flex;gap:6px;margin-top:10px}
-nav button{flex:1;border:0;background:var(--card);color:var(--mut);padding:9px 4px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;position:relative}
+nav{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-top:6px;margin-top:4px}nav::-webkit-scrollbar{display:none}
+nav button{flex:1 0 auto;white-space:nowrap;padding-left:10px!important;padding-right:10px!important;border:0;background:var(--card);color:var(--mut);padding:9px 4px;border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;position:relative}
 nav button.act{background:var(--cream);color:#1a1310}
 .badge{position:absolute;top:-5px;right:-3px;background:var(--red);color:#fff;font-size:11px;border-radius:10px;padding:1px 6px}
 main{padding:14px;max-width:1200px;margin:0 auto;padding-bottom:60px}
@@ -98,6 +98,17 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
 .rapidas button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:5px 10px;font-size:12.5px;cursor:pointer}
 .env{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
 .env textarea{flex:1;resize:none;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card);padding:10px;font:inherit;color:inherit}
+.tag.mesa{background:#1f4a35;color:#c5f5da}
+.mesas{display:grid;gap:12px;align-items:start;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.me{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.me.libre{opacity:.55;padding:9px 12px}
+.me.alerta{border-color:var(--amber);box-shadow:0 0 0 2px rgba(245,176,65,.35);animation:glow2 1.6s ease-in-out infinite}
+@keyframes glow2{50%{box-shadow:0 0 0 5px rgba(245,176,65,.15)}}
+.me .btn{flex:0 0 auto}.me .tot{margin-top:auto}.me .mh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.me .mh b{font-size:19px;white-space:nowrap}.me .mh small{white-space:nowrap}.me .mh .est{margin-left:auto}
+.ll{display:flex;align-items:center;gap:8px;background:#3a2c10;border:1px solid #6b5220;color:#ffe3a8;border-radius:10px;padding:7px 9px;font-size:14px;font-weight:700}
+.ll button{margin-left:auto;border:0;border-radius:8px;background:var(--cream);color:#1a1310;font-weight:700;padding:5px 9px;cursor:pointer;font-size:12.5px}
+.salon-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.salon-top .ctl{white-space:normal}
 @media print{body{background:#fff;color:#000}header,.demo,nav,.chips,.acts,.toast{display:none!important}.ped{border:1px solid #000;color:#000;background:#fff;page-break-inside:avoid}.ped:not(.print){display:none}.items{background:#eee}.info,.cli a{color:#000}}
 </style>
 </head>
@@ -128,6 +139,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
   </div>
   <nav>
     <button data-t="comandas" class="act">Comandas<span class="badge hide" id="bNuevos"></span></button>
+    <button data-t="salon">🍽️ Salón<span class="badge hide" id="bSalon"></span></button>
     <button data-t="mensajes">⚠️ Mensajes<span class="badge hide" id="bAlertas"></span></button>
     <button data-t="carta">Carta</button>
     <button data-t="clientes">Clientes</button>
@@ -148,6 +160,14 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
       <button class="chip" data-f="cerradas">Entregadas</button>
     </div>
     <div class="grid" id="lista"></div>
+  </section>
+  <section id="tSalon" class="hide">
+    <div class="salon-top">
+      <span style="color:var(--mut);font-size:13.5px;flex:1;min-width:220px">Cada mesa tiene un QR con la carta. Lo que piden entra solo a <b>Comandas</b> y acá ves el consumo de cada mesa, los llamados al mozo y quién pidió la cuenta.</span>
+      <a class="btn sec" href="qr/" target="_blank" style="text-decoration:none">🖨️ Imprimir QR</a>
+      <a class="btn sec" href="menu/?mesa=1" target="_blank" style="text-decoration:none">👀 Ver carta (Mesa 1)</a>
+    </div>
+    <div class="mesas" id="mesas"></div>
   </section>
   <section id="tMensajes" class="hide">
     <div class="ctl" style="margin-bottom:12px;flex-wrap:wrap;white-space:normal">
@@ -186,7 +206,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;b
 const API = "https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/resto-wa?n=unapizza&panel=1";
 const $ = (n) => "$" + Math.round(n || 0).toLocaleString("es-AR");
 const ESTADOS = { nuevo: ["Nuevo", "var(--red2)"], preparacion: ["En preparación", "var(--amber)"], listo: ["Listo", "var(--blue)"], en_camino: ["En camino", "#c7a6ff"], entregado: ["Entregado", "var(--ok)"], cancelado: ["Cancelado", "var(--mut)"] };
-let PIN = "", S = { pedidos: [], menu: [], config: {}, alertas: [] }, vistos = null, alertasVistas = null, chatAbierto = null, filtro = "activas", tab = "comandas", confirmarCancel = null;
+let PIN = "", S = { pedidos: [], menu: [], config: {}, alertas: [], llamados: [] }, llVistos = null, confirmarCobro = null, vistos = null, alertasVistas = null, chatAbierto = null, filtro = "activas", tab = "comandas", confirmarCancel = null;
 const store = { get(k) { try { return localStorage.getItem(k) } catch { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
 
 async function api(accion, extra = {}) {
@@ -229,6 +249,10 @@ async function cargar(primera) {
     const nuevasAl = d.alertas.filter((a) => a.estado === "abierta" && !a.ejemplo && (!alertasVistas || !alertasVistas.has(a.id + ":" + a.no_leidos)) && a.no_leidos > 0);
     if (alertasVistas && nuevasAl.length) { sonar(); toast("⚠️ Un cliente necesita que le respondan"); }
     alertasVistas = new Set(firma.split(","));
+    const llIds = new Set((d.llamados || []).map((l) => l.id));
+    const llNuevos = (d.llamados || []).filter((l) => llVistos && !llVistos.has(l.id));
+    if (llNuevos.length) { sonar(); const l = llNuevos[0]; toast(l.tipo === "mozo" ? `🙋 Mesa ${l.mesa} llama al mozo` : `🧾 Mesa ${l.mesa} pide la cuenta`); }
+    llVistos = llIds;
     if (chatAbierto) refrescarChat();
     document.getElementById("dot").classList.remove("off"); document.getElementById("liveTxt").textContent = "En vivo";
     pintar();
@@ -252,6 +276,9 @@ function pintar() {
   document.title = (nuevos ? `(${nuevos}) ` : "") + "Una Pizza · Panel";
   if (tab === "comandas") pintarComandas();
   if (tab === "hoy") pintarHoy();
+  const nLl = (S.llamados || []).length;
+  const bs = document.getElementById("bSalon"); bs.textContent = nLl; bs.classList.toggle("hide", !nLl);
+  if (tab === "salon") pintarSalon();
   if (tab === "carta" && !document.getElementById("carta").contains(document.activeElement)) pintarCarta();
 }
 
@@ -259,6 +286,7 @@ function pintar() {
 const SIG = { nuevo: ["👨‍🍳 Aceptar y preparar", "preparacion"], preparacion: ["✅ Está listo", "listo"] };
 function siguiente(p) {
   if (SIG[p.estado]) return SIG[p.estado];
+  if (p.estado === "listo" && p.tipo === "mesa") return ["🍽️ Servido en la mesa", "entregado"];
   if (p.estado === "listo") return p.tipo === "delivery" ? ["🛵 Salió el delivery", "en_camino"] : ["🙌 Entregado", "entregado"];
   if (p.estado === "en_camino") return ["🙌 Entregado", "entregado"];
   return null;
@@ -276,18 +304,18 @@ function pintarComandas() {
     const tel = p.telefono.split("@")[0], ej = p.ejemplo;
     const vuelto = p.pago === "efectivo" && p.paga_con > p.total ? ` · paga con ${$(p.paga_con)} → vuelto <b>${$(p.paga_con - p.total)}</b>` : "";
     return `<article class="ped ${p.estado}" id="p${p.id}">
-      <div class="ph"><span class="num">#${p.numero}</span><span class="tag ${p.tipo === "delivery" ? "del" : "ret"}">${p.tipo === "delivery" ? "🛵 DELIVERY" : "🏃 RETIRA"}</span>${ej ? '<span class="tag">EJEMPLO</span>' : ""}${abiertas(p.telefono).length ? '<span class="tag rec">⚠️ RECLAMO</span>' : ""}<span class="est" style="color:${col}">${et}</span></div>
-      <div class="cli"><b>${esc(p.cliente_nombre)}</b>${p.cliente_conocido ? " ⭐" : ""} ${ej ? "" : ` · <a href="https://wa.me/${tel}" target="_blank">+${tel}</a>`}<br><small style="color:var(--mut)">${hora(p.creado)} · ${hace(p.creado)} · demora prometida ${p.demora_min}'</small></div>
+      <div class="ph"><span class="num">#${p.numero}</span><span class="tag ${p.tipo === "delivery" ? "del" : p.tipo === "mesa" ? "mesa" : "ret"}">${p.tipo === "delivery" ? "🛵 DELIVERY" : p.tipo === "mesa" ? `🍽️ MESA ${p.mesa}` : "🏃 RETIRA"}</span>${ej ? '<span class="tag">EJEMPLO</span>' : ""}${abiertas(p.telefono).length ? '<span class="tag rec">⚠️ RECLAMO</span>' : ""}<span class="est" style="color:${col}">${et}</span></div>
+      <div class="cli"><b>${esc(p.cliente_nombre)}</b>${p.cliente_conocido ? " ⭐" : ""} ${ej || p.tipo === "mesa" ? (p.tipo === "mesa" ? ' · <small style="color:var(--mut)">pidió desde la carta QR</small>' : "") : ` · <a href="https://wa.me/${tel}" target="_blank">+${tel}</a>`}<br><small style="color:var(--mut)">${hora(p.creado)} · ${hace(p.creado)} · demora prometida ${p.demora_min}'</small></div>
       <div class="items">${p.items.map((l) => `<div><span class="q">${l.cantidad}x</span><span>${esc(l.nombre)}</span></div>${l.nota ? `<span class="nt">↳ ${esc(l.nota)}</span>` : ""}`).join("")}</div>
       <div class="info">
         ${p.tipo === "delivery" ? `<span>📍 <b>${esc(p.direccion)}</b>${p.entre_calles ? ` (${esc(p.entre_calles)})` : ""}${p.referencia ? `<br>&nbsp;&nbsp;&nbsp;&nbsp;Ref: ${esc(p.referencia)}` : ""}</span>` : ""}
-        <span>${p.pago === "transferencia" ? `🏦 Transferencia ${p.comprobante_url ? (ej ? `· <span style="color:var(--ok)">✔ comprobante recibido</span>` : `· <a href="${esc(p.comprobante_url)}" target="_blank" style="color:var(--ok)">✔ ver comprobante</a>`) : "· <span style='color:var(--amber)'>esperando comprobante</span>"}` : `💵 Efectivo${vuelto}`}</span>
+        ${p.tipo === "mesa" ? `<span>🧾 ${p.cobrado ? "Cobrado" : "Se cobra al pedir la cuenta"}</span>` : `<span>${p.pago === "transferencia" ? `🏦 Transferencia ${p.comprobante_url ? (ej ? `· <span style="color:var(--ok)">✔ comprobante recibido</span>` : `· <a href="${esc(p.comprobante_url)}" target="_blank" style="color:var(--ok)">✔ ver comprobante</a>`) : "· <span style='color:var(--amber)'>esperando comprobante</span>"}` : `💵 Efectivo${vuelto}`}</span>`}
         ${p.notas ? `<span>🗒️ ${esc(p.notas)}</span>` : ""}
       </div>
       <div class="tot"><span style="color:var(--mut);font-size:13px">${p.envio ? `Subtotal ${$(p.subtotal)} + envío ${$(p.envio)}` : ""}</span><b>${$(p.total)}</b></div>
       <div class="acts">
         ${sig ? `<button class="btn" data-id="${p.id}" data-e="${sig[1]}">${sig[0]}</button>` : ""}
-        <button class="btn sec" data-chat="${esc(p.telefono)}" data-nom="${esc(p.cliente_nombre)}" title="Ver la charla">💬</button>
+        ${p.tipo === "mesa" ? "" : `<button class="btn sec" data-chat="${esc(p.telefono)}" data-nom="${esc(p.cliente_nombre)}" title="Ver la charla">💬</button>`}
         <button class="btn sec" data-print="${p.id}" title="Imprimir comanda">🖨️</button>
         ${!["entregado", "cancelado"].includes(p.estado) ? `<button class="btn sec ${confirmarCancel === p.id ? "warn" : ""}" data-cancel="${p.id}">${confirmarCancel === p.id ? "¿Cancelar?" : "✕"}</button>` : ""}
       </div>
@@ -307,7 +335,7 @@ document.getElementById("lista").onclick = async (e) => {
 };
 async function cambiar(id, estado, btn) {
   if (btn) { btn.disabled = true; btn.textContent = "…"; }
-  try { await api("estado_pedido", { id, estado }); toast("Listo · le avisamos al cliente por WhatsApp"); await cargar(); }
+  try { await api("estado_pedido", { id, estado }); toast(S.pedidos.find((p) => p.id === id)?.tipo === "mesa" ? "Listo ✓" : "Listo · le avisamos al cliente por WhatsApp"); await cargar(); }
   catch (e) { toast("Error: " + e.message); if (btn) btn.disabled = false; }
 }
 document.getElementById("filtros").onclick = (e) => { const b = e.target.closest(".chip"); if (!b) return; filtro = b.dataset.f; document.querySelectorAll(".chip").forEach((c) => c.classList.toggle("act", c === b)); pintarComandas(); };
@@ -322,8 +350,8 @@ document.querySelectorAll(".step button").forEach((b) => b.onclick = () => { con
 document.querySelector("nav").onclick = (e) => {
   const b = e.target.closest("button"); if (!b) return; tab = b.dataset.t;
   document.querySelectorAll("nav button").forEach((x) => x.classList.toggle("act", x === b));
-  ["comandas", "mensajes", "carta", "clientes", "hoy"].forEach((t) => document.getElementById("t" + t[0].toUpperCase() + t.slice(1)).classList.toggle("hide", t !== tab));
-  if (tab === "carta") pintarCarta(); if (tab === "mensajes") pintarAlertas(); if (tab === "hoy") pintarHoy(); if (tab === "clientes") pintarClientes(); if (tab === "comandas") pintarComandas();
+  ["comandas", "salon", "mensajes", "carta", "clientes", "hoy"].forEach((t) => document.getElementById("t" + t[0].toUpperCase() + t.slice(1)).classList.toggle("hide", t !== tab));
+  if (tab === "carta") pintarCarta(); if (tab === "mensajes") pintarAlertas(); if (tab === "hoy") pintarHoy(); if (tab === "clientes") pintarClientes(); if (tab === "comandas") pintarComandas(); if (tab === "salon") pintarSalon();
 };
 
 // ---- Carta ----
@@ -363,14 +391,46 @@ function pintarHoy() {
   const v = S.pedidos.filter((p) => p.estado !== "cancelado");
   const tot = v.reduce((a, p) => a + +p.total, 0);
   const ef = v.filter((p) => p.pago === "efectivo").reduce((a, p) => a + +p.total, 0);
-  const del = v.filter((p) => p.tipo === "delivery").length;
-  const k = [["Vendido hoy", $(tot)], ["Pedidos", v.length], ["Ticket promedio", $(v.length ? tot / v.length : 0)], ["Efectivo", $(ef)], ["Transferencia", $(tot - ef)], ["Delivery / Retiro", `${del} / ${v.length - del}`], ["Envíos cobrados", $(v.reduce((a, p) => a + +p.envio, 0))], ["Cancelados", S.pedidos.length - v.length]];
+  const del = v.filter((p) => p.tipo === "delivery").length, mes = v.filter((p) => p.tipo === "mesa").length;
+  const tr = v.filter((p) => p.pago === "transferencia").reduce((a, p) => a + +p.total, 0);
+  const k = [["Vendido hoy", $(tot)], ["Pedidos", v.length], ["Ticket promedio", $(v.length ? tot / v.length : 0)], ["Efectivo", $(ef)], ["Transferencia", $(tr)], ["Salón (mesas)", $(tot - ef - tr)], ["Delivery / Retiro / Mesa", `${del} / ${v.length - del - mes} / ${mes}`], ["Envíos cobrados", $(v.reduce((a, p) => a + +p.envio, 0))], ["Cancelados", S.pedidos.length - v.length]];
   document.getElementById("kpis").innerHTML = k.map(([a, b]) => `<div class="kpi"><small>${a}</small><b>${b}</b></div>`).join("");
   const cnt = {}; v.forEach((p) => p.items.forEach((l) => { cnt[l.nombre] = (cnt[l.nombre] || 0) + l.cantidad; }));
   const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 8); const max = top[0]?.[1] || 1;
   document.getElementById("top").innerHTML = top.length ? top.map(([n, c]) => `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between"><span>${esc(n)}</span><b>${c}</b></div><div class="bar"><i style="width:${c / max * 100}%"></i></div></div>`).join("") : `<div class="empty">Sin pedidos todavía.</div>`;
 }
 setInterval(() => { if (tab === "comandas") pintarComandas(); }, 30000);
+
+// ---- Salón ----
+const PAGOS = { efectivo: "💵 efectivo", transferencia: "🏦 transferencia", tarjeta: "💳 tarjeta" };
+function pintarSalon() {
+  const n = S.config.mesas || 10, h = [];
+  for (let m = 1; m <= n; m++) {
+    const peds = S.pedidos.filter((p) => p.tipo === "mesa" && p.mesa === m && !p.cobrado && p.estado !== "cancelado").sort((a, b) => new Date(a.creado) - new Date(b.creado));
+    const lls = (S.llamados || []).filter((l) => l.mesa === m);
+    const tot = peds.reduce((a, p) => a + +p.total, 0);
+    const coc = peds.filter((p) => ["nuevo", "preparacion"].includes(p.estado)).length, ps = peds.filter((p) => p.estado === "listo").length;
+    const est = !peds.length && !lls.length ? ["Libre", "var(--mut)"] : ps ? [`${ps} para servir`, "var(--blue)"] : coc ? [`${coc} en cocina`, "var(--amber)"] : ["Comiendo", "var(--ok)"];
+    h.push([lls.length ? 0 : peds.length ? 1 : 2, m, `<div class="me ${!peds.length && !lls.length ? "libre" : ""} ${lls.length ? "alerta" : ""}">
+      <div class="mh"><b>Mesa ${m}</b>${peds[0] ? `<small style="color:var(--mut)">desde ${hora(peds[0].creado)}</small>` : ""}<span class="est" style="color:${est[1]}">${est[0]}</span></div>
+      ${lls.map((l) => `<div class="ll">${l.tipo === "mozo" ? "🙋 Llama al mozo" : `🧾 Pide la cuenta${l.pago ? ` · ${PAGOS[l.pago] || l.pago}` : ""}`}<small style="font-weight:500;opacity:.8">${hace(l.creado)}</small><button data-ll="${l.id}">✓ Atendido</button></div>`).join("")}
+      ${peds.length ? `<div class="items">${peds.map((p) => p.items.map((l) => `<div><span class="q">${l.cantidad}x</span><span>${esc(l.nombre)}</span></div>`).join("")).join("")}</div>
+        <div class="tot"><span style="color:var(--mut);font-size:13px">${peds.length} pedido${peds.length > 1 ? "s" : ""}${peds.some((p) => p.cliente_nombre && p.cliente_nombre !== "Mesa " + m) ? " · " + esc([...new Set(peds.map((p) => p.cliente_nombre).filter((x) => x !== "Mesa " + m))].join(", ")) : ""}</span><b>${$(tot)}</b></div>
+        <button class="btn ${confirmarCobro === m ? "warn" : ""}" data-cobrar="${m}">${confirmarCobro === m ? `¿Cobrado ${$(tot)}? Tocá para confirmar` : "💰 Cobrar y liberar mesa"}</button>` : `${lls.length ? `<small style="color:var(--mut)">Sin pedidos abiertos</small>` : ""}`}
+    </div>`]);
+  }
+  document.getElementById("mesas").innerHTML = h.sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((x) => x[2]).join("");
+}
+document.getElementById("mesas").onclick = async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.ll) { b.disabled = true; try { await api("atender_llamado", { id: +b.dataset.ll }); S.llamados = S.llamados.filter((l) => l.id !== +b.dataset.ll); pintar(); } catch (er) { toast("Error: " + er.message); } return; }
+  if (b.dataset.cobrar) {
+    const m = +b.dataset.cobrar;
+    if (confirmarCobro !== m) { confirmarCobro = m; pintarSalon(); setTimeout(() => { if (confirmarCobro === m) { confirmarCobro = null; pintarSalon(); } }, 4000); return; }
+    confirmarCobro = null; b.disabled = true;
+    try { await api("cobrar_mesa", { mesa: m }); toast(`✅ Mesa ${m} cobrada y libre`); await cargar(); } catch (er) { toast("Error: " + er.message); }
+  }
+};
 
 // ---- Mensajes / reclamos ----
 const TIPOS = { reclamo: "⚠️ Reclamo", hablar_con_persona: "🙋 Quiere hablar con alguien", cancelar_pedido: "❌ Quiere cancelar", otro: "💬 Consulta" };

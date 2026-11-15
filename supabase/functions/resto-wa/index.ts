@@ -2,6 +2,7 @@
 // Un solo endpoint para dos cosas:
 //   1) Webhook de Green:   POST ?n=<negocio>&k=<webhook_key>
 //   2) API del panel:      POST ?n=<negocio>&panel=1   body {pin, accion, ...}
+//   3) Carta QR pública:   POST ?n=<negocio>&carta=1   body {accion: menu | pedido_mesa | llamar | mesa}
 // Setup del webhook en Green: GET ?n=<negocio>&k=<webhook_key>&setup=1
 // Los precios y el total los calcula SIEMPRE el servidor con la carta de la base (la IA solo arma el carrito).
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -182,6 +183,7 @@ CÓMO TRABAJÁS:
 6. Si pide la carta o el menú, poné "enviar_menu": true (el sistema manda la carta completa) y en respuesta algo corto.
 7. Si quiere cancelar lo que estaba armando (todavía sin confirmar): accion "cancelar". Si es un pedido YA confirmado, seguí la regla 9.
 8. Si manda un audio, entendelo y escribí qué dijo en "transcripcion".
+8b. PEDIDO DESDE LA CARTA: si el mensaje empieza con "Pedido desde la carta", es un carrito que el cliente armó en la carta digital. Cargá TODOS esos productos al carrito tal cual (mismo tamaño, cantidad y notas), agradecé en una frase y pasá directo a lo que falte (retiro o delivery, nombre, dirección, pago). No le vuelvas a ofrecer la carta.
 9. PROBLEMAS → PERSONA: si el cliente tiene un problema con un pedido (llegó mal o incompleto, frío, se demoró mucho, cobro equivocado), se queja, pide hablar con una persona o el encargado, quiere cancelar o cambiar un pedido YA confirmado, o pregunta algo que no podés resolver con lo que sabés: completá "derivar" con el tipo y un resumen claro para el encargado (qué pasó y qué pide, con el número de pedido si lo sabés). En "respuesta" pedí disculpas breve y decí que ya le pasaste el mensaje al encargado y que le responde por este mismo chat en unos minutos. NO prometas reenvíos, descuentos, reintegros ni tiempos: eso lo decide el local.
 
 Respondé SIEMPRE con este JSON y nada más:
@@ -483,12 +485,24 @@ async function panel(neg: Neg, body: any) {
     await guardarChat(ch);
     return { ok: true };
   }
+  if (a === "atender_llamado") {
+    await db.from("resto_llamados").update({ estado: "atendido", atendido: new Date().toISOString() }).eq("negocio", neg.id).eq("id", body.id);
+    return { ok: true };
+  }
+  if (a === "cobrar_mesa") {
+    const mesa = Number(body.mesa);
+    await db.from("resto_pedidos").update({ cobrado: true, estado: "entregado", actualizado: new Date().toISOString() })
+      .eq("negocio", neg.id).eq("tipo", "mesa").eq("mesa", mesa).eq("cobrado", false).neq("estado", "cancelado");
+    await db.from("resto_llamados").update({ estado: "atendido", atendido: new Date().toISOString() }).eq("negocio", neg.id).eq("mesa", mesa).eq("estado", "abierto");
+    return { ok: true };
+  }
   if (a === "ejemplos") { await cargarEjemplos(neg); return { ok: true }; }
   if (a === "borrar_ejemplos") {
     await db.from("resto_pedidos").delete().eq("negocio", neg.id).eq("ejemplo", true);
     await db.from("resto_clientes").delete().eq("negocio", neg.id).eq("ejemplo", true);
     await db.from("resto_alertas").delete().eq("negocio", neg.id).eq("ejemplo", true);
     await db.from("resto_chats").delete().eq("negocio", neg.id).like("telefono", "ejemplo-%");
+    await db.from("resto_llamados").delete().eq("negocio", neg.id).eq("ejemplo", true);
     return { ok: true };
   }
   if (a === "clientes") {
@@ -497,12 +511,62 @@ async function panel(neg: Neg, body: any) {
   }
   // "datos" (por defecto): todo lo que necesita la pantalla
   const desde = inicioDia();
-  const [{ data: pedidos }, items, { data: alertas }] = await Promise.all([
+  const [{ data: pedidos }, items, { data: alertas }, { data: llamados }] = await Promise.all([
     db.from("resto_pedidos").select("*").eq("negocio", neg.id).gte("creado", desde).order("creado", { ascending: false }),
     menu(neg.id),
     db.from("resto_alertas").select("*").eq("negocio", neg.id).or(`estado.eq.abierta,creado.gte.${desde}`).order("creado", { ascending: false }).limit(100),
+    db.from("resto_llamados").select("*").eq("negocio", neg.id).eq("estado", "abierto").order("creado"),
   ]);
-  return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, alertas: alertas ?? [], desde };
+  return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, alertas: alertas ?? [], llamados: llamados ?? [], desde };
+}
+
+// ---------- Carta QR pública (sin PIN) ----------
+async function carta(neg: Neg, body: any, req: Request) {
+  const cfg = neg.config;
+  const a = body.accion;
+  const mesas = Number(cfg.mesas ?? 0);
+  if (a === "menu") {
+    const items = await menu(neg.id);
+    return {
+      nombre: neg.nombre,
+      local: { direccion: cfg.direccion, horarios: cfg.horarios, abierto: !!cfg.abierto, delivery_activo: !!cfg.delivery_activo, envio_costo: cfg.envio_costo, zona_envio: cfg.zona_envio, demora_retiro: cfg.demora_retiro, demora_delivery: cfg.demora_delivery, notas: cfg.notas, whatsapp: cfg.whatsapp_publico, mesas },
+      menu: items.map(({ id, categoria, nombre, descripcion, opciones, disponible, admite_mitad }) => ({ id, categoria, nombre, descripcion, opciones, disponible, admite_mitad })),
+    };
+  }
+  const mesa = Math.round(Number(body.mesa));
+  if (!(mesa >= 1 && mesa <= mesas)) return { error: "Mesa no válida" };
+  if (a === "mesa") {
+    const { data } = await db.from("resto_pedidos").select("numero,items,total,estado,creado").eq("negocio", neg.id).eq("tipo", "mesa").eq("mesa", mesa)
+      .eq("cobrado", false).neq("estado", "cancelado").gte("creado", inicioDia()).order("creado");
+    const { data: ll } = await db.from("resto_llamados").select("tipo").eq("negocio", neg.id).eq("mesa", mesa).eq("estado", "abierto");
+    return { pedidos: data ?? [], total: (data ?? []).reduce((s, p) => s + Number(p.total), 0), llamados: (ll ?? []).map((x) => x.tipo) };
+  }
+  if (a === "llamar") {
+    const tipo = body.tipo === "cuenta" ? "cuenta" : "mozo";
+    const { data: ya } = await db.from("resto_llamados").select("id").eq("negocio", neg.id).eq("mesa", mesa).eq("tipo", tipo).eq("estado", "abierto").limit(1);
+    if (!ya?.length) await db.from("resto_llamados").insert({ negocio: neg.id, mesa, tipo, pago: tipo === "cuenta" ? (["efectivo", "transferencia", "tarjeta"].includes(body.pago) ? body.pago : null) : null });
+    return { ok: true };
+  }
+  if (a === "pedido_mesa") {
+    if (!cfg.abierto) return { error: `Ahora el local no está tomando pedidos. ${cfg.horarios ?? ""}` };
+    const { count } = await db.from("resto_pedidos").select("id", { count: "exact", head: true }).eq("negocio", neg.id).eq("mesa", mesa)
+      .gte("creado", new Date(Date.now() - 30 * 60_000).toISOString());
+    if ((count ?? 0) >= 6) return { error: "Hiciste muchos pedidos seguidos desde esta mesa. Llamá al mozo, por favor 🙏" };
+    const items = await menu(neg.id);
+    const { ok, problemas } = validar((body.lineas ?? []).slice(0, 30), items);
+    if (problemas.length) return { error: "Revisá tu pedido: " + problemas.join("; ") };
+    if (!ok.length) return { error: "El pedido está vacío" };
+    const t = totales(ok, { tipo: "retiro" }, cfg);
+    const { data: num } = await db.rpc("resto_nuevo_numero", { p_negocio: neg.id });
+    const nombre = String(body.nombre ?? "").trim().slice(0, 60) || null;
+    const { error } = await db.from("resto_pedidos").insert({
+      negocio: neg.id, numero: num, telefono: `mesa-${mesa}`, cliente_nombre: nombre ?? `Mesa ${mesa}`, items: ok, subtotal: t.subtotal, envio: 0, total: t.subtotal,
+      tipo: "mesa", mesa, origen: "carta", notas: String(body.notas ?? "").trim().slice(0, 300) || null, demora_min: cfg.demora_retiro,
+    });
+    if (error) { console.error("pedido mesa", error); return { error: "No pudimos tomar el pedido, probá de nuevo" }; }
+    return { ok: true, numero: num, total: t.subtotal };
+  }
+  return { error: "acción" };
 }
 
 // ---------- Pedidos de ejemplo (para mostrar el panel lleno) ----------
@@ -511,6 +575,7 @@ async function cargarEjemplos(neg: Neg) {
   await db.from("resto_clientes").delete().eq("negocio", neg.id).eq("ejemplo", true);
   await db.from("resto_alertas").delete().eq("negocio", neg.id).eq("ejemplo", true);
   await db.from("resto_chats").delete().eq("negocio", neg.id).like("telefono", "ejemplo-%");
+  await db.from("resto_llamados").delete().eq("negocio", neg.id).eq("ejemplo", true);
   const items = await menu(neg.id);
   const id = (n: string) => items.find((i) => i.nombre === n)!.id;
   const L = (n: string, op: string, cant = 1, mitad?: string, nota = ""): Linea => ({ item_id: id(n), opcion: op, cantidad: cant, mitad_id: mitad ? id(mitad) : null, nota });
@@ -527,6 +592,24 @@ async function cargarEjemplos(neg: Neg) {
     { min: 70, est: "cancelado", nom: "Nicolás Pereyra", tel: "10", d: { tipo: "delivery", direccion: "Ruta 26 km 3, Barrio Los Robles", pago: "efectivo" }, l: [L("Palmitos", "8 porciones")] },
   ];
   let num = (await db.rpc("resto_nuevo_numero", { p_negocio: neg.id })).data ?? 1;
+  // Salón: pedidos hechos desde la carta QR de las mesas
+  const salon: { min: number; est: string; mesa: number; nom: string | null; l: Linea[] }[] = [
+    { min: 26, est: "entregado", mesa: 5, nom: "Flor", l: [L("Muzzarella", "8 porciones", 1, "Napolitana"), L("Heineken", "Litro", 2)] },
+    { min: 8, est: "preparacion", mesa: 5, nom: "Flor", l: [L("Flan casero", "Con crema o dulce de leche", 2)] },
+    { min: 12, est: "preparacion", mesa: 3, nom: null, l: [L("Fugazzetta rellena", "Entera"), L("Coca-Cola", "1,75 L")] },
+    { min: 3, est: "nuevo", mesa: 8, nom: "Tomás", l: [L("Empanada", "Media docena", 1, undefined, "3 carne, 3 jamón y queso"), L("Imperial", "Lata", 3)] },
+  ];
+  for (const e of salon) {
+    const { ok } = validar(e.l, items);
+    const t = totales(ok, { tipo: "retiro" }, neg.config);
+    const creado = new Date(Date.now() - e.min * 60_000).toISOString();
+    await db.from("resto_pedidos").insert({ negocio: neg.id, numero: num++, telefono: `mesa-${e.mesa}`, cliente_nombre: e.nom ?? `Mesa ${e.mesa}`, items: ok, subtotal: t.subtotal, envio: 0, total: t.subtotal,
+      tipo: "mesa", mesa: e.mesa, origen: "carta", estado: e.est, demora_min: neg.config.demora_retiro, ejemplo: true, creado, actualizado: creado });
+  }
+  await db.from("resto_llamados").insert([
+    { negocio: neg.id, mesa: 3, tipo: "mozo", ejemplo: true, creado: new Date(Date.now() - 1 * 60_000).toISOString() },
+    { negocio: neg.id, mesa: 5, tipo: "cuenta", pago: "transferencia", ejemplo: true, creado: new Date(Date.now() - 2 * 60_000).toISOString() },
+  ]);
   const ord = [...ej].sort((a, b) => b.min - a.min);
   for (const e of ord) {
     const { ok } = validar(e.l, items);
@@ -565,6 +648,11 @@ Deno.serve(async (req) => {
   const neg = await negocio(url.searchParams.get("n") ?? "");
   if (!neg) return new Response("no", { status: 404, headers: CORS });
 
+  if (url.searchParams.get("carta")) {
+    let body: any = {}; try { body = await req.json(); } catch { /* vacío */ }
+    const r = await carta(neg, body, req);
+    return new Response(JSON.stringify(r), { headers: { ...CORS, "content-type": "application/json" }, status: (r as any).error ? 400 : 200 });
+  }
   if (url.searchParams.get("panel")) {
     let body: any = {}; try { body = await req.json(); } catch { /* vacío */ }
     const r = await panel(neg, body);
