@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una Pizza · Cocina</title>
+<meta name="theme-color" content="#120d0a">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👨‍🍳</text></svg>">
+<style>
+:root{--bg:#120d0a;--card:#221812;--line:#3d2d24;--txt:#fbf1e6;--mut:#b8a595;--red:#e8462e;--amber:#f5b041;--ok:#5fd08a;--blue:#5aa9f0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font:17px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+header h1{font-size:20px}header .c{margin-left:auto;display:flex;gap:14px;font-weight:700;font-size:15px}
+header a{color:var(--mut);font-size:14px;text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ok)}.dot.off{background:#777}
+main{padding:14px;display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:start}
+.k{background:var(--card);border:2px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.k.nuevo{border-color:var(--red)}.k.preparacion{border-color:var(--amber)}
+.k.tarde .kh{background:#5a1a10}
+.kh{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#2c1f17}
+.kh .n{font-size:26px;font-weight:900}.kh .t{font-weight:800;font-size:15px;border-radius:8px;padding:3px 9px;background:#3a2a52;color:#d9c6ff}
+.kh .t.mesa{background:#1f4a35;color:#c5f5da}.kh .t.ret{background:#24384a;color:#bfe0ff}
+.kh .m{margin-left:auto;font-weight:800;font-size:18px}
+.ki{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.ki div{display:flex;gap:10px;font-size:20px;font-weight:600;line-height:1.25}.ki .q{font-weight:900;min-width:38px;color:var(--amber)}
+.ki .nt{font-size:16px;color:#ffd08a;font-weight:600;padding-left:48px;display:block}
+.kn{margin:0 14px 10px;background:#3a2c10;border-radius:10px;padding:8px 10px;font-size:16px;color:#ffe3a8;font-weight:600}
+.kb{border:0;padding:16px;font-weight:900;font-size:19px;cursor:pointer;background:var(--red);color:#fff}
+.k.preparacion .kb{background:var(--ok);color:#0d2a18}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:18vh 20px;font-size:20px}
+.login{max-width:340px;margin:14vh auto;text-align:center;padding:20px}
+.login input{width:100%;margin:18px 0 10px;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:24px;text-align:center;letter-spacing:.3em}
+.login button{width:100%;border:0;border-radius:12px;padding:14px;font-weight:800;background:var(--txt);color:#1a1310;cursor:pointer}
+.err{color:#ff8a75;min-height:22px;font-size:15px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<section id="vLogin" class="login">
+  <div style="font-size:54px">👨‍🍳</div><h2>Cocina · Una Pizza</h2>
+  <input id="pin" inputmode="numeric" maxlength="6" placeholder="PIN" autocomplete="off">
+  <div class="err" id="err"></div><button id="entrar">Entrar</button>
+</section>
+<div id="vApp" class="hide">
+  <header><span class="dot" id="dot"></span><h1>Cocina</h1><div class="c"><span style="color:var(--red)" id="cN"></span><span style="color:var(--amber)" id="cP"></span></div><a href="../">Panel</a></header>
+  <main id="lista"></main>
+</div>
+<script>
+const API = "https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/resto-wa?n=unapizza&panel=1";
+let PIN = "", S = { pedidos: [] }, vistos = null, AC = null;
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = { get(k) { try { return localStorage.getItem(k) } catch { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } };
+async function api(accion, extra = {}) {
+  const r = await fetch(API, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pin: PIN, accion, ...extra }) });
+  const j = await r.json().catch(() => ({ error: "Sin conexión" }));
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+function sonar() {
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    [0, .2, .4].forEach((t, i) => { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = [880, 1175, 1568][i]; g.gain.setValueAtTime(.0001, AC.currentTime + t); g.gain.exponentialRampToValueAtTime(.5, AC.currentTime + t + .02); g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + t + .18); o.connect(g).connect(AC.destination); o.start(AC.currentTime + t); o.stop(AC.currentTime + t + .2); });
+  } catch {}
+}
+async function entrar(pin) {
+  PIN = pin; el("err").textContent = "";
+  try { await cargar(true); store.set("unapizza_pin", pin); el("vLogin").classList.add("hide"); el("vApp").classList.remove("hide"); setInterval(cargar, 5000); setInterval(pintar, 20000); }
+  catch (e) { el("err").textContent = e.message; }
+}
+el("entrar").onclick = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); } catch {} entrar(el("pin").value.trim()); };
+el("pin").onkeydown = e => { if (e.key === "Enter") el("entrar").click(); };
+const g = store.get("unapizza_pin"); if (g) el("pin").value = g;
+async function cargar(primera) {
+  try {
+    S = await api("datos");
+    const ids = new Set(S.pedidos.map(p => p.id));
+    if (vistos && S.pedidos.some(p => !vistos.has(p.id) && p.estado === "nuevo")) sonar();
+    vistos = ids; el("dot").classList.remove("off"); pintar();
+  } catch (e) { if (primera) throw e; el("dot").classList.add("off"); }
+}
+function pintar() {
+  const l = S.pedidos.filter(p => ["nuevo", "preparacion"].includes(p.estado)).sort((a, b) => new Date(a.creado) - new Date(b.creado));
+  el("cN").textContent = l.filter(p => p.estado === "nuevo").length + " nuevos";
+  el("cP").textContent = l.filter(p => p.estado === "preparacion").length + " en preparación";
+  el("lista").innerHTML = l.length ? l.map(p => {
+    const min = Math.max(0, Math.round((Date.now() - new Date(p.creado)) / 60000));
+    return `<article class="k ${p.estado} ${min > (p.demora_min || 30) ? "tarde" : ""}">
+      <div class="kh"><span class="n">#${p.numero}</span><span class="t ${p.tipo === "mesa" ? "mesa" : p.tipo === "retiro" ? "ret" : ""}">${p.tipo === "mesa" ? "🍽️ MESA " + p.mesa : p.tipo === "delivery" ? "🛵 DELIVERY" : "🏃 RETIRA"}</span><span class="m">${min}'</span></div>
+      <div class="ki">${p.items.map(i => `<div><span class="q">${i.cantidad}x</span><span>${esc(i.nombre)}</span></div>${i.nota ? `<span class="nt">↳ ${esc(i.nota)}</span>` : ""}`).join("")}</div>
+      ${p.notas ? `<div class="kn">🗒️ ${esc(p.notas)}</div>` : ""}
+      <button class="kb" data-id="${p.id}" data-e="${p.estado === "nuevo" ? "preparacion" : "listo"}">${p.estado === "nuevo" ? "👨‍🍳 Empezar" : "✅ Listo"}</button>
+    </article>`;
+  }).join("") : `<div class="empty">🍕<br>Nada para preparar.<br>Cuando entre un pedido aparece acá con un sonido.</div>`;
+}
+el("lista").onclick = async e => {
+  const b = e.target.closest(".kb"); if (!b) return; b.disabled = true; b.textContent = "…";
+  try { await api("estado_pedido", { id: +b.dataset.id, estado: b.dataset.e }); await cargar(); } catch (er) { b.disabled = false; b.textContent = "Error, tocá de nuevo"; }
+};
+</script>
+</body>
+</html>

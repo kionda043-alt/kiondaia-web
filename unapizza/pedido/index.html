@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una Pizza · Tu pedido</title>
+<meta name="theme-color" content="#c8341f">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍕</text></svg>">
+<style>
+:root{--red:#c8341f;--cream:#fbf1e6;--paper:#fffaf3;--ink:#2a1a12;--mut:#8a7464;--line:#ead9c6;--ok:#2f9e5b}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--ink);font:15.5px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.demob{background:#2a1a12;color:#ffe9b8;font-size:12.5px;font-weight:600;text-align:center;padding:6px 12px}
+.hero{background:var(--red);color:#fff;padding:18px 16px 50px;text-align:center}
+.hero .logo{width:54px;height:54px;border-radius:50%;background:var(--cream);display:grid;place-items:center;font-size:28px;margin:0 auto 6px}
+.hero h1{font-size:22px;font-weight:900}
+.wrap{max-width:520px;margin:-36px auto 0;padding:0 14px 40px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 6px 20px rgba(80,30,10,.08);margin-bottom:12px}
+.num{font-size:13px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.big{font-size:24px;font-weight:900;letter-spacing:-.01em;margin:2px 0 4px}
+.sub{color:var(--mut);font-size:14px}
+.steps{margin-top:16px;display:flex;flex-direction:column}
+.st{display:flex;gap:12px;align-items:flex-start;position:relative;padding-bottom:18px}
+.st:last-child{padding-bottom:0}
+.st::before{content:"";position:absolute;left:15px;top:32px;bottom:0;width:2px;background:var(--line)}
+.st:last-child::before{display:none}
+.st .d{width:32px;height:32px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;place-items:center;font-size:16px;flex:0 0 auto;filter:grayscale(1);opacity:.5}
+.st.ok .d{border-color:var(--ok);filter:none;opacity:1}.st.ok::before{background:var(--ok)}
+.st.now .d{border-color:var(--red);filter:none;opacity:1;box-shadow:0 0 0 5px rgba(200,52,31,.15);animation:p 1.6s infinite}
+@keyframes p{50%{box-shadow:0 0 0 9px rgba(200,52,31,.05)}}
+.st b{display:block;padding-top:4px}.st small{color:var(--mut)}
+.st:not(.ok):not(.now) b{color:var(--mut);font-weight:500}
+.ln{display:flex;gap:8px;padding:5px 0;font-size:14.5px}.ln b{min-width:26px}.ln small{display:block;color:#d98a12}
+.tot{display:flex;justify-content:space-between;border-top:1px dashed var(--line);margin-top:8px;padding-top:8px;font-weight:900;font-size:18px}
+.btn{display:block;text-align:center;text-decoration:none;background:#1f9d55;color:#fff;font-weight:800;border-radius:14px;padding:14px}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:18px}.foot a{color:var(--mut)}
+.canc{background:#ffe1db;color:#9a2a17;border-radius:12px;padding:12px;font-weight:700;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="demob" id="demo" hidden>🧪 Demo de kionda IA · este pedido no se prepara de verdad</div>
+<div class="hero"><div class="logo">🍕</div><h1>Una Pizza</h1></div>
+<div class="wrap">
+  <div class="card" id="estado"><div class="sub">Buscando tu pedido…</div></div>
+  <div class="card" id="detalle" hidden></div>
+  <a class="btn" id="wa" hidden>💬 Escribirnos por WhatsApp</a>
+  <div class="foot">Seguimiento de pedidos · hecho por <a href="https://kiondaia.com" target="_blank" rel="noopener">kionda IA</a></div>
+</div>
+<script>
+const API = "https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/resto-wa?n=unapizza&carta=1";
+const KEY = "sb_publishable_jJ7O9A5iqqLoeyWF1SYZZQ_LQpd4vLK";
+const C = new URLSearchParams(location.search).get("c") || "";
+const $ = n => "$" + Math.round(n).toLocaleString("es-AR");
+const el = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hora = t => new Date(t).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+let timer = null;
+async function cargar() {
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "content-type": "application/json", apikey: KEY }, body: JSON.stringify({ accion: "seguimiento", c: C }) });
+    const j = await r.json();
+    if (!r.ok || j.error) throw new Error(j.error || "Error");
+    pintar(j);
+  } catch (e) {
+    if (!el("detalle").hidden) return; // ya lo mostramos: es un corte de conexión, se reintenta solo
+    el("estado").innerHTML = `<div class="big">No encontramos ese pedido 😕</div><div class="sub">Revisá el link que te mandamos por WhatsApp.</div>`;
+  }
+}
+function pintar({ pedido: p, local: L }) {
+  el("demo").hidden = !L.demo;
+  const del = p.tipo === "delivery";
+  const pasos = [["nuevo", "📝", "Recibimos tu pedido", hora(p.creado)], ["preparacion", "👨‍🍳", "Lo estamos preparando", ""],
+    del ? ["en_camino", "🛵", "Salió para tu casa", ""] : ["listo", "✅", p.tipo === "mesa" ? "Listo, ya te lo llevan" : "Listo para retirar", L.direccion],
+    ["entregado", "🙌", del ? "Entregado" : p.tipo === "mesa" ? "En tu mesa" : "Retirado", "¡Que lo disfrutes!"]];
+  const orden = del ? ["nuevo", "preparacion", "listo", "en_camino", "entregado"] : ["nuevo", "preparacion", "listo", "entregado"];
+  let pos = orden.indexOf(p.estado);
+  const idx = k => orden.indexOf(k);
+  const TIT = { nuevo: "Recibimos tu pedido", preparacion: "Está en el horno 🔥", listo: del ? "Está listo, ya sale" : "¡Está listo!", en_camino: "¡Va en camino! 🛵", entregado: "Entregado 🙌", cancelado: "Pedido cancelado" };
+  const llega = new Date(new Date(p.creado).getTime() + (p.demora_min || 30) * 60000);
+  const canc = p.estado === "cancelado";
+  el("estado").innerHTML = `<div class="num">Pedido #${p.numero}${p.cliente_nombre ? " · " + esc(p.cliente_nombre) : ""}</div><div class="big">${TIT[p.estado] || p.estado}</div>
+    ${canc ? `<div class="canc">El local canceló este pedido. Escribinos y lo vemos.</div>` : `${p.estado !== "entregado" ? `<div class="sub">Hora estimada: <b style="color:var(--ink)">${hora(llega)}</b> (${p.demora_min} min desde que pediste)</div>` : ""}
+    <div class="steps">${pasos.map(([k, ic, t, s]) => `<div class="st ${idx(k) < pos || p.estado === "entregado" ? "ok" : idx(k) === pos || (k === "en_camino" && p.estado === "listo" && false) ? "now" : ""}"><span class="d">${ic}</span><div><b>${t}</b>${s && idx(k) <= pos ? `<small>${esc(s)}</small>` : ""}</div></div>`).join("")}</div>`}`;
+  el("detalle").hidden = false;
+  el("detalle").innerHTML = p.items.map(l => `<div class="ln"><b>${l.cantidad}x</b><div>${esc(l.nombre)}${l.nota ? `<small>${esc(l.nota)}</small>` : ""}</div></div>`).join("")
+    + (p.envio ? `<div class="ln" style="color:var(--mut)"><b></b><div>Envío ${$(p.envio)}</div></div>` : "") + `<div class="tot"><span>Total</span><span>${$(p.total)}</span></div>`;
+  const w = el("wa"); w.hidden = !L.whatsapp; w.href = `https://wa.me/${String(L.whatsapp || "").replace(/\D/g, "")}?text=${encodeURIComponent("Hola, consulto por mi pedido #" + p.numero)}`;
+  if (["entregado", "cancelado"].includes(p.estado)) { clearInterval(timer); timer = null; }
+}
+cargar(); timer = setInterval(cargar, 15000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && timer) cargar(); });
+</script>
+</body>
+</html>

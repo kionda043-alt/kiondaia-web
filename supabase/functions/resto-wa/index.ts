@@ -2,7 +2,8 @@
 // Un solo endpoint para dos cosas:
 //   1) Webhook de Green:   POST ?n=<negocio>&k=<webhook_key>
 //   2) API del panel:      POST ?n=<negocio>&panel=1   body {pin, accion, ...}
-//   3) Carta QR pública:   POST ?n=<negocio>&carta=1   body {accion: menu | pedido_mesa | llamar | mesa}
+//   3) Carta QR pública:   POST ?n=<negocio>&carta=1   body {accion: menu | pedido_mesa | llamar | mesa | seguimiento}
+//   4) Tareas programadas: GET  ?n=<negocio>&k=<webhook_key>&tareas=1  (cada 10 min: reseñas, difusión, cierre del día)
 // Setup del webhook en Green: GET ?n=<negocio>&k=<webhook_key>&setup=1
 // Los precios y el total los calcula SIEMPRE el servidor con la carta de la base (la IA solo arma el carrito).
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -27,6 +28,26 @@ type Datos = { nombre?: string | null; tipo?: "retiro" | "delivery" | null; dire
 type Chat = { negocio: string; telefono: string; historial: { r: string; t: string }[]; carrito: { lineas?: Linea[]; datos?: Datos }; esperando_confirmacion: boolean; ids_procesados: string[]; modo?: string; actualizado?: string };
 
 const $ = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
+const sitio = (cfg: Record<string, any>) => String(cfg.sitio ?? "https://kiondaia.com/unapizza").replace(/\/$/, "");
+const iso = (minutos: number) => new Date(Date.now() + minutos * 60_000).toISOString();
+function ahoraAR() {
+  const d = new Date(Date.now() - 3 * 3600_000);
+  return { dia: d.getUTCDay(), min: d.getUTCHours() * 60 + d.getUTCMinutes(), fecha: d.toISOString().slice(0, 10) };
+}
+// Abierto = el interruptor del panel está prendido y (si el horario automático está activo) estamos dentro del horario
+function abiertoAhora(cfg: Record<string, any>) {
+  if (!cfg.abierto) return false;
+  if (!cfg.horario_auto || !cfg.horario_semana) return true;
+  const { dia, min } = ahoraAR(), h = cfg.horario_semana;
+  const hoy = h[String(dia)], ayer = h[String((dia + 6) % 7)];
+  return !!((hoy && min >= hoy[0] && min < hoy[1]) || (ayer && min + 1440 < ayer[1]));
+}
+function puedeEscribir(cfg: Record<string, any>, tel: string) {
+  return tel.endsWith("@c.us") && !tel.startsWith("ejemplo") && (!!cfg.publico || (cfg.permitidos ?? []).includes(tel));
+}
+function fechaLinda(f: string) {
+  return new Date(f + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+}
 
 // ---------- Datos ----------
 async function negocio(id: string): Promise<Neg | null> {
@@ -35,7 +56,8 @@ async function negocio(id: string): Promise<Neg | null> {
 }
 async function menu(neg: string): Promise<Item[]> {
   const { data } = await db.from("resto_menu").select("*").eq("negocio", neg).order("orden");
-  return (data ?? []) as Item[];
+  const items = (data ?? []) as Item[], cats = [...new Set(items.map((i) => i.categoria))];
+  return items.sort((a, b) => cats.indexOf(a.categoria) - cats.indexOf(b.categoria) || a.orden - b.orden);
 }
 async function cargarChat(neg: string, tel: string): Promise<Chat> {
   const { data } = await db.from("resto_chats").select("*").eq("negocio", neg).eq("telefono", tel).maybeSingle();
@@ -150,24 +172,25 @@ function subtotalTexto(lineas: LineaOk[], d: Datos, cfg: Record<string, any>) {
 function horaAR() {
   return new Date().toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", weekday: "long", hour: "2-digit", minute: "2-digit" });
 }
-function sistema(neg: Neg, items: Item[], ch: Chat, cliente: any, activos: any[], lineasOk: LineaOk[]) {
+function sistema(neg: Neg, items: Item[], ch: Chat, cliente: any, activos: any[], lineasOk: LineaOk[], reservas: any[] = []) {
   const c = neg.config;
   return `Sos quien atiende el WhatsApp de pedidos de *${neg.nombre}* (${c.direccion}). Hablás en español rioplatense, de vos, cálido y ágil, como un buen encargado de mostrador. Mensajes cortos (máximo 5 líneas), emojis con moderación. Nunca digas que sos una IA salvo que te lo pregunten directo.
-
+${c.demo ? `\nIMPORTANTE: esto es una DEMOSTRACIÓN de kionda IA, no el canal oficial del local. Si es el primer mensaje de la charla, aclaralo en una línea ("🧪 Esto es una demo: los pedidos no se preparan de verdad") y después atendé normal.\n` : ""}
 ESTADO DEL LOCAL AHORA (lo maneja el local desde su panel, respetalo siempre):
-- Abierto para pedidos: ${c.abierto ? "SÍ" : "NO (respondé dudas, pero no tomes pedidos; decí el horario)"}
+- Abierto para pedidos: ${abiertoAhora(c) ? "SÍ" : "NO (respondé dudas, pero no tomes pedidos; decí el horario)"}
 - Delivery: ${c.delivery_activo ? `activo · envío ${$(c.envio_costo)} · zona: ${c.zona_envio}` : "PAUSADO por mucha demanda: solo retiro en el local"}
 - Demora actual: retiro ${c.demora_retiro} min · delivery ${c.demora_delivery} min
 - Horarios: ${c.horarios}
 - Pago: efectivo o transferencia (alias ${c.alias}, a nombre de ${c.titular_alias}). No hay Mercado Pago ni tarjeta por WhatsApp.
 - ${c.notas ?? ""}
-- Día y hora: ${horaAR()}
+- Día y hora: ${horaAR()} · fecha de hoy: ${ahoraAR().fecha}
 
 CARTA (precios en pesos; el id sirve para armar el carrito):
 ${cartaParaIA(items)}
 
 CLIENTE: ${cliente ? `conocido · nombre ${cliente.nombre ?? "?"} · última dirección ${cliente.direccion ?? "-"}${cliente.entre_calles ? ` (${cliente.entre_calles})` : ""} · pedidos anteriores ${cliente.pedidos} · último pedido: ${(cliente.ultimo_pedido?.items ?? []).map((l: any) => `${l.cantidad}x ${l.nombre}`).join(", ") || "-"}. Saludalo por el nombre y, si viene a pedir, ofrecé repetir el último pedido o usar la misma dirección.` : "nuevo"}
 ${activos.length ? `PEDIDOS EN CURSO DE ESTE CLIENTE: ${activos.map((p) => `#${p.numero} (${p.estado}, hecho ${new Date(p.creado).toLocaleTimeString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit" })}, total ${$(p.total)})`).join("; ")}. Si pregunta por su pedido, contale el estado.` : ""}
+${reservas.length ? `RESERVAS DE ESTE CLIENTE: ${reservas.map((r) => `${r.fecha} ${r.hora}, ${r.personas} personas (${r.estado})`).join("; ")}.` : ""}
 
 CARRITO ACTUAL (validado por el sistema): ${lineasOk.length ? lineasOk.map((l) => `${l.cantidad}x ${l.nombre}${l.nota ? ` [${l.nota}]` : ""}`).join("; ") : "vacío"}
 DATOS ACTUALES: ${JSON.stringify(ch.carrito.datos ?? {})}
@@ -185,10 +208,13 @@ CÓMO TRABAJÁS:
 8. Si manda un audio, entendelo y escribí qué dijo en "transcripcion".
 8b. PEDIDO DESDE LA CARTA: si el mensaje empieza con "Pedido desde la carta", es un carrito que el cliente armó en la carta digital. Cargá TODOS esos productos al carrito tal cual (mismo tamaño, cantidad y notas), agradecé en una frase y pasá directo a lo que falte (retiro o delivery, nombre, dirección, pago). No le vuelvas a ofrecer la carta.
 9. PROBLEMAS → PERSONA: si el cliente tiene un problema con un pedido (llegó mal o incompleto, frío, se demoró mucho, cobro equivocado), se queja, pide hablar con una persona o el encargado, quiere cancelar o cambiar un pedido YA confirmado, o pregunta algo que no podés resolver con lo que sabés: completá "derivar" con el tipo y un resumen claro para el encargado (qué pasó y qué pide, con el número de pedido si lo sabés). En "respuesta" pedí disculpas breve y decí que ya le pasaste el mensaje al encargado y que le responde por este mismo chat en unos minutos. NO prometas reenvíos, descuentos, reintegros ni tiempos: eso lo decide el local.
+10. RESERVAS DE MESA: si quiere reservar, pedí día, hora, cantidad de personas y a nombre de quién (de a una o dos cosas por mensaje). Solo dentro de los horarios del local. Cuando tengas todo, completá "reserva" UNA sola vez: el sistema la anota y el local la confirma por este mismo chat. En "respuesta" decí que ya la anotaste y que en un rato le confirman. No completes "reserva" si esa misma ya figura en RESERVAS DE ESTE CLIENTE.
+11. Si pide no recibir más promociones o novedades (por ejemplo escribe "BAJA"), poné "baja_promos": true y confirmale que no le llegan más.
 
 Respondé SIEMPRE con este JSON y nada más:
 {"transcripcion": string|null, "respuesta": string, "enviar_menu": boolean, "mostrar_subtotal": boolean,
  "derivar": null | {"tipo": "reclamo"|"hablar_con_persona"|"cancelar_pedido"|"otro", "resumen": string},
+ "reserva": null | {"fecha": "AAAA-MM-DD", "hora": "HH:MM", "personas": number, "nombre": string, "notas": string|null}, "baja_promos": boolean,
  "carrito": [{"item_id": number, "opcion": string, "cantidad": number, "mitad_id": number|null, "nota": string}],
  "datos": {"nombre": string|null, "tipo": "retiro"|"delivery"|null, "direccion": string|null, "entre_calles": string|null, "referencia": string|null, "pago": "efectivo"|"transferencia"|null, "paga_con": number|null, "notas": string|null},
  "accion": "seguir"|"pedir_confirmacion"|"confirmar"|"cancelar"}
@@ -243,7 +269,7 @@ async function bajarAudio(url: string, mime?: string) {
 // Cola: si el cliente manda varios mensajes seguidos (texto + audio), se esperan 2 s y se responden juntos.
 async function entrada(neg: Neg, b: any) {
   const chatId: string = b?.senderData?.chatId ?? "";
-  if (!(neg.config.permitidos ?? []).includes(chatId)) return; // demo cerrada: solo números de prueba
+  if (!neg.config.publico && !(neg.config.permitidos ?? []).includes(chatId)) return; // si no es público, solo números de prueba
   const { data: fila, error } = await db.from("resto_cola").insert({ negocio: neg.id, telefono: chatId, id_mensaje: b.idMessage ?? null, payload: b }).select("id").single();
   if (error || !fila) return; // repetido (Green a veces reenvía)
   await new Promise((r) => setTimeout(r, 2000));
@@ -311,10 +337,12 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
   const { data: cliente } = await db.from("resto_clientes").select("*").eq("negocio", neg.id).eq("telefono", chatId).maybeSingle();
   const { data: activos } = await db.from("resto_pedidos").select("numero,estado,total,creado").eq("negocio", neg.id).eq("telefono", chatId)
     .in("estado", ["nuevo", "preparacion", "listo", "en_camino"]).gte("creado", new Date(Date.now() - 12 * 3600_000).toISOString());
+  const { data: reservas } = await db.from("resto_reservas").select("fecha,hora,personas,estado").eq("negocio", neg.id).eq("telefono", chatId).gte("fecha", ahoraAR().fecha).neq("estado", "cancelada");
   const actual = validar(ch.carrito.lineas ?? [], items).ok;
+  const abierto = abiertoAhora(cfg);
 
   ch.historial.push({ r: "u", t: texto });
-  const out = await ia(sistema(neg, items, ch, cliente, activos ?? [], actual), ch.historial.slice(-24), audios);
+  const out = await ia(sistema(neg, items, ch, cliente, activos ?? [], actual, reservas ?? []), ch.historial.slice(-24), audios);
   if (!out) { await enviar(cfg, chatId, "Perdón, se me trabó el sistema un segundo 😅 ¿Me lo repetís?"); await guardarChat(ch); return; }
   if (audio && out.transcripcion) ch.historial[ch.historial.length - 1].t = texto.replace(/\[mandó un audio\]/, `[audio] ${out.transcripcion}`);
 
@@ -343,7 +371,22 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
     return guardarChat(ch);
   }
 
-  if (out.enviar_menu) await enviar(cfg, chatId, `🍕 *Carta de ${neg.nombre}*\n${cartaTexto(items)}`);
+  if (out.baja_promos) await db.from("resto_clientes").update({ no_promos: true }).eq("negocio", neg.id).eq("telefono", chatId);
+
+  // Reserva de mesa: queda pendiente hasta que el local la confirma desde el panel
+  const rv = out.reserva;
+  if (rv && rv.fecha && rv.hora && rv.personas) {
+    const fecha = String(rv.fecha).slice(0, 10), hora = String(rv.hora).slice(0, 5);
+    const nombre = String(rv.nombre || datos.nombre || cliente?.nombre || "Cliente").slice(0, 60);
+    if (/^\d{4}-\d\d-\d\d$/.test(fecha) && !(reservas ?? []).some((r) => r.fecha === fecha && String(r.hora).slice(0, 5) === hora)) {
+      const personas = Math.max(1, Math.min(60, Math.round(Number(rv.personas)) || 2));
+      await db.from("resto_reservas").insert({ negocio: neg.id, telefono: chatId, nombre, fecha, hora, personas, notas: rv.notas ? String(rv.notas).slice(0, 300) : null });
+      if (cfg.celular_reclamos) await enviar(cfg, `${String(cfg.celular_reclamos).replace(/\D/g, "")}@c.us`,
+        `📅 *Reserva nueva* · ${neg.nombre}\n👤 ${nombre} (+${chatId.split("@")[0]})\n🗓️ ${fechaLinda(fecha)} a las ${hora} · ${personas} personas${rv.notas ? `\n🗒️ ${rv.notas}` : ""}\n\nConfirmala desde el panel: ${cfg.panel_url ?? sitio(cfg)}`);
+    }
+  }
+
+  if (out.enviar_menu) await enviar(cfg, chatId, `🍕 *Carta de ${neg.nombre}*\n${cartaTexto(items)}\n\n📲 También podés armar tu pedido tocando acá: ${sitio(cfg)}/menu/`);
 
   // Cancelar lo que se estaba armando
   if (out.accion === "cancelar") {
@@ -354,10 +397,10 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
   }
 
   // Confirmar → se crea la comanda
-  if (out.accion === "confirmar" && ch.esperando_confirmacion && !cambio && cfg.abierto) {
+  if (out.accion === "confirmar" && ch.esperando_confirmacion && !cambio && abierto) {
     const falta = faltante(lineas, datos, cfg);
     if (!falta) {
-      const num = await crearPedido(neg, chatId, lineas, datos, !!cliente);
+      const { num, codigo } = await crearPedido(neg, chatId, lineas, datos, !!cliente);
       ch.carrito = { datos: { nombre: datos.nombre, direccion: datos.direccion, entre_calles: datos.entre_calles, referencia: datos.referencia } };
       ch.esperando_confirmacion = false;
       const t = totales(lineas, datos, cfg);
@@ -365,6 +408,8 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
       if (datos.pago === "transferencia") m += `\n🏦 Transferí a *${cfg.alias}* (${cfg.titular_alias}) y mandá el comprobante por acá.\n`;
       else if (datos.paga_con && datos.paga_con > t.total) m += `💵 Pagás con ${$(datos.paga_con)} → te llevamos ${$(datos.paga_con - t.total)} de vuelto.\n`;
       m += `\nTe aviso por acá cuando ${datos.tipo === "delivery" ? "salga para tu casa" : "esté listo para retirar"}. ¡Gracias!`;
+      if (codigo) m += `\n\n📍 Seguí tu pedido en vivo: ${sitio(cfg)}/pedido/?c=${codigo}`;
+      if (cfg.demo) m += `\n\n🧪 _Demo de kionda IA: este pedido no se prepara de verdad._`;
       await mandar(cfg, ch, m);
       return guardarChat(ch);
     }
@@ -372,7 +417,7 @@ async function procesar(neg: Neg, chatId: string, mensajes: any[]) {
 
   // Pedir confirmación → el resumen y el total los arma el sistema
   if (out.accion === "pedir_confirmacion" || (out.accion === "confirmar" && (!ch.esperando_confirmacion || cambio))) {
-    if (!cfg.abierto) {
+    if (!abierto) {
       ch.esperando_confirmacion = false;
       await mandar(cfg, ch, (respuesta ? respuesta + "\n\n" : "") + `Ahora estamos cerrados 🙏 ${cfg.horarios}`);
       return guardarChat(ch);
@@ -405,7 +450,7 @@ async function crearPedido(neg: Neg, tel: string, lineas: LineaOk[], d: Datos, c
     pago: d.pago, paga_con: d.pago === "efectivo" ? d.paga_con : null, notas: d.notas,
     demora_min: d.tipo === "delivery" ? neg.config.demora_delivery : neg.config.demora_retiro, cliente_conocido: conocido,
   };
-  const { error } = await db.from("resto_pedidos").insert(fila);
+  const { data: ins, error } = await db.from("resto_pedidos").insert(fila).select("codigo").single();
   if (error) console.error("insert pedido", error);
   const { data: prev } = await db.from("resto_clientes").select("pedidos").eq("negocio", neg.id).eq("telefono", tel).maybeSingle();
   await db.from("resto_clientes").upsert({
@@ -413,7 +458,7 @@ async function crearPedido(neg: Neg, tel: string, lineas: LineaOk[], d: Datos, c
     ...(d.tipo === "delivery" ? { direccion: d.direccion, entre_calles: d.entre_calles, referencia: d.referencia } : {}),
     pedidos: (prev?.pedidos ?? 0) + 1, ultimo_pedido: { numero: num, items: lineas, total: t.total }, actualizado: new Date().toISOString(),
   });
-  return num;
+  return { num: num as number, codigo: ins?.codigo as string | undefined };
 }
 
 // ---------- Panel ----------
@@ -431,17 +476,24 @@ function inicioDia() {
 }
 function publico(cfg: Record<string, any>) {
   const { green_url, green_id, green_token_secret, webhook_key, panel_pin, permitidos, ...rest } = cfg;
-  return rest;
+  return { ...rest, abierto_ahora: abiertoAhora(cfg) };
 }
-async function panel(neg: Neg, body: any) {
+async function panel(neg: Neg, body: any, req: Request) {
   const cfg = neg.config;
-  if (String(body.pin ?? "") !== String(cfg.panel_pin)) { await new Promise((r) => setTimeout(r, 800)); return { error: "PIN incorrecto" }; }
+  // Bloqueo por intentos: 6 PIN errados desde la misma conexión en 10 minutos
+  const ip = (req.headers.get("x-forwarded-for") ?? "?").split(",")[0].trim();
+  const { count: fallos } = await db.from("resto_pin_intentos").select("id", { count: "exact", head: true }).eq("negocio", neg.id).eq("ip", ip).gte("creado", iso(-10));
+  if ((fallos ?? 0) >= 6) return { error: "Demasiados intentos. Esperá 10 minutos y probá de nuevo." };
+  if (String(body.pin ?? "") !== String(cfg.panel_pin)) {
+    await db.from("resto_pin_intentos").insert({ negocio: neg.id, ip });
+    await new Promise((r) => setTimeout(r, 800)); return { error: "PIN incorrecto" };
+  }
   const a = body.accion;
   if (a === "estado_pedido") {
     const est = String(body.estado);
     if (!AVISOS[est] && est !== "nuevo") return { error: "estado inválido" };
     const { data: p } = await db.from("resto_pedidos").update({ estado: est, actualizado: new Date().toISOString() }).eq("negocio", neg.id).eq("id", body.id).select().maybeSingle();
-    if (p && AVISOS[est] && body.avisar !== false && !p.ejemplo && (cfg.permitidos ?? []).includes(p.telefono)) {
+    if (p && AVISOS[est] && body.avisar !== false && !p.ejemplo && p.tipo !== "mesa" && puedeEscribir(cfg, p.telefono)) {
       const m = AVISOS[est](p, cfg);
       await enviar(cfg, p.telefono, m);
       const ch = await cargarChat(neg.id, p.telefono); ch.historial.push({ r: "b", t: m }); await guardarChat(ch);
@@ -449,7 +501,7 @@ async function panel(neg: Neg, body: any) {
     return { ok: true };
   }
   if (a === "config") {
-    const permitidas = ["abierto", "delivery_activo", "demora_retiro", "demora_delivery", "envio_costo", "celular_reclamos"];
+    const permitidas = ["abierto", "delivery_activo", "demora_retiro", "demora_delivery", "envio_costo", "celular_reclamos", "horario_auto"];
     const nuevo = { ...cfg };
     for (const k of permitidas) if (k in (body.cambios ?? {})) nuevo[k] = body.cambios[k];
     await db.from("resto_negocios").update({ config: nuevo }).eq("id", neg.id);
@@ -458,8 +510,25 @@ async function panel(neg: Neg, body: any) {
   if (a === "item") {
     const cambios: Record<string, unknown> = {};
     if ("disponible" in body) cambios.disponible = !!body.disponible;
-    if (Array.isArray(body.opciones)) cambios.opciones = body.opciones.map((o: any) => ({ nombre: String(o.nombre), precio: Math.max(0, Number(o.precio) || 0) }));
+    if (Array.isArray(body.opciones)) cambios.opciones = opcionesLimpias(body.opciones);
+    if (typeof body.nombre === "string" && body.nombre.trim()) cambios.nombre = body.nombre.trim().slice(0, 80);
+    if (typeof body.descripcion === "string") cambios.descripcion = body.descripcion.trim().slice(0, 300);
+    if (typeof body.categoria === "string" && body.categoria.trim()) cambios.categoria = body.categoria.trim().slice(0, 60);
+    if ("admite_mitad" in body) cambios.admite_mitad = !!body.admite_mitad;
+    if (Array.isArray(cambios.opciones) && !(cambios.opciones as unknown[]).length) return { error: "Poné al menos un precio" };
     await db.from("resto_menu").update(cambios).eq("negocio", neg.id).eq("id", body.id);
+    return { ok: true };
+  }
+  if (a === "item_nuevo") {
+    const ops = opcionesLimpias(body.opciones ?? []);
+    const nombre = String(body.nombre ?? "").trim().slice(0, 80), categoria = String(body.categoria ?? "").trim().slice(0, 60);
+    if (!nombre || !categoria || !ops.length) return { error: "Faltan nombre, categoría o precio" };
+    const { data: ult } = await db.from("resto_menu").select("orden").eq("negocio", neg.id).order("orden", { ascending: false }).limit(1).maybeSingle();
+    const { error } = await db.from("resto_menu").insert({ negocio: neg.id, categoria, nombre, descripcion: String(body.descripcion ?? "").trim().slice(0, 300), opciones: ops, disponible: true, admite_mitad: !!body.admite_mitad, orden: (ult?.orden ?? 0) + 1 });
+    return error ? { error: "No se pudo guardar" } : { ok: true };
+  }
+  if (a === "item_borrar") {
+    await db.from("resto_menu").delete().eq("negocio", neg.id).eq("id", body.id);
     return { ok: true };
   }
   if (a === "chat") {
@@ -472,7 +541,7 @@ async function panel(neg: Neg, body: any) {
     if (!txt) return { error: "mensaje vacío" };
     const ch = await cargarChat(neg.id, tel);
     ch.historial.push({ r: "l", t: txt }); ch.modo = "humano";
-    if (!tel.startsWith("ejemplo") && (cfg.permitidos ?? []).includes(tel)) await enviar(cfg, tel, txt);
+    if (puedeEscribir(cfg, tel)) await enviar(cfg, tel, txt);
     await guardarChat(ch);
     await db.from("resto_alertas").update({ no_leidos: 0, actualizado: new Date().toISOString() }).eq("negocio", neg.id).eq("telefono", tel).eq("estado", "abierta");
     return { ok: true };
@@ -491,9 +560,59 @@ async function panel(neg: Neg, body: any) {
   }
   if (a === "cobrar_mesa") {
     const mesa = Number(body.mesa);
-    await db.from("resto_pedidos").update({ cobrado: true, estado: "entregado", actualizado: new Date().toISOString() })
-      .eq("negocio", neg.id).eq("tipo", "mesa").eq("mesa", mesa).eq("cobrado", false).neq("estado", "cancelado");
+    const pago = ["efectivo", "transferencia", "tarjeta"].includes(body.pago) ? body.pago : null;
+    const propina = Math.max(0, Math.round(Number(body.propina) || 0));
+    const { data: ab } = await db.from("resto_pedidos").select("id").eq("negocio", neg.id).eq("tipo", "mesa").eq("mesa", mesa).eq("cobrado", false).neq("estado", "cancelado").order("creado");
+    if (ab?.length) {
+      await db.from("resto_pedidos").update({ cobrado: true, estado: "entregado", pago, actualizado: new Date().toISOString() }).in("id", ab.map((x) => x.id));
+      if (propina) await db.from("resto_pedidos").update({ propina }).eq("id", ab[ab.length - 1].id);
+    }
     await db.from("resto_llamados").update({ estado: "atendido", atendido: new Date().toISOString() }).eq("negocio", neg.id).eq("mesa", mesa).eq("estado", "abierto");
+    return { ok: true };
+  }
+  if (a === "reserva_estado") {
+    const est = String(body.estado);
+    if (!["confirmada", "cancelada", "pendiente"].includes(est)) return { error: "estado inválido" };
+    const { data: r } = await db.from("resto_reservas").update({ estado: est }).eq("negocio", neg.id).eq("id", body.id).select().maybeSingle();
+    if (r && est !== "pendiente" && !r.ejemplo && r.telefono && puedeEscribir(cfg, r.telefono)) {
+      const m = est === "confirmada"
+        ? `✅ ¡Reserva confirmada! Te esperamos el ${fechaLinda(r.fecha)} a las ${String(r.hora).slice(0, 5)} · ${r.personas} personas, a nombre de ${r.nombre}. 🍕`
+        : `😔 No pudimos tomar tu reserva del ${fechaLinda(r.fecha)} a las ${String(r.hora).slice(0, 5)}. Si querés, escribinos y buscamos otro horario.`;
+      await enviar(cfg, r.telefono, m);
+      const ch = await cargarChat(neg.id, r.telefono); ch.historial.push({ r: "b", t: m }); await guardarChat(ch);
+    }
+    return { ok: true };
+  }
+  if (a === "reserva_nueva") {
+    const fecha = String(body.fecha ?? "").slice(0, 10), hora = String(body.hora ?? "").slice(0, 5), nombre = String(body.nombre ?? "").trim().slice(0, 60);
+    if (!/^\d{4}-\d\d-\d\d$/.test(fecha) || !/^\d\d:\d\d$/.test(hora) || !nombre) return { error: "Faltan fecha, hora o nombre" };
+    await db.from("resto_reservas").insert({ negocio: neg.id, nombre, fecha, hora, personas: Math.max(1, Math.min(60, Math.round(Number(body.personas)) || 2)), notas: String(body.notas ?? "").trim().slice(0, 300) || null, estado: "confirmada", origen: "panel" });
+    return { ok: true };
+  }
+  if (a === "difusion") {
+    const texto = String(body.texto ?? "").trim().slice(0, 900);
+    if (texto.length < 10) return { error: "Escribí el mensaje de la promo" };
+    const { count: reciente } = await db.from("resto_difusion").select("id", { count: "exact", head: true }).eq("negocio", neg.id).gte("creado", iso(-20 * 60));
+    if (reciente) return { error: "Ya mandaste una promo en las últimas 20 horas. Para cuidar el número, es una por día." };
+    let q = db.from("resto_clientes").select("telefono").eq("negocio", neg.id).eq("no_promos", false).eq("ejemplo", false).like("telefono", "%@c.us").limit(150);
+    if (body.audiencia === "inactivos") q = q.lte("actualizado", iso(-30 * 24 * 60));
+    const { data: cl } = await q;
+    const dest = (cl ?? []).filter((c) => puedeEscribir(cfg, c.telefono));
+    if (!dest.length) return { error: "Todavía no hay clientes reales a quienes mandarle (los de ejemplo no cuentan)." };
+    await db.from("resto_difusion").insert(dest.map((c) => ({ negocio: neg.id, telefono: c.telefono, texto: `${texto}\n\n_Si no querés recibir más promos, respondé BAJA._` })));
+    return { ok: true, cantidad: dest.length };
+  }
+  if (a === "cierre_ahora") {
+    const { data: peds } = await db.from("resto_pedidos").select("*").eq("negocio", neg.id).gte("creado", inicioDia());
+    const texto = resumenDia(neg, peds ?? []);
+    const cel = String(cfg.celular_reclamos ?? "").replace(/\D/g, "");
+    if (cel && body.enviar) await enviar(cfg, `${cel}@c.us`, texto);
+    return { ok: true, texto, enviado: !!(cel && body.enviar) };
+  }
+  if (a === "rotar_mesas") {
+    const t: Record<string, string> = {};
+    for (let m = 1; m <= Number(cfg.mesas ?? 0); m++) t[m] = crypto.randomUUID().replace(/-/g, "").slice(0, 6);
+    await db.from("resto_negocios").update({ config: { ...cfg, mesa_tokens: t } }).eq("id", neg.id);
     return { ok: true };
   }
   if (a === "ejemplos") { await cargarEjemplos(neg); return { ok: true }; }
@@ -503,6 +622,7 @@ async function panel(neg: Neg, body: any) {
     await db.from("resto_alertas").delete().eq("negocio", neg.id).eq("ejemplo", true);
     await db.from("resto_chats").delete().eq("negocio", neg.id).like("telefono", "ejemplo-%");
     await db.from("resto_llamados").delete().eq("negocio", neg.id).eq("ejemplo", true);
+    await db.from("resto_reservas").delete().eq("negocio", neg.id).eq("ejemplo", true);
     return { ok: true };
   }
   if (a === "clientes") {
@@ -511,30 +631,106 @@ async function panel(neg: Neg, body: any) {
   }
   // "datos" (por defecto): todo lo que necesita la pantalla
   const desde = inicioDia();
-  const [{ data: pedidos }, items, { data: alertas }, { data: llamados }] = await Promise.all([
+  const [{ data: pedidos }, items, { data: alertas }, { data: llamados }, { data: reservas }, { count: difPend }] = await Promise.all([
     db.from("resto_pedidos").select("*").eq("negocio", neg.id).gte("creado", desde).order("creado", { ascending: false }),
     menu(neg.id),
     db.from("resto_alertas").select("*").eq("negocio", neg.id).or(`estado.eq.abierta,creado.gte.${desde}`).order("creado", { ascending: false }).limit(100),
     db.from("resto_llamados").select("*").eq("negocio", neg.id).eq("estado", "abierto").order("creado"),
+    db.from("resto_reservas").select("*").eq("negocio", neg.id).gte("fecha", iso(-27 * 60).slice(0, 10)).order("fecha").order("hora").limit(200),
+    db.from("resto_difusion").select("id", { count: "exact", head: true }).eq("negocio", neg.id).eq("estado", "pendiente"),
   ]);
-  return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, alertas: alertas ?? [], llamados: llamados ?? [], desde };
+  return { nombre: neg.nombre, config: publico(cfg), pedidos: pedidos ?? [], menu: items, alertas: alertas ?? [], llamados: llamados ?? [], reservas: reservas ?? [], difusion_pendiente: difPend ?? 0, hoy: ahoraAR().fecha, desde };
+}
+function opcionesLimpias(ops: any[]): Opcion[] {
+  return (ops ?? []).map((o) => ({ nombre: String(o?.nombre ?? "").trim().slice(0, 40), precio: Math.max(0, Math.round(Number(o?.precio) || 0)) })).filter((o) => o.nombre && o.precio > 0).slice(0, 6);
+}
+
+// ---------- Resumen del día y tareas programadas ----------
+function resumenDia(neg: Neg, pedidos: any[]) {
+  const v = pedidos.filter((p) => p.estado !== "cancelado" && !p.ejemplo);
+  const suma = (f: (p: any) => boolean) => v.filter(f).reduce((a, p) => a + Number(p.total), 0);
+  const tot = suma(() => true), prop = v.reduce((a, p) => a + Number(p.propina ?? 0), 0);
+  const cnt: Record<string, number> = {};
+  for (const p of v) for (const l of p.items ?? []) cnt[l.nombre] = (cnt[l.nombre] ?? 0) + l.cantidad;
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const n = (t: string) => v.filter((p) => p.tipo === t).length;
+  let s = `📊 *Cierre del día* · ${neg.nombre}\n\n💰 Vendido: *${$(tot)}* en ${v.length} pedidos\n🎟️ Ticket promedio: ${$(v.length ? tot / v.length : 0)}\n\n`;
+  s += `💵 Efectivo: ${$(suma((p) => p.pago === "efectivo"))}\n🏦 Transferencia: ${$(suma((p) => p.pago === "transferencia"))}\n💳 Tarjeta: ${$(suma((p) => p.pago === "tarjeta"))}`;
+  const sin = suma((p) => !p.pago); if (sin) s += `\n⏳ Mesas sin cobrar: ${$(sin)}`;
+  if (prop) s += `\n🙌 Propinas: ${$(prop)}`;
+  s += `\n\n🛵 Delivery ${n("delivery")} · 🏃 Retiro ${n("retiro")} · 🍽️ Mesa ${n("mesa")}`;
+  const canc = pedidos.filter((p) => p.estado === "cancelado" && !p.ejemplo).length; if (canc) s += `\n❌ Cancelados: ${canc}`;
+  if (top.length) s += `\n\n🏆 Lo más pedido:\n${top.map(([a, b]) => `• ${b}x ${a}`).join("\n")}`;
+  return s;
+}
+async function tareas(neg: Neg) {
+  const cfg = neg.config;
+  // 1) Pedido de reseña un rato después de entregar (una vez por cliente cada 30 días)
+  if (cfg.resena_url) {
+    const { data } = await db.from("resto_pedidos").select("id,telefono,cliente_nombre").eq("negocio", neg.id).eq("estado", "entregado").neq("tipo", "mesa")
+      .eq("ejemplo", false).eq("resena_pedida", false).lte("actualizado", iso(-45)).gte("actualizado", iso(-180)).limit(10);
+    for (const p of data ?? []) {
+      const { count } = await db.from("resto_pedidos").select("id", { count: "exact", head: true }).eq("negocio", neg.id).eq("telefono", p.telefono).eq("resena_pedida", true).gte("creado", iso(-30 * 24 * 60));
+      await db.from("resto_pedidos").update({ resena_pedida: true }).eq("id", p.id);
+      if (count || !puedeEscribir(cfg, p.telefono)) continue;
+      const ch = await cargarChat(neg.id, p.telefono);
+      if (ch.modo === "humano") continue; // hay un reclamo abierto: no es momento
+      const m = `¡Hola${p.cliente_nombre ? " " + String(p.cliente_nombre).split(" ")[0] : ""}! 😊 ¿Qué tal estuvo el pedido? Si te gustó, nos ayuda un montón que nos dejes una reseña (es un minuto):\n${cfg.resena_url}\n\n¡Gracias por elegirnos! 🍕`;
+      await enviar(cfg, p.telefono, m); ch.historial.push({ r: "b", t: m }); await guardarChat(ch);
+    }
+  }
+  // 2) Difusión de promos: de a pocos mensajes y espaciados, para cuidar el número
+  const { data: cola } = await db.from("resto_difusion").select("*").eq("negocio", neg.id).eq("estado", "pendiente").order("id").limit(6);
+  for (const d of cola ?? []) {
+    await db.from("resto_difusion").update({ estado: "enviado", enviado: new Date().toISOString() }).eq("id", d.id);
+    if (!puedeEscribir(cfg, d.telefono)) continue;
+    await enviar(cfg, d.telefono, d.texto);
+    const ch = await cargarChat(neg.id, d.telefono); ch.historial.push({ r: "b", t: d.texto }); await guardarChat(ch);
+    await new Promise((r) => setTimeout(r, 4000 + Math.random() * 4000));
+  }
+  // 3) Cierre del día al dueño (entre la 1:30 y las 6 de la mañana, una sola vez)
+  const { min } = ahoraAR(), desde = inicioDia(), cel = String(cfg.celular_reclamos ?? "").replace(/\D/g, "");
+  if (min >= 90 && min < 360 && cfg.ultimo_cierre !== desde && cel && !abiertoAhora({ ...cfg, horario_auto: true })) {
+    const actual = await negocio(neg.id);
+    await db.from("resto_negocios").update({ config: { ...(actual?.config ?? cfg), ultimo_cierre: desde } }).eq("id", neg.id);
+    const { data: peds } = await db.from("resto_pedidos").select("*").eq("negocio", neg.id).gte("creado", desde).eq("ejemplo", false);
+    if (peds?.length) await enviar(cfg, `${cel}@c.us`, resumenDia(neg, peds));
+  }
 }
 
 // ---------- Carta QR pública (sin PIN) ----------
-async function carta(neg: Neg, body: any, req: Request) {
+// Cada mesa tiene un código secreto en su QR (config.mesa_tokens): no se puede pedir "a la mesa 4" adivinando el número.
+function mesaDe(cfg: Record<string, any>, t: unknown): number {
+  const tok = String(t ?? "");
+  if (!tok) return 0;
+  for (const [m, v] of Object.entries(cfg.mesa_tokens ?? {})) if (v === tok) return Number(m);
+  return 0;
+}
+async function carta(neg: Neg, body: any) {
   const cfg = neg.config;
   const a = body.accion;
-  const mesas = Number(cfg.mesas ?? 0);
+  const abierto = abiertoAhora(cfg);
   if (a === "menu") {
     const items = await menu(neg.id);
+    const { data: ult } = await db.from("resto_pedidos").select("items").eq("negocio", neg.id).neq("estado", "cancelado").gte("creado", iso(-30 * 24 * 60)).limit(400);
+    const cnt = new Map<number, number>();
+    for (const p of ult ?? []) for (const l of p.items ?? []) for (const id of [l.item_id, l.mitad_id]) if (id) cnt.set(id, (cnt.get(id) ?? 0) + l.cantidad);
+    const top = [...cnt].sort((x, y) => y[1] - x[1]).map(([id]) => items.find((i) => i.id === id)).filter((i) => i && i.disponible && !/bebida/i.test(i.categoria)).slice(0, 4).map((i) => i!.id);
     return {
-      nombre: neg.nombre,
-      local: { direccion: cfg.direccion, horarios: cfg.horarios, abierto: !!cfg.abierto, delivery_activo: !!cfg.delivery_activo, envio_costo: cfg.envio_costo, zona_envio: cfg.zona_envio, demora_retiro: cfg.demora_retiro, demora_delivery: cfg.demora_delivery, notas: cfg.notas, whatsapp: cfg.whatsapp_publico, mesas },
+      nombre: neg.nombre, mesa: mesaDe(cfg, body.t), demo: !!cfg.demo, top,
+      local: { direccion: cfg.direccion, horarios: cfg.horarios, abierto, delivery_activo: !!cfg.delivery_activo, envio_costo: cfg.envio_costo, zona_envio: cfg.zona_envio, demora_retiro: cfg.demora_retiro, demora_delivery: cfg.demora_delivery, notas: cfg.notas, whatsapp: cfg.whatsapp_publico },
       menu: items.map(({ id, categoria, nombre, descripcion, opciones, disponible, admite_mitad }) => ({ id, categoria, nombre, descripcion, opciones, disponible, admite_mitad })),
     };
   }
-  const mesa = Math.round(Number(body.mesa));
-  if (!(mesa >= 1 && mesa <= mesas)) return { error: "Mesa no válida" };
+  if (a === "seguimiento") {
+    const c = String(body.c ?? "");
+    if (c.length < 6) return { error: "No encontramos ese pedido" };
+    const { data: p } = await db.from("resto_pedidos").select("numero,estado,tipo,items,subtotal,envio,total,demora_min,creado,actualizado,cliente_nombre,pago").eq("negocio", neg.id).eq("codigo", c).maybeSingle();
+    if (!p) return { error: "No encontramos ese pedido" };
+    return { pedido: { ...p, cliente_nombre: String(p.cliente_nombre ?? "").split(" ")[0], items: (p.items ?? []).map((l: any) => ({ cantidad: l.cantidad, nombre: l.nombre, nota: l.nota })) }, local: { nombre: neg.nombre, direccion: cfg.direccion, whatsapp: cfg.whatsapp_publico, demo: !!cfg.demo } };
+  }
+  const mesa = mesaDe(cfg, body.t);
+  if (!mesa) return { error: "El código de la mesa no es válido. Escaneá de nuevo el QR de tu mesa." };
   if (a === "mesa") {
     const { data } = await db.from("resto_pedidos").select("numero,items,total,estado,creado").eq("negocio", neg.id).eq("tipo", "mesa").eq("mesa", mesa)
       .eq("cobrado", false).neq("estado", "cancelado").gte("creado", inicioDia()).order("creado");
@@ -544,13 +740,18 @@ async function carta(neg: Neg, body: any, req: Request) {
   if (a === "llamar") {
     const tipo = body.tipo === "cuenta" ? "cuenta" : "mozo";
     const { data: ya } = await db.from("resto_llamados").select("id").eq("negocio", neg.id).eq("mesa", mesa).eq("tipo", tipo).eq("estado", "abierto").limit(1);
-    if (!ya?.length) await db.from("resto_llamados").insert({ negocio: neg.id, mesa, tipo, pago: tipo === "cuenta" ? (["efectivo", "transferencia", "tarjeta"].includes(body.pago) ? body.pago : null) : null });
+    const extra = tipo === "cuenta" ? {
+      pago: ["efectivo", "transferencia", "tarjeta"].includes(body.pago) ? body.pago : null,
+      propina_pct: [0, 5, 10, 15].includes(Number(body.propina_pct)) ? Number(body.propina_pct) : null,
+      dividir: Number(body.dividir) >= 2 && Number(body.dividir) <= 20 ? Math.round(Number(body.dividir)) : null,
+    } : {};
+    if (ya?.length) await db.from("resto_llamados").update(extra).eq("id", ya[0].id);
+    else await db.from("resto_llamados").insert({ negocio: neg.id, mesa, tipo, ...extra });
     return { ok: true };
   }
   if (a === "pedido_mesa") {
-    if (!cfg.abierto) return { error: `Ahora el local no está tomando pedidos. ${cfg.horarios ?? ""}` };
-    const { count } = await db.from("resto_pedidos").select("id", { count: "exact", head: true }).eq("negocio", neg.id).eq("mesa", mesa)
-      .gte("creado", new Date(Date.now() - 30 * 60_000).toISOString());
+    if (!abierto) return { error: `Ahora el local no está tomando pedidos. ${cfg.horarios ?? ""}` };
+    const { count } = await db.from("resto_pedidos").select("id", { count: "exact", head: true }).eq("negocio", neg.id).eq("mesa", mesa).gte("creado", iso(-30));
     if ((count ?? 0) >= 6) return { error: "Hiciste muchos pedidos seguidos desde esta mesa. Llamá al mozo, por favor 🙏" };
     const items = await menu(neg.id);
     const { ok, problemas } = validar((body.lineas ?? []).slice(0, 30), items);
@@ -576,6 +777,13 @@ async function cargarEjemplos(neg: Neg) {
   await db.from("resto_alertas").delete().eq("negocio", neg.id).eq("ejemplo", true);
   await db.from("resto_chats").delete().eq("negocio", neg.id).like("telefono", "ejemplo-%");
   await db.from("resto_llamados").delete().eq("negocio", neg.id).eq("ejemplo", true);
+  await db.from("resto_reservas").delete().eq("negocio", neg.id).eq("ejemplo", true);
+  const hoyAR = ahoraAR().fecha, man = new Date(Date.now() + 21 * 3600_000).toISOString().slice(0, 10);
+  await db.from("resto_reservas").insert([
+    { negocio: neg.id, telefono: "ejemplo-21", nombre: "Romina Paz", fecha: hoyAR, hora: "21:00", personas: 4, notas: "Cumpleaños, si puede ser mesa afuera", estado: "pendiente", ejemplo: true },
+    { negocio: neg.id, telefono: "ejemplo-22", nombre: "Gustavo Molina", fecha: hoyAR, hora: "20:30", personas: 2, estado: "confirmada", ejemplo: true },
+    { negocio: neg.id, telefono: "ejemplo-23", nombre: "Familia Quiroga", fecha: man, hora: "21:30", personas: 8, notas: "Traen torta", estado: "confirmada", ejemplo: true },
+  ]);
   const items = await menu(neg.id);
   const id = (n: string) => items.find((i) => i.nombre === n)!.id;
   const L = (n: string, op: string, cant = 1, mitad?: string, nota = ""): Linea => ({ item_id: id(n), opcion: op, cantidad: cant, mitad_id: mitad ? id(mitad) : null, nota });
@@ -608,7 +816,7 @@ async function cargarEjemplos(neg: Neg) {
   }
   await db.from("resto_llamados").insert([
     { negocio: neg.id, mesa: 3, tipo: "mozo", ejemplo: true, creado: new Date(Date.now() - 1 * 60_000).toISOString() },
-    { negocio: neg.id, mesa: 5, tipo: "cuenta", pago: "transferencia", ejemplo: true, creado: new Date(Date.now() - 2 * 60_000).toISOString() },
+    { negocio: neg.id, mesa: 5, tipo: "cuenta", pago: "transferencia", propina_pct: 10, dividir: 2, ejemplo: true, creado: new Date(Date.now() - 2 * 60_000).toISOString() },
   ]);
   const ord = [...ej].sort((a, b) => b.min - a.min);
   for (const e of ord) {
@@ -650,12 +858,12 @@ Deno.serve(async (req) => {
 
   if (url.searchParams.get("carta")) {
     let body: any = {}; try { body = await req.json(); } catch { /* vacío */ }
-    const r = await carta(neg, body, req);
+    const r = await carta(neg, body);
     return new Response(JSON.stringify(r), { headers: { ...CORS, "content-type": "application/json" }, status: (r as any).error ? 400 : 200 });
   }
   if (url.searchParams.get("panel")) {
     let body: any = {}; try { body = await req.json(); } catch { /* vacío */ }
-    const r = await panel(neg, body);
+    const r = await panel(neg, body, req);
     return new Response(JSON.stringify(r), { headers: { ...CORS, "content-type": "application/json" }, status: (r as any).error ? 401 : 200 });
   }
 
@@ -677,6 +885,11 @@ Deno.serve(async (req) => {
       const c = neg.config, tk = Deno.env.get(c.green_token_secret) ?? "";
       const r = await fetch(`${c.green_url}/waInstance${c.green_id}/lastOutgoingMessages/${tk}?minutes=120`);
       return new Response(await r.text());
+    }
+    if (url.searchParams.get("tareas")) {
+      // @ts-ignore EdgeRuntime existe en Supabase
+      EdgeRuntime.waitUntil(tareas(neg).catch((e) => console.error("tareas", e)));
+      return new Response("ok");
     }
     return new Response("resto-wa vivo");
   }
