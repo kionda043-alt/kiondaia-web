@@ -53,6 +53,16 @@ main{max-width:1000px;margin:0 auto;padding:16px 14px 80px}
 .it .tx{flex:1;min-width:0;cursor:pointer}.it .n{font-weight:700}.it .d{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it .p{font-size:13.5px;font-weight:700;margin-top:2px}.it .p em{font-style:normal;color:var(--muted);font-weight:500}
 .it.off .tx{opacity:.5}
+.it .mini{width:44px;height:44px;border-radius:10px;object-fit:cover;flex:0 0 auto}
+.fotoP{display:flex;gap:10px;align-items:center}
+.fotoP .v{width:84px;height:84px;border-radius:14px;border:1.5px dashed var(--line);background:#fffaf2;display:grid;place-items:center;font-size:26px;overflow:hidden;flex:0 0 auto}
+.fotoP .v img{width:100%;height:100%;object-fit:cover}
+.candado{background:#fff;border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--muted)}
+.portP{height:96px;border-radius:14px;border:1.5px dashed var(--line);background:#fffaf2 center/cover;display:grid;place-items:center;color:var(--muted);font-size:14px;margin-bottom:8px}
+.planes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.pl{border:1.5px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.pl.mio{border-color:var(--ok);background:#f3fbf6}
+.pl h3{font-size:18px}.pl .btn{margin-top:auto}
 .sw{width:42px;height:24px;border-radius:12px;background:#c9c2b6;position:relative;border:0;flex:0 0 auto;transition:.2s}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
 .sw.on{background:var(--ok)}.sw.on::after{left:21px}
@@ -108,6 +118,7 @@ ul.ch li::before{content:"✓";color:var(--coral);font-weight:700;margin-right:8
 <script src="../app.js"></script>
 <script>
 if (!ses) location.replace("../#entrar");
+let fotoNueva = null, quitarFoto = false;
 let S = null, tab = "carta", fotos = [], paso = null, prod = null, borrar = false, dis = null;
 const main = $id("main");
 const SUG = ["#c8341f", "#e07b00", "#1f6f5c", "#1d4e89", "#6b2d8a", "#b0125b", "#222222"];
@@ -125,9 +136,10 @@ function cabecera() {
   c.className = "chip " + (L.tipo === "prueba" ? "pr" : L.tipo === "activo" ? "ok" : "mal");
   c.textContent = L.tipo === "prueba" ? `Prueba · ${L.dias === 1 ? "1 día" : `${L.dias} días`}` : L.tipo === "activo" ? "Plan activo" : "Carta pausada";
 }
-const waActivar = () => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Quiero activar mi carta digital.\nLocal: ${S.local.nombre}\nCarta: ${S.url}`)}`;
+const waActivar = (plan) => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Quiero activar mi carta digital${plan ? ` con el plan ${PLANES[plan].nombre}` : ""}.\nLocal: ${S.local.nombre}\nCarta: ${S.url}`)}`;
+const waFotos = () => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Quiero sumar las fotos a mi carta digital (plan Carta con fotos).\nLocal: ${S.local.nombre}`)}`;
 function pausaHtml() {
-  return S.local.activa ? "" : `<div class="pausa"><h2>${S.local.estado === "prueba" ? "Se terminó tu prueba gratis" : "Tu carta está en pausa"}</h2><p>Tu carta está en pausa y el QR no la muestra. No se borró nada: activá tu plan y vuelve a funcionar al instante, con el mismo QR.</p><a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan · ${pesos(PRECIO)}/mes</a></div>`;
+  return S.local.activa ? "" : `<div class="pausa"><h2>${S.local.estado === "prueba" ? "Se terminó tu prueba gratis" : "Tu carta está en pausa"}</h2><p>Tu carta está en pausa y el QR no la muestra. No se borró nada: activá tu plan y vuelve a funcionar al instante, con el mismo QR.</p><a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan · desde ${pesos(PRECIO)}/mes</a></div>`;
 }
 
 // ---------- Asistente de carga (primera vez) ----------
@@ -196,9 +208,9 @@ $id("nav").onclick = e => { const b = e.target.closest("button"); if (!b) return
 function tCarta() {
   const cats = [...new Set(S.items.map(i => i.categoria))];
   main.innerHTML = `${pausaHtml()}<div class="fila" style="margin-bottom:6px"><button class="btn chico" id="nuevo">➕ Producto</button><button class="btn sec chico" id="otra">📷 Leer otra foto</button><span style="color:var(--muted);font-size:13.5px;margin-left:auto">${S.items.length} productos</span></div>
-    ${cats.map(c => `<div class="cat"><h3>${esc(c)}</h3><button data-ren="${esc(c)}" title="Cambiar nombre">✏️</button></div>` + S.items.filter(i => i.categoria === c).map(it => `<div class="it${it.disponible ? "" : " off"}"><div class="tx" data-ed="${it.id}"><div class="n">${esc(it.nombre)}</div>${it.descripcion ? `<div class="d">${esc(it.descripcion)}</div>` : ""}
+    ${cats.map(c => `<div class="cat"><h3>${esc(c)}</h3><button data-ren="${esc(c)}" title="Cambiar nombre">✏️</button></div>` + S.items.filter(i => i.categoria === c).map(it => `<div class="it${it.disponible ? "" : " off"}">${it.foto_url && S.local.fotos ? `<img class="mini" src="${esc(it.foto_url)}" alt="">` : ""}<div class="tx" data-ed="${it.id}"><div class="n">${esc(it.nombre)}</div>${it.descripcion ? `<div class="d">${esc(it.descripcion)}</div>` : ""}
       <div class="p">${it.precios.map(p => `${p.nombre ? `<em>${esc(p.nombre)}</em> ` : ""}${pesos(p.precio)}`).join(" · ")}</div></div><button class="sw${it.disponible ? " on" : ""}" data-sw="${it.id}" title="Disponible / sin stock"></button></div>`).join("")).join("") || `<div class="vacio">Todavía no hay productos. Tocá "➕ Producto" o "📷 Leer otra foto".</div>`}
-    <p style="color:var(--muted);font-size:13.5px;margin-top:14px">Tocá un producto para editarlo. El interruptor lo marca como "sin stock" en la carta.</p>`;
+    <p style="color:var(--muted);font-size:13.5px;margin-top:14px">Tocá un producto para editarlo${S.local.fotos ? " o sumarle una foto" : ""}. El interruptor lo marca como "sin stock" en la carta.</p>`;
   $id("nuevo").onclick = () => abrirProd(0);
   $id("otra").onclick = otraFoto;
 }
@@ -214,7 +226,7 @@ function cerrarModal() { $id("modal").classList.add("hide"); }
 $id("mX").onclick = cerrarModal; $id("modal").onclick = e => { if (e.target.id === "modal") cerrarModal(); };
 
 function abrirProd(id) {
-  const it = id ? S.items.find(i => i.id == id) : null; borrar = false;
+  const it = id ? S.items.find(i => i.id == id) : null; borrar = false; fotoNueva = null; quitarFoto = false;
   prod = it ? JSON.parse(JSON.stringify(it)) : { id: 0, nombre: "", descripcion: "", categoria: S.items.length ? S.items[S.items.length - 1].categoria : "", precios: [{ nombre: "", precio: "" }], disponible: true };
   pProd();
 }
@@ -230,14 +242,22 @@ function pProd() {
     <label>${varios ? "Tamaños y precios" : "Precio"}</label>
     ${prod.precios.map((p, i) => `<div class="pre"><input type="text" class="a ${varios ? "" : "hide"}" placeholder="Tamaño (ej: Grande)" maxlength="40" value="${esc(p.nombre)}"><input type="number" inputmode="numeric" class="b" placeholder="Precio" value="${p.precio || ""}">${varios ? `<button data-q="${i}">✕</button>` : ""}</div>`).join("")}
     <button class="lnk" id="pMas">＋ Agregar otro tamaño con su precio</button>
+    <label>Foto (opcional)</label>
+    ${S.local.fotos ? `<div class="fotoP"><div class="v">${fotoNueva || (prod.foto_url && !quitarFoto) ? `<img src="${esc(fotoNueva || prod.foto_url)}">` : "📷"}</div><div><label class="btn sec chico" style="margin:0;color:var(--navy);font-size:14px">${fotoNueva || (prod.foto_url && !quitarFoto) ? "Cambiar foto" : "Subir foto"}<input type="file" accept="image/*" id="pFoto" hidden></label>${fotoNueva || (prod.foto_url && !quitarFoto) ? '<button class="lnk" id="pQF">Quitar</button>' : ""}</div></div>`
+      : `<div class="candado">📷 Las fotos de los productos son del plan <b>Carta con fotos</b>. <a href="${waFotos()}" target="_blank" rel="noopener" style="color:var(--navy);font-weight:700">Quiero sumarlo</a></div>`}
     <div class="fila" style="margin-top:12px"><button class="btn" id="pOk" style="flex:1">Guardar</button>${prod.id ? `<button class="btn sec" id="pDel">${borrar ? "¿Seguro? Tocá de nuevo" : "🗑️ Borrar"}</button>` : ""}</div>`);
   $id("pMas").onclick = () => { leerProd(); prod.precios.push({ nombre: "", precio: "" }); pProd(); };
   document.querySelectorAll("#mBody [data-q]").forEach(b => b.onclick = () => { leerProd(); prod.precios.splice(+b.dataset.q, 1); pProd(); });
+  const pf = $id("pFoto"); if (pf) pf.onchange = async e => { leerProd(); try { fotoNueva = await achicar(e.target.files[0], 900); quitarFoto = false; } catch (er) { toast(er.message); } pProd(); };
+  const qf = $id("pQF"); if (qf) qf.onclick = () => { leerProd(); fotoNueva = null; quitarFoto = true; pProd(); };
   $id("pOk").onclick = async e => {
     leerProd(); const precios = prod.precios.filter(p => p.precio > 0);
     if (!prod.nombre || !prod.categoria || !precios.length) return toast("Falta el nombre, la sección o el precio");
-    e.target.disabled = true;
-    try { await api("item_guardar", { ...prod, precios }); cerrarModal(); S = await api("mio"); paso = null; pintar(); toast("✅ Guardado"); } catch (er) { toast(er.message); e.target.disabled = false; }
+    e.target.disabled = true; e.target.textContent = "Guardando…";
+    try {
+      const r = await api("item_guardar", { id: prod.id, nombre: prod.nombre, descripcion: prod.descripcion, categoria: prod.categoria, disponible: prod.disponible, precios });
+      if (fotoNueva) await api("item_foto", { id: r.id, imagen: fotoNueva }); else if (quitarFoto && prod.id) await api("item_foto", { id: prod.id, quitar: true });
+      cerrarModal(); S = await api("mio"); paso = null; pintar(); toast("✅ Guardado"); } catch (er) { toast(er.message); e.target.disabled = false; e.target.textContent = "Guardar"; }
   };
   const d = $id("pDel"); if (d) d.onclick = async () => {
     if (!borrar) { leerProd(); borrar = true; return pProd(); }
@@ -267,6 +287,10 @@ function tDiseno() {
   main.innerHTML = `${pausaHtml()}<div class="dis"><div>
     <div class="card"><h2>Tu marca</h2><p class="s">El logo y el color aparecen arriba de la carta.</p>
       <div class="fila"><div class="logoP">${L.logo_url ? `<img src="${esc(L.logo_url)}">` : "🏷️"}</div><label class="btn sec chico" style="margin:0;color:var(--navy);font-size:14px">${L.logo_url ? "Cambiar logo" : "Subir logo"}<input type="file" accept="image/*" id="fLogo" hidden></label>${L.logo_url ? '<button class="lnk" id="qLogo">Quitar</button>' : ""}</div>
+      <label>Foto de portada (opcional)</label>
+      ${L.fotos ? `<div class="portP" ${L.portada_url ? `style="background-image:url('${encodeURI(L.portada_url)}')"` : ""}>${L.portada_url ? "" : "Una foto del local o de un plato, de fondo arriba de la carta"}</div>
+        <div class="fila"><label class="btn sec chico" style="margin:0;color:var(--navy);font-size:14px">${L.portada_url ? "Cambiar portada" : "Subir portada"}<input type="file" accept="image/*" id="fPort" hidden></label>${L.portada_url ? '<button class="lnk" id="qPort">Quitar</button>' : ""}</div>`
+        : `<div class="candado">🖼️ La foto de portada es del plan <b>Carta con fotos</b>. <a href="${waFotos()}" target="_blank" rel="noopener" style="color:var(--navy);font-weight:700">Quiero sumarlo</a></div>`}
       <label>Color principal</label><div class="colores" id="cols">${sug.map(h => `<button style="background:${h}" data-h="${h}" class="${h.toLowerCase() === c.primario.toLowerCase() ? "act" : ""}"></button>`).join("")}<input type="color" id="cPick" value="${esc(c.primario)}" title="Otro color"></div>
       <label>Estilo</label><div class="seg" data-k="estilo"><button data-v="claro" class="${c.estilo === "claro" ? "act" : ""}">☀️ Claro</button><button data-v="oscuro" class="${c.estilo === "oscuro" ? "act" : ""}">🌙 Oscuro</button></div>
       <label>Tipografía de los títulos</label><div class="seg" data-k="fuente"><button data-v="moderna" class="${c.fuente === "moderna" ? "act" : ""}">Moderna</button><button data-v="clasica" class="${c.fuente === "clasica" ? "act" : ""}" style="font-family:Georgia,serif">Clásica</button></div></div>
@@ -287,6 +311,8 @@ function tDiseno() {
   main.querySelectorAll(".seg[data-k]").forEach(s => s.onclick = e => { const b = e.target.closest("button"); if (!b) return; pone(); c[s.dataset.k] = b.dataset.v; guardar(true).then(tDiseno); });
   $id("dOk").onclick = () => guardar();
   $id("fLogo").onchange = e => subirLogo(e.target.files[0], async () => { S = await api("mio"); dis = null; tDiseno(); });
+  const fp = $id("fPort"); if (fp) fp.onchange = async e => { try { toast("Subiendo portada…"); pone(); await api("portada", { imagen: await achicar(e.target.files[0], 1400, "image/jpeg", 0.8) }); S = await api("mio"); tDiseno(); toast("✅ Portada cargada"); } catch (er) { toast(er.message); } };
+  const qp = $id("qPort"); if (qp) qp.onclick = async () => { try { pone(); await api("portada", { quitar: true }); S = await api("mio"); tDiseno(); } catch (er) { toast(er.message); } };
   const q = $id("qLogo"); if (q) q.onclick = async () => { try { await api("guardar_local", { quitar_logo: true }); S = await api("mio"); tDiseno(); } catch (er) { toast(er.message); } };
 }
 
@@ -312,10 +338,11 @@ function tPlan() {
   const L = S.local, f = d => new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "long" });
   const est = L.tipo === "prueba" ? `Estás en la <b>prueba gratis</b>: ${L.dias === 1 ? "te queda 1 día" : `te quedan ${L.dias} días`} (hasta el ${f(L.prueba_hasta)}). Cuando termine, la carta queda en pausa hasta que actives el plan.` : L.tipo === "activo" ? `Tu plan está <b>activo</b>${L.pago_hasta ? ` hasta el ${f(L.pago_hasta + "T12:00:00")}` : ""}.` : `Tu carta está <b>en pausa</b>. Activá el plan y vuelve a funcionar con el mismo QR.`;
   const mas = t => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Tengo la carta digital de ${L.nombre} y quiero saber más sobre: ${t}`)}`;
-  main.innerHTML = `<div class="card"><h2>Plan Carta</h2><p class="s">${est}</p>
-      <div class="plan"><div class="pr">${pesos(PRECIO)} <small>por mes</small></div>${L.tipo === "activo" ? "" : `<a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan</a>`}</div>
-      <ul class="ch"><li>Carta con tu logo y tus colores</li><li>Productos y cambios ilimitados</li><li>QR fijo para las mesas</li><li>Sin instalación y sin permanencia</li></ul>
-      <p style="color:var(--muted);font-size:13.5px">El pago se coordina por WhatsApp. Apenas lo registramos, tu carta queda activa por 30 días.</p></div>
+  const mio = L.tipo === "activo" ? L.plan : null;
+  const card = (k, items) => `<div class="pl${mio === k ? " mio" : ""}"><h3>${PLANES[k].nombre}${mio === k ? " · tu plan" : ""}</h3><div class="plan"><div class="pr">${pesos(PLANES[k].precio)} <small>por mes</small></div></div><ul class="ch">${items.map(i => `<li>${i}</li>`).join("")}</ul>${mio === k ? "" : `<a class="btn ${mio ? "sec" : "wa"}" href="${waActivar(k)}" target="_blank" rel="noopener">💬 ${mio ? "Cambiar a este plan" : "Activar este plan"}</a>`}</div>`;
+  main.innerHTML = `<div class="card"><h2>Tu plan</h2><p class="s">${est}${L.tipo === "prueba" ? " Durante la prueba tenés todo, incluidas las fotos; al activar elegís el plan." : ""}</p>
+      <div class="planes">${card("carta", ["Carta con tu logo y tus colores", "Productos y cambios ilimitados", "QR fijo para las mesas", "Sin instalación y sin permanencia"])}${card("fotos", ["Todo lo del plan Carta", "Foto en cada producto", "Foto de portada del local", "Las fotos se agrandan al tocarlas"])}</div>
+      <p style="color:var(--muted);font-size:13.5px;margin-top:12px">El pago se coordina por WhatsApp. Apenas lo registramos, tu carta queda activa por 30 días.${L.tipo === "activo" && L.plan === "carta" ? " Si subiste fotos durante la prueba, están guardadas: aparecen al pasar al plan con fotos." : ""}</p></div>
     <div class="card"><h2>¿Querés ir un paso más?</h2><p class="s">Sobre tu misma carta se pueden sumar:</p>
       <ul class="ch"><li><b>Pedidos desde la mesa:</b> el cliente pide desde el QR y llega a la cocina.</li><li><b>Comandas, salón y pantalla de cocina.</b></li><li><b>Asistente de WhatsApp</b> que toma pedidos y reservas solo.</li></ul>
       <a class="btn sec" href="${mas("los planes con pedidos y asistente de WhatsApp")}" target="_blank" rel="noopener">Quiero saber más</a></div>

@@ -12,7 +12,8 @@ body.oscuro{--bg:#121212;--card:#1d1d1d;--ink:#f4f2ee;--mut:#a39f98;--line:#2e2e
 body.clasica{--tit:Georgia,"Times New Roman",serif}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.hero{background:var(--p);color:var(--sp);padding:26px 18px 30px;text-align:center}
+.hero{background:var(--p);color:var(--sp);padding:26px 18px 30px;text-align:center;background-size:cover;background-position:center}
+.hero.conp{color:#fff;padding-top:44px;padding-bottom:36px}.hero.conp h1{text-shadow:0 2px 12px rgba(0,0,0,.5)}
 .logo{width:92px;height:92px;border-radius:50%;background:#fff;margin:0 auto 10px;display:grid;place-items:center;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.18)}
 .logo img{width:100%;height:100%;object-fit:contain}
 .logo span{font-family:var(--tit);font-weight:800;font-size:38px;color:var(--p)}
@@ -30,6 +31,9 @@ h1{font-family:var(--tit);font-size:27px;line-height:1.1;letter-spacing:-.01em}
 .cat.act{background:var(--p);color:var(--sp);border-color:var(--p)}
 h2{font-family:var(--tit);font-size:21px;margin:22px 2px 10px;padding-bottom:6px;border-bottom:2px solid var(--p);display:inline-block}
 .it{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.it .ft{width:68px;height:68px;border-radius:12px;object-fit:cover;flex:0 0 auto;cursor:zoom-in;background:var(--line)}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:30;display:grid;place-items:center;padding:16px;cursor:zoom-out}
+.lb img{max-width:100%;max-height:82vh;border-radius:14px}.lb b{display:block;color:#fff;text-align:center;margin-top:10px;font-size:17px}
 .it .tx{flex:1;min-width:0}.it .n{font-weight:700}.it .d{color:var(--mut);font-size:13.5px;margin-top:1px}
 .it .pr{text-align:right;font-weight:800;white-space:nowrap}
 .it .pr small{display:block;font-weight:500;color:var(--mut);font-size:12px;margin-top:3px}
@@ -73,7 +77,7 @@ function pintar() {
   document.documentElement.style.setProperty("--p", p); document.documentElement.style.setProperty("--sp", contraste(p));
   document.querySelector('meta[name="theme-color"]')?.remove(); const m = document.createElement("meta"); m.name = "theme-color"; m.content = p; document.head.appendChild(m);
   const cats = [...new Set(D.items.map(i => i.categoria))];
-  app.innerHTML = `<div class="hero"><div class="logo">${L.logo_url ? `<img src="${esc(L.logo_url)}" alt="">` : `<span>${esc(L.nombre.trim()[0] || "?").toUpperCase()}</span>`}</div>
+  app.innerHTML = `<div class="hero${L.portada_url ? " conp" : ""}"${L.portada_url ? ` style="background-image:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.62)),url('${encodeURI(L.portada_url)}')"` : ""}><div class="logo">${L.logo_url ? `<img src="${esc(L.logo_url)}" alt="">` : `<span>${esc(L.nombre.trim()[0] || "?").toUpperCase()}</span>`}</div>
     <h1>${esc(L.nombre)}</h1><div class="info">${L.direccion ? `<span>📍 ${esc(L.direccion)}</span>` : ""}${L.horarios ? `<span>🕖 ${esc(L.horarios)}</span>` : ""}</div>
     ${L.whatsapp || L.instagram ? `<div class="links">${L.whatsapp ? `<a href="https://wa.me/${esc(L.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ""}${L.instagram ? `<a href="https://instagram.com/${esc(L.instagram)}" target="_blank" rel="noopener">📷 @${esc(L.instagram)}</a>` : ""}</div>` : ""}</div>
     <div class="wrap">${D.items.length ? `<div class="pega"><div class="busca"><input id="q" placeholder="Buscar en la carta…" autocomplete="off" value="${esc(busca)}"></div><div class="cats" id="cats"></div></div><div id="lista"></div>` : `<div class="vacio">Estamos armando la carta. Volvé en un ratito 🙂</div>`}
@@ -90,10 +94,15 @@ function lista() {
   cs.innerHTML = cats.map((c, i) => `<button class="cat${i ? "" : " act"}" data-c="${i}">${esc(c)}</button>`).join("");
   cs.querySelectorAll(".cat").forEach(bt => bt.onclick = () => { const s = document.getElementById("c" + bt.dataset.c); if (s) scrollTo({ top: s.getBoundingClientRect().top + scrollY - 108, behavior: "smooth" }); });
   const h = cats.map((c, i) => { const its = D.items.filter(x => x.categoria === c && ok(x));
-    return its.length ? `<section id="c${i}" data-c="${i}"><h2>${esc(c)}</h2>${its.map(it => `<div class="it${it.disponible ? "" : " off"}"><div class="tx"><div class="n">${esc(it.nombre)}</div>${it.descripcion ? `<div class="d">${esc(it.descripcion)}</div>` : ""}${it.disponible ? "" : '<div class="sin">Sin stock hoy</div>'}</div>
+    return its.length ? `<section id="c${i}" data-c="${i}"><h2>${esc(c)}</h2>${its.map(it => `<div class="it${it.disponible ? "" : " off"}">${it.foto_url ? `<img class="ft" loading="lazy" src="${esc(it.foto_url)}" alt="" data-n="${esc(it.nombre)}">` : ""}<div class="tx"><div class="n">${esc(it.nombre)}</div>${it.descripcion ? `<div class="d">${esc(it.descripcion)}</div>` : ""}${it.disponible ? "" : '<div class="sin">Sin stock hoy</div>'}</div>
       <div class="pr">${it.precios.map(p => `<div>${$(p.precio)}${p.nombre ? `<small>${esc(p.nombre)}</small>` : ""}</div>`).join("")}</div></div>`).join("")}</section>` : ""; }).join("");
   document.getElementById("lista").innerHTML = h || `<div class="vacio">No encontramos "${esc(busca)}".</div>`;
 }
+document.addEventListener("click", e => {
+  const f = e.target.closest(".ft"), lb = e.target.closest(".lb");
+  if (lb) return lb.remove();
+  if (f) { const d = document.createElement("div"); d.className = "lb"; d.innerHTML = `<div><img src="${esc(f.src)}" alt=""><b>${esc(f.dataset.n)}</b></div>`; document.body.appendChild(d); }
+});
 addEventListener("scroll", () => {
   let act = 0; document.querySelectorAll("section[data-c]").forEach(s => { if (s.getBoundingClientRect().top < 170) act = +s.dataset.c; });
   document.querySelectorAll(".cat").forEach(b => { const on = +b.dataset.c === act; if (on && !b.classList.contains("act")) { const c = document.getElementById("cats"); c.scrollTo({ left: b.offsetLeft - c.clientWidth / 2 + b.offsetWidth / 2, behavior: "smooth" }); } b.classList.toggle("act", on); });

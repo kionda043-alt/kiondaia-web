@@ -7,7 +7,8 @@ const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const MODEL = Deno.env.get("GEMINI_MODEL") ?? "gemini-flash-latest";
 const SITIO = "https://kiondaia.com/carta";
-const DIAS_PRUEBA = 15, MAX_LECTURAS = 4, MAX_ITEMS = 400;
+const DIAS_PRUEBA = 15, MAX_LECTURAS = 4, MAX_ITEMS = 400, MAX_FOTOS = 80;
+const PLANES = ["carta", "fotos"];
 const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-headers": "content-type, authorization, apikey, x-client-info",
@@ -52,6 +53,23 @@ function activa(l: Local) {
   if (l.estado === "activo") return !l.pago_hasta || new Date(l.pago_hasta + "T23:59:59-03:00").getTime() > Date.now();
   return false;
 }
+// Las fotos (de productos y de portada) son del plan "fotos". Durante la prueba gratis se puede usar todo.
+function conFotos(l: Local) { return activa(l) && (l.estado === "prueba" || l.plan === "fotos"); }
+// Guarda una imagen en el bucket y devuelve su URL pública; borra la anterior si había
+async function subirImagen(local: Local, dataUrl: unknown, nombre: string, maxB64: number, anterior?: string | null) {
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(dataUrl ?? ""));
+  if (!m || m[2].length > maxB64) return { error: "La imagen es muy pesada o no es válida" };
+  const bin = Uint8Array.from(atob(m[2]), (ch) => ch.charCodeAt(0));
+  const ruta = `${local.id}/${nombre}-${Date.now()}.${m[1].split("/")[1].replace("jpeg", "jpg")}`;
+  const { error } = await db.storage.from("carta").upload(ruta, bin, { contentType: m[1], upsert: true });
+  if (error) { console.error("subir", error); return { error: "No pudimos subir la imagen" }; }
+  await borrarImagen(anterior);
+  return { url: db.storage.from("carta").getPublicUrl(ruta).data.publicUrl };
+}
+async function borrarImagen(url?: string | null) {
+  const ruta = String(url ?? "").split("/object/public/carta/")[1];
+  if (ruta) await db.storage.from("carta").remove([ruta]);
+}
 function estadoDe(l: Local) {
   const a = activa(l);
   const hasta = l.estado === "prueba" ? new Date(l.prueba_hasta) : l.pago_hasta ? new Date(l.pago_hasta + "T23:59:59-03:00") : null;
@@ -71,11 +89,11 @@ function coloresLimpios(c: any, prev: any = {}) {
   };
 }
 async function items(local: string) {
-  const { data } = await db.from("carta_items").select("id,categoria,nombre,descripcion,precios,disponible,orden").eq("local", local).order("orden").order("id");
+  const { data } = await db.from("carta_items").select("id,categoria,nombre,descripcion,precios,disponible,orden,foto_url").eq("local", local).order("orden").order("id");
   const l = data ?? [], cats = [...new Set(l.map((i) => i.categoria))];
   return l.sort((a, b) => cats.indexOf(a.categoria) - cats.indexOf(b.categoria) || a.orden - b.orden || a.id - b.id);
 }
-const publico = (l: Local) => ({ slug: l.slug, nombre: l.nombre, logo_url: l.logo_url, colores: l.colores, direccion: l.direccion, horarios: l.horarios, whatsapp: l.whatsapp, instagram: l.instagram, nota: l.nota });
+const publico = (l: Local) => ({ slug: l.slug, nombre: l.nombre, logo_url: l.logo_url, portada_url: conFotos(l) ? l.portada_url : null, colores: l.colores, direccion: l.direccion, horarios: l.horarios, whatsapp: l.whatsapp, instagram: l.instagram, nota: l.nota });
 
 // ---------- Lectura de la carta con IA ----------
 async function aBase64(buf: Uint8Array) {
@@ -119,7 +137,8 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
     const { data: l } = await db.from("carta_locales").select("*").eq("slug", txt(b.slug, 60).toLowerCase()).maybeSingle();
     if (!l) return [{ error: "No encontramos esa carta" }, 404];
     if (!activa(l)) return [{ pausada: true, nombre: l.nombre }];
-    return [{ local: publico(l), items: (await items(l.id)).map(({ orden: _o, ...r }) => r) }];
+    const f = conFotos(l);
+    return [{ local: publico(l), items: (await items(l.id)).map(({ orden: _o, foto_url, ...r }) => ({ ...r, foto_url: f ? foto_url : null })) }];
   }
 
   if (a === "registrar") {
@@ -160,7 +179,7 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
       const mail = new Map((us?.users ?? []).map((x: any) => [x.id, x.email]));
       const { data: cnt } = await db.from("carta_items").select("local").limit(20000);
       const n = new Map<string, number>(); for (const c of cnt ?? []) n.set(c.local, (n.get(c.local) ?? 0) + 1);
-      return [{ locales: (ls ?? []).map((l) => ({ id: l.id, slug: l.slug, nombre: l.nombre, email: mail.get(l.owner) ?? "", whatsapp: l.whatsapp, estado: l.estado, prueba_hasta: l.prueba_hasta, pago_hasta: l.pago_hasta, creado: l.creado, productos: n.get(l.id) ?? 0, visto: l.visto_admin, ...estadoDe(l) })) }];
+      return [{ locales: (ls ?? []).map((l) => ({ id: l.id, slug: l.slug, nombre: l.nombre, email: mail.get(l.owner) ?? "", whatsapp: l.whatsapp, estado: l.estado, prueba_hasta: l.prueba_hasta, pago_hasta: l.pago_hasta, creado: l.creado, productos: n.get(l.id) ?? 0, plan: l.plan, visto: l.visto_admin, ...estadoDe(l) })) }];
     }
     const { data: l } = await db.from("carta_locales").select("*").eq("id", b.id).maybeSingle();
     if (!l) return [{ error: "No existe" }, 404];
@@ -175,7 +194,7 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
     if (b.cambio === "activar") {
       // Suma 30 días desde hoy, o desde el vencimiento si todavía no venció
       const base = l.estado === "activo" && l.pago_hasta && new Date(l.pago_hasta) > hoy ? new Date(l.pago_hasta) : hoy;
-      c = { ...c, estado: "activo", pago_hasta: mas(30, base) };
+      c = { ...c, estado: "activo", pago_hasta: mas(30, base), plan: PLANES.includes(b.plan) ? b.plan : l.plan };
     } else if (b.cambio === "pausar") c = { ...c, estado: "pausado" };
     else if (b.cambio === "extender") c = { ...c, estado: "prueba", prueba_hasta: new Date(Math.max(Date.now(), new Date(l.prueba_hasta).getTime()) + 15 * 86_400_000).toISOString() };
     else if (b.cambio !== "visto") return [{ error: "cambio inválido" }, 400];
@@ -187,7 +206,7 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
   if (a === "mio") {
     if (!local) return [{ local: null, admin: esAdmin, email: user.email }];
     const { ip: _ip, owner: _ow, visto_admin: _v, ...l } = local;
-    return [{ local: { ...l, ...estadoDe(local), lecturas_restantes: Math.max(0, MAX_LECTURAS - local.lecturas_ia) }, items: await items(local.id), admin: esAdmin, email: user.email, url: `${SITIO}/ver/?l=${local.slug}` }];
+    return [{ local: { ...l, ...estadoDe(local), lecturas_restantes: Math.max(0, MAX_LECTURAS - local.lecturas_ia), fotos: conFotos(local) }, items: await items(local.id), admin: esAdmin, email: user.email, url: `${SITIO}/ver/?l=${local.slug}` }];
   }
   if (!local) return [{ error: "Tu cuenta no tiene una carta" }, 404];
   const tocar = () => db.from("carta_locales").update({ actualizado: new Date().toISOString() }).eq("id", local.id);
@@ -249,22 +268,46 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
     return [{ ok: true, logo_url: url }];
   }
 
+  if (a === "portada" || a === "item_foto") {
+    if (!conFotos(local)) return [{ error: "Las fotos son del plan Carta con fotos. Escribinos y lo activamos." }, 403];
+    if (a === "portada") {
+      if (b.quitar) { await borrarImagen(local.portada_url); await db.from("carta_locales").update({ portada_url: null, actualizado: new Date().toISOString() }).eq("id", local.id); return [{ ok: true }]; }
+      const r = await subirImagen(local, b.imagen, "portada", 900_000, local.portada_url);
+      if (r.error) return [{ error: r.error }, 400];
+      await db.from("carta_locales").update({ portada_url: r.url, actualizado: new Date().toISOString() }).eq("id", local.id);
+      return [{ ok: true, portada_url: r.url }];
+    }
+    const { data: it } = await db.from("carta_items").select("id,foto_url").eq("local", local.id).eq("id", b.id).maybeSingle();
+    if (!it) return [{ error: "No encontramos ese producto" }, 404];
+    if (b.quitar) { await borrarImagen(it.foto_url); await db.from("carta_items").update({ foto_url: null }).eq("id", it.id); await tocar(); return [{ ok: true }]; }
+    if (!it.foto_url) {
+      const { count } = await db.from("carta_items").select("id", { count: "exact", head: true }).eq("local", local.id).not("foto_url", "is", null);
+      if ((count ?? 0) >= MAX_FOTOS) return [{ error: `Llegaste al máximo de ${MAX_FOTOS} fotos` }, 400];
+    }
+    const r = await subirImagen(local, b.imagen, `p${it.id}`, 600_000, it.foto_url);
+    if (r.error) return [{ error: r.error }, 400];
+    await db.from("carta_items").update({ foto_url: r.url }).eq("id", it.id); await tocar();
+    return [{ ok: true, foto_url: r.url }];
+  }
+
   if (a === "item_guardar") {
     const precios = preciosLimpios(b.precios), nombre = txt(b.nombre, 80), categoria = txt(b.categoria, 60);
     if (!nombre || !categoria || !precios.length) return [{ error: "Falta nombre, categoría o precio" }, 400];
     const fila = { categoria, nombre, descripcion: txt(b.descripcion, 300), precios, disponible: b.disponible !== false };
+    let id = b.id;
     if (b.id) await db.from("carta_items").update(fila).eq("local", local.id).eq("id", b.id);
     else {
       const { count } = await db.from("carta_items").select("id", { count: "exact", head: true }).eq("local", local.id);
       if ((count ?? 0) >= MAX_ITEMS) return [{ error: "Llegaste al máximo de productos" }, 400];
       const { data: ult } = await db.from("carta_items").select("orden").eq("local", local.id).order("orden", { ascending: false }).limit(1).maybeSingle();
-      await db.from("carta_items").insert({ ...fila, local: local.id, orden: (ult?.orden ?? -1) + 1 });
+      const { data: nuevo } = await db.from("carta_items").insert({ ...fila, local: local.id, orden: (ult?.orden ?? -1) + 1 }).select("id").single();
+      id = nuevo?.id;
     }
     await tocar();
-    return [{ ok: true }];
+    return [{ ok: true, id }];
   }
   if (a === "item_disponible") { await db.from("carta_items").update({ disponible: !!b.disponible }).eq("local", local.id).eq("id", b.id); await tocar(); return [{ ok: true }]; }
-  if (a === "item_borrar") { await db.from("carta_items").delete().eq("local", local.id).eq("id", b.id); await tocar(); return [{ ok: true }]; }
+  if (a === "item_borrar") { const { data: v } = await db.from("carta_items").select("foto_url").eq("local", local.id).eq("id", b.id).maybeSingle(); await borrarImagen(v?.foto_url); await db.from("carta_items").delete().eq("local", local.id).eq("id", b.id); await tocar(); return [{ ok: true }]; }
   if (a === "categoria_renombrar") {
     const de = txt(b.de, 60), aNombre = txt(b.a, 60);
     if (!de || !aNombre) return [{ error: "Falta el nombre" }, 400];

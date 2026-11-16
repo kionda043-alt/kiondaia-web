@@ -2,7 +2,8 @@
 const SB = "https://itnxcvnmmoqgeijerjqj.supabase.co";
 const KEY = "sb_publishable_jJ7O9A5iqqLoeyWF1SYZZQ_LQpd4vLK";
 const WA_KIONDA = "5491132654042";
-const PRECIO = 15000;
+const PLANES = { carta: { nombre: "Carta", precio: 15000 }, fotos: { nombre: "Carta con fotos", precio: 20000 } };
+const PRECIO = PLANES.carta.precio;
 const $id = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const pesos = (n) => "$" + Math.round(n || 0).toLocaleString("es-AR");

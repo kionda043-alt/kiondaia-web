@@ -47,25 +47,26 @@ async function cargar() {
 }
 function pintar() {
   const n = t => L.filter(x => x.tipo === t).length, vence = L.filter(x => x.tipo === "prueba" && x.dias <= 3).length, nuevos = L.filter(x => !x.visto).length;
-  $id("kpis").innerHTML = [["Locales", L.length], ["En prueba", n("prueba")], ["Pagando", n("activo")], ["Pausados", n("pausado")], ["Ingreso mensual", pesos(n("activo") * PRECIO)]].map(([a, b]) => `<div class="kpi"><small>${a}</small><b>${b}</b></div>`).join("");
+  $id("kpis").innerHTML = [["Locales", L.length], ["En prueba", n("prueba")], ["Pagando", n("activo")], ["Pausados", n("pausado")], ["Ingreso mensual", pesos(L.filter(x => x.tipo === "activo").reduce((a, x) => a + (PLANES[x.plan] || PLANES.carta).precio, 0))]].map(([a, b]) => `<div class="kpi"><small>${a}</small><b>${b}</b></div>`).join("");
   const F = [["todos", "Todos"], ["nuevos", `Nuevos (${nuevos})`], ["vencen", `Vencen pronto (${vence})`], ["prueba", "En prueba"], ["activo", "Pagando"], ["pausado", "Pausados"]];
   $id("filtros").innerHTML = F.map(([k, t]) => `<button class="chip${filtro === k ? " act" : ""}" data-f="${k}">${t}</button>`).join("");
   const l = L.filter(x => filtro === "todos" || (filtro === "nuevos" ? !x.visto : filtro === "vencen" ? x.tipo === "prueba" && x.dias <= 3 : x.tipo === filtro));
   $id("lista").innerHTML = l.map(x => {
-    const est = x.tipo === "prueba" ? `Prueba · ${x.dias} día${x.dias === 1 ? "" : "s"} (hasta ${f(x.prueba_hasta)})` : x.tipo === "activo" ? `Pagando · hasta ${x.pago_hasta ? f(x.pago_hasta + "T12:00:00") : "sin fecha"}` : x.estado === "prueba" ? "Pausado · prueba vencida" : x.estado === "activo" ? "Pausado · pago vencido" : "Pausado a mano";
+    const est = x.tipo === "prueba" ? `Prueba · ${x.dias} día${x.dias === 1 ? "" : "s"} (hasta ${f(x.prueba_hasta)})` : x.tipo === "activo" ? `${(PLANES[x.plan] || PLANES.carta).nombre} · hasta ${x.pago_hasta ? f(x.pago_hasta + "T12:00:00") : "sin fecha"}` : x.estado === "prueba" ? "Pausado · prueba vencida" : x.estado === "activo" ? "Pausado · pago vencido" : "Pausado a mano";
     const wa = x.whatsapp ? ` · <a href="https://wa.me/${esc(x.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : "";
     return `<div class="l ${x.tipo}"><div class="h"><b>${esc(x.nombre)}</b>${x.visto ? "" : '<span class="tag n">NUEVO</span>'}<span class="tag">${est}</span></div>
       <div class="d">${esc(x.email)}${wa} · ${x.productos} productos · alta ${f(x.creado)} · <a href="../ver/?l=${esc(x.slug)}" target="_blank" rel="noopener">ver carta</a></div>
-      <div class="acts"><button class="btn ok" data-id="${x.id}" data-c="activar">${confirmar === x.id + "activar" ? "¿Registrar pago? Tocá de nuevo" : "💰 Registrar pago (+30 días)"}</button><button class="btn sec" data-id="${x.id}" data-c="extender">+15 días de prueba</button>${x.tipo !== "pausado" ? `<button class="btn sec" data-id="${x.id}" data-c="pausar">${confirmar === x.id + "pausar" ? "¿Pausar? Tocá de nuevo" : "Pausar"}</button>` : ""}<button class="btn sec" data-id="${x.id}" data-c="clave">Nueva contraseña</button>${x.visto ? "" : `<button class="btn sec" data-id="${x.id}" data-c="visto">Marcar visto</button>`}</div></div>`;
+      <div class="acts"><button class="btn ok" data-id="${x.id}" data-c="activar" data-p="carta">${confirmar === x.id + "activarcarta" ? "¿Registrar pago? Tocá de nuevo" : "💰 Pago Carta (+30 días)"}</button><button class="btn ok" data-id="${x.id}" data-c="activar" data-p="fotos">${confirmar === x.id + "activarfotos" ? "¿Registrar pago? Tocá de nuevo" : "📷 Pago Carta con fotos (+30 días)"}</button><button class="btn sec" data-id="${x.id}" data-c="extender">+15 días de prueba</button>${x.tipo !== "pausado" ? `<button class="btn sec" data-id="${x.id}" data-c="pausar">${confirmar === x.id + "pausar" ? "¿Pausar? Tocá de nuevo" : "Pausar"}</button>` : ""}<button class="btn sec" data-id="${x.id}" data-c="clave">Nueva contraseña</button>${x.visto ? "" : `<button class="btn sec" data-id="${x.id}" data-c="visto">Marcar visto</button>`}</div></div>`;
   }).join("") || `<div class="vacio">Nada por acá.</div>`;
 }
 $id("filtros").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { filtro = b.dataset.f; pintar(); } };
 $id("lista").onclick = async e => {
   const b = e.target.closest("[data-c]"); if (!b) return; const id = b.dataset.id, c = b.dataset.c;
   if (c === "clave") { const clave = prompt("Nueva contraseña para este local (mínimo 6 caracteres):"); if (!clave) return; try { await api("admin_clave", { id, clave }); toast("Contraseña cambiada"); } catch (er) { toast(er.message); } return; }
-  if ((c === "activar" || c === "pausar") && confirmar !== id + c) { confirmar = id + c; pintar(); setTimeout(() => { if (confirmar === id + c) { confirmar = null; pintar(); } }, 4000); return; }
+  const k = id + c + (b.dataset.p || "");
+  if ((c === "activar" || c === "pausar") && confirmar !== k) { confirmar = k; pintar(); setTimeout(() => { if (confirmar === k) { confirmar = null; pintar(); } }, 4000); return; }
   confirmar = null;
-  try { await api("admin_estado", { id, cambio: c }); toast("Listo"); await cargar(); } catch (er) { toast(er.message); }
+  try { await api("admin_estado", { id, cambio: c, plan: b.dataset.p }); toast("Listo"); await cargar(); } catch (er) { toast(er.message); }
 };
 $id("salir").onclick = () => salir("../#entrar");
 cargar();
