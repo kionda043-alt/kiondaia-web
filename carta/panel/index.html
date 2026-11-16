@@ -123,11 +123,11 @@ function cabecera() {
   const L = S.local, c = $id("chip");
   $id("tNom").textContent = L.nombre; $id("verCarta").href = S.url;
   c.className = "chip " + (L.tipo === "prueba" ? "pr" : L.tipo === "activo" ? "ok" : "mal");
-  c.textContent = L.tipo === "prueba" ? `Prueba gratis · ${L.dias === 1 ? "queda 1 día" : `quedan ${L.dias} días`}` : L.tipo === "activo" ? "Plan activo" : "Carta pausada";
+  c.textContent = L.tipo === "prueba" ? `Prueba · ${L.dias === 1 ? "1 día" : `${L.dias} días`}` : L.tipo === "activo" ? "Plan activo" : "Carta pausada";
 }
 const waActivar = () => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Quiero activar mi carta digital.\nLocal: ${S.local.nombre}\nCarta: ${S.url}`)}`;
 function pausaHtml() {
-  return S.local.activa ? "" : `<div class="pausa"><h2>Se terminó tu prueba gratis</h2><p>Tu carta está en pausa y el QR no la muestra. No se borró nada: activá tu plan y vuelve a funcionar al instante, con el mismo QR.</p><a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan · ${pesos(PRECIO)}/mes</a></div>`;
+  return S.local.activa ? "" : `<div class="pausa"><h2>${S.local.estado === "prueba" ? "Se terminó tu prueba gratis" : "Tu carta está en pausa"}</h2><p>Tu carta está en pausa y el QR no la muestra. No se borró nada: activá tu plan y vuelve a funcionar al instante, con el mismo QR.</p><a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan · ${pesos(PRECIO)}/mes</a></div>`;
 }
 
 // ---------- Asistente de carga (primera vez) ----------
