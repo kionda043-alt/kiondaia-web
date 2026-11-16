@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cartas · Administrador</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z' fill='%23FF5A36'/%3E%3C/svg%3E">
+<style>
+:root{--cream:#FFF4E6;--navy:#14112B;--coral:#FF5A36;--muted:#5B5670;--line:#eadcc8;--ok:#1f9d55}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--cream);color:var(--navy)}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;gap:12px;align-items:center}
+header h1{font-size:18px;flex:1}header a,header button{color:#c9c5dc;background:none;border:0;font-size:14px;text-decoration:none}
+main{max-width:1000px;margin:0 auto;padding:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:14px;padding:12px}.kpi small{color:var(--muted)}.kpi b{display:block;font-size:24px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:13.5px;font-weight:600}
+.chip.act{background:var(--navy);color:#fff;border-color:var(--navy)}
+.l{background:#fff;border-radius:16px;padding:14px;margin-bottom:10px;border-left:6px solid var(--muted)}
+.l.prueba{border-left-color:#e0a800}.l.activo{border-left-color:var(--ok)}.l.pausado{border-left-color:#c62f12}
+.l .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.l .h b{font-size:17px}
+.tag{font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;background:#f1e7d6}
+.tag.n{background:var(--coral);color:#fff}
+.l .d{color:var(--muted);font-size:13.5px;margin:4px 0 10px}.l .d a{color:var(--navy)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:8px 12px;font-weight:700;background:var(--navy);color:#fff;font-size:14px}
+.btn.sec{background:#fff;border:1.5px solid var(--line);color:var(--navy)}.btn.ok{background:var(--ok)}
+.vacio{text-align:center;color:var(--muted);padding:40px 10px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,160%);background:var(--navy);color:#fff;border-radius:12px;padding:10px 16px;font-weight:700;z-index:60;transition:transform .25s}
+#toast.on{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<header><h1>Cartas · Administrador</h1><a href="../panel/">Mi panel</a><button id="salir">Salir</button></header>
+<main><div class="kpis" id="kpis"></div><div class="chips" id="filtros"></div><div id="lista"><div class="vacio">Cargando…</div></div></main>
+<script src="../app.js"></script>
+<script>
+if (!ses) location.replace("../#entrar");
+let L = [], filtro = "todos", confirmar = null;
+const f = d => new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+async function cargar() {
+  try { L = (await api("admin_lista")).locales; pintar(); }
+  catch (e) { if (e.sesion === false) return salir("../#entrar"); $id("lista").innerHTML = `<div class="vacio">${esc(e.message)}</div>`; }
+}
+function pintar() {
+  const n = t => L.filter(x => x.tipo === t).length, vence = L.filter(x => x.tipo === "prueba" && x.dias <= 3).length, nuevos = L.filter(x => !x.visto).length;
+  $id("kpis").innerHTML = [["Locales", L.length], ["En prueba", n("prueba")], ["Pagando", n("activo")], ["Pausados", n("pausado")], ["Ingreso mensual", pesos(n("activo") * PRECIO)]].map(([a, b]) => `<div class="kpi"><small>${a}</small><b>${b}</b></div>`).join("");
+  const F = [["todos", "Todos"], ["nuevos", `Nuevos (${nuevos})`], ["vencen", `Vencen pronto (${vence})`], ["prueba", "En prueba"], ["activo", "Pagando"], ["pausado", "Pausados"]];
+  $id("filtros").innerHTML = F.map(([k, t]) => `<button class="chip${filtro === k ? " act" : ""}" data-f="${k}">${t}</button>`).join("");
+  const l = L.filter(x => filtro === "todos" || (filtro === "nuevos" ? !x.visto : filtro === "vencen" ? x.tipo === "prueba" && x.dias <= 3 : x.tipo === filtro));
+  $id("lista").innerHTML = l.map(x => {
+    const est = x.tipo === "prueba" ? `Prueba · ${x.dias} día${x.dias === 1 ? "" : "s"} (hasta ${f(x.prueba_hasta)})` : x.tipo === "activo" ? `Pagando · hasta ${x.pago_hasta ? f(x.pago_hasta + "T12:00:00") : "sin fecha"}` : x.estado === "prueba" ? "Pausado · prueba vencida" : x.estado === "activo" ? "Pausado · pago vencido" : "Pausado a mano";
+    const wa = x.whatsapp ? ` · <a href="https://wa.me/${esc(x.whatsapp)}" target="_blank" rel="noopener">WhatsApp</a>` : "";
+    return `<div class="l ${x.tipo}"><div class="h"><b>${esc(x.nombre)}</b>${x.visto ? "" : '<span class="tag n">NUEVO</span>'}<span class="tag">${est}</span></div>
+      <div class="d">${esc(x.email)}${wa} · ${x.productos} productos · alta ${f(x.creado)} · <a href="../ver/?l=${esc(x.slug)}" target="_blank" rel="noopener">ver carta</a></div>
+      <div class="acts"><button class="btn ok" data-id="${x.id}" data-c="activar">${confirmar === x.id + "activar" ? "¿Registrar pago? Tocá de nuevo" : "💰 Registrar pago (+30 días)"}</button><button class="btn sec" data-id="${x.id}" data-c="extender">+15 días de prueba</button>${x.tipo !== "pausado" ? `<button class="btn sec" data-id="${x.id}" data-c="pausar">${confirmar === x.id + "pausar" ? "¿Pausar? Tocá de nuevo" : "Pausar"}</button>` : ""}<button class="btn sec" data-id="${x.id}" data-c="clave">Nueva contraseña</button>${x.visto ? "" : `<button class="btn sec" data-id="${x.id}" data-c="visto">Marcar visto</button>`}</div></div>`;
+  }).join("") || `<div class="vacio">Nada por acá.</div>`;
+}
+$id("filtros").onclick = e => { const b = e.target.closest("[data-f]"); if (b) { filtro = b.dataset.f; pintar(); } };
+$id("lista").onclick = async e => {
+  const b = e.target.closest("[data-c]"); if (!b) return; const id = b.dataset.id, c = b.dataset.c;
+  if (c === "clave") { const clave = prompt("Nueva contraseña para este local (mínimo 6 caracteres):"); if (!clave) return; try { await api("admin_clave", { id, clave }); toast("Contraseña cambiada"); } catch (er) { toast(er.message); } return; }
+  if ((c === "activar" || c === "pausar") && confirmar !== id + c) { confirmar = id + c; pintar(); setTimeout(() => { if (confirmar === id + c) { confirmar = null; pintar(); } }, 4000); return; }
+  confirmar = null;
+  try { await api("admin_estado", { id, cambio: c }); toast("Listo"); await cargar(); } catch (er) { toast(er.message); }
+};
+$id("salir").onclick = () => salir("../#entrar");
+cargar();
+</script>
+</body>
+</html>

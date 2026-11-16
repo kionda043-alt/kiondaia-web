@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carta</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+<style>
+:root{--p:#c8341f;--sp:#fff;--bg:#f8f5f0;--card:#fff;--ink:#1d1d1f;--mut:#74706a;--line:#e8e2d8;--tit:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body.oscuro{--bg:#121212;--card:#1d1d1d;--ink:#f4f2ee;--mut:#a39f98;--line:#2e2e2e}
+body.clasica{--tit:Georgia,"Times New Roman",serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.hero{background:var(--p);color:var(--sp);padding:26px 18px 30px;text-align:center}
+.logo{width:92px;height:92px;border-radius:50%;background:#fff;margin:0 auto 10px;display:grid;place-items:center;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.18)}
+.logo img{width:100%;height:100%;object-fit:contain}
+.logo span{font-family:var(--tit);font-weight:800;font-size:38px;color:var(--p)}
+h1{font-family:var(--tit);font-size:27px;line-height:1.1;letter-spacing:-.01em}
+.info{font-size:13.5px;opacity:.92;margin-top:6px;display:flex;flex-direction:column;gap:1px}
+.links{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.links a{background:rgba(255,255,255,.2);color:inherit;text-decoration:none;font-weight:700;font-size:13.5px;border-radius:20px;padding:6px 13px}
+.wrap{max-width:720px;margin:0 auto;padding:0 14px 60px}
+.pega{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 2px;margin:0 -14px;padding-left:14px;padding-right:14px}
+.busca input{width:100%;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:11px 14px;font:inherit;outline:0}
+.busca input:focus{border-color:var(--p)}
+.cats{display:flex;gap:6px;overflow-x:auto;padding:9px 0;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:20px;padding:6px 13px;font:inherit;font-size:13.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.cat.act{background:var(--p);color:var(--sp);border-color:var(--p)}
+h2{font-family:var(--tit);font-size:21px;margin:22px 2px 10px;padding-bottom:6px;border-bottom:2px solid var(--p);display:inline-block}
+.it{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.it .tx{flex:1;min-width:0}.it .n{font-weight:700}.it .d{color:var(--mut);font-size:13.5px;margin-top:1px}
+.it .pr{text-align:right;font-weight:800;white-space:nowrap}
+.it .pr small{display:block;font-weight:500;color:var(--mut);font-size:12px;margin-top:3px}
+.it .pr div+div{margin-top:4px}
+.it.off{opacity:.5}.it.off .n{text-decoration:line-through}
+.sin{font-size:12px;font-weight:700;color:var(--p)}
+.nota{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;color:var(--mut);margin-top:14px}
+.vacio{text-align:center;color:var(--mut);padding:40px 10px}
+.foot{text-align:center;color:var(--mut);font-size:12px;margin-top:30px}.foot a{color:var(--mut)}
+.pausa{min-height:100vh;display:grid;place-items:center;text-align:center;padding:30px;color:var(--mut)}
+.pausa b{display:block;font-size:22px;color:var(--ink);margin:8px 0 6px}
+</style>
+</head>
+<body>
+<div id="app"><div class="pausa"><div>Cargando la carta…</div></div></div>
+<script>
+const API = "https://itnxcvnmmoqgeijerjqj.supabase.co/functions/v1/carta";
+const KEY = "sb_publishable_jJ7O9A5iqqLoeyWF1SYZZQ_LQpd4vLK";
+const SLUG = (new URLSearchParams(location.search).get("l") || "").toLowerCase();
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = n => "$" + Math.round(n).toLocaleString("es-AR");
+const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const app = document.getElementById("app");
+let D = null, busca = "", firma = "";
+function contraste(hex) { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 1000 > 165 ? "#1d1d1f" : "#ffffff"; }
+function aviso(t, s) { app.innerHTML = `<div class="pausa"><div><div style="font-size:44px">🍽️</div><b>${esc(t)}</b>${esc(s)}</div></div>`; }
+async function cargar(primera) {
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "content-type": "application/json", apikey: KEY }, body: JSON.stringify({ accion: "ver", slug: SLUG }) });
+    const j = await r.json();
+    if (j.pausada) { document.title = j.nombre; return aviso(j.nombre, "La carta no está disponible en este momento. Pedísela al personal del local 🙂"); }
+    if (!r.ok || j.error) throw new Error(j.error);
+    const f = JSON.stringify(j); if (f === firma) return; firma = f; D = j; pintar();
+  } catch (e) { if (primera) aviso("No encontramos esta carta", "Revisá el link o volvé a escanear el QR."); }
+}
+function pintar() {
+  const L = D.local, c = L.colores || {};
+  document.title = L.nombre + " · Carta";
+  document.body.className = (c.estilo === "oscuro" ? "oscuro " : "") + (c.fuente === "clasica" ? "clasica" : "");
+  const p = /^#[0-9a-f]{6}$/i.test(c.primario) ? c.primario : "#c8341f";
+  document.documentElement.style.setProperty("--p", p); document.documentElement.style.setProperty("--sp", contraste(p));
+  document.querySelector('meta[name="theme-color"]')?.remove(); const m = document.createElement("meta"); m.name = "theme-color"; m.content = p; document.head.appendChild(m);
+  const cats = [...new Set(D.items.map(i => i.categoria))];
+  app.innerHTML = `<div class="hero"><div class="logo">${L.logo_url ? `<img src="${esc(L.logo_url)}" alt="">` : `<span>${esc(L.nombre.trim()[0] || "?").toUpperCase()}</span>`}</div>
+    <h1>${esc(L.nombre)}</h1><div class="info">${L.direccion ? `<span>📍 ${esc(L.direccion)}</span>` : ""}${L.horarios ? `<span>🕖 ${esc(L.horarios)}</span>` : ""}</div>
+    ${L.whatsapp || L.instagram ? `<div class="links">${L.whatsapp ? `<a href="https://wa.me/${esc(L.whatsapp)}" target="_blank" rel="noopener">💬 WhatsApp</a>` : ""}${L.instagram ? `<a href="https://instagram.com/${esc(L.instagram)}" target="_blank" rel="noopener">📷 @${esc(L.instagram)}</a>` : ""}</div>` : ""}</div>
+    <div class="wrap">${D.items.length ? `<div class="pega"><div class="busca"><input id="q" placeholder="Buscar en la carta…" autocomplete="off" value="${esc(busca)}"></div><div class="cats" id="cats"></div></div><div id="lista"></div>` : `<div class="vacio">Estamos armando la carta. Volvé en un ratito 🙂</div>`}
+    ${L.nota ? `<div class="nota">${esc(L.nota)}</div>` : ""}
+    <div class="foot">Carta digital por <a href="https://kiondaia.com/carta/" target="_blank" rel="noopener">kionda IA</a></div></div>`;
+  if (!D.items.length) return;
+  document.getElementById("q").oninput = e => { busca = e.target.value; lista(); };
+  lista();
+}
+function lista() {
+  const cats = [...new Set(D.items.map(i => i.categoria))], b = norm(busca.trim());
+  const ok = it => !b || norm(it.nombre + " " + it.descripcion + " " + it.categoria).includes(b);
+  const cs = document.getElementById("cats"); cs.style.display = b ? "none" : "";
+  cs.innerHTML = cats.map((c, i) => `<button class="cat${i ? "" : " act"}" data-c="${i}">${esc(c)}</button>`).join("");
+  cs.querySelectorAll(".cat").forEach(bt => bt.onclick = () => { const s = document.getElementById("c" + bt.dataset.c); if (s) scrollTo({ top: s.getBoundingClientRect().top + scrollY - 108, behavior: "smooth" }); });
+  const h = cats.map((c, i) => { const its = D.items.filter(x => x.categoria === c && ok(x));
+    return its.length ? `<section id="c${i}" data-c="${i}"><h2>${esc(c)}</h2>${its.map(it => `<div class="it${it.disponible ? "" : " off"}"><div class="tx"><div class="n">${esc(it.nombre)}</div>${it.descripcion ? `<div class="d">${esc(it.descripcion)}</div>` : ""}${it.disponible ? "" : '<div class="sin">Sin stock hoy</div>'}</div>
+      <div class="pr">${it.precios.map(p => `<div>${$(p.precio)}${p.nombre ? `<small>${esc(p.nombre)}</small>` : ""}</div>`).join("")}</div></div>`).join("")}</section>` : ""; }).join("");
+  document.getElementById("lista").innerHTML = h || `<div class="vacio">No encontramos "${esc(busca)}".</div>`;
+}
+addEventListener("scroll", () => {
+  let act = 0; document.querySelectorAll("section[data-c]").forEach(s => { if (s.getBoundingClientRect().top < 170) act = +s.dataset.c; });
+  document.querySelectorAll(".cat").forEach(b => { const on = +b.dataset.c === act; if (on && !b.classList.contains("act")) { const c = document.getElementById("cats"); c.scrollTo({ left: b.offsetLeft - c.clientWidth / 2 + b.offsetWidth / 2, behavior: "smooth" }); } b.classList.toggle("act", on); });
+}, { passive: true });
+if (!SLUG) aviso("No encontramos esta carta", "Revisá el link o volvé a escanear el QR."); else { cargar(true); setInterval(() => { if (!document.hidden && !busca) cargar(); }, 60000); }
+</script>
+</body>
+</html>

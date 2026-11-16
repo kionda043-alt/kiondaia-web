@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi carta · kionda IA</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#14112B">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z' fill='%23FF5A36'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FFF4E6;--cream2:#FBE9D3;--navy:#14112B;--coral:#FF5A36;--coral-d:#E8461F;--muted:#5B5670;--line:#eadcc8;--ok:#1f9d55}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:"DM Sans",system-ui,sans-serif;background:var(--cream);color:var(--navy);line-height:1.45;font-size:15.5px}
+h1,h2,h3{font-family:"Space Grotesk",system-ui,sans-serif;letter-spacing:-.02em;line-height:1.1}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+header{background:var(--navy);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20}
+.top{display:flex;align-items:center;gap:10px;max-width:1000px;margin:0 auto}
+.top h1{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.chip{font-size:12.5px;font-weight:700;border-radius:20px;padding:4px 10px;background:#2c2752;white-space:nowrap}
+.chip.ok{background:#134e33;color:#b8f5d3}.chip.mal{background:#5a1c10;color:#ffd0c4}.chip.pr{background:#4a3a10;color:#ffe6a8}
+.top a,.top button.l{color:#c9c5dc;font-size:13.5px;background:none;border:0;text-decoration:none;white-space:nowrap}
+nav{display:flex;gap:6px;max-width:1000px;margin:10px auto 0}
+nav button{flex:1;border:0;background:#221d44;color:#c9c5dc;padding:9px 4px;border-radius:10px;font-weight:700;font-size:14px}
+nav button.act{background:var(--cream);color:var(--navy)}
+main{max-width:1000px;margin:0 auto;padding:16px 14px 80px}
+.btn{border:0;border-radius:12px;background:var(--coral);color:#fff;font-weight:700;padding:12px 16px;text-decoration:none;display:inline-block;text-align:center}
+.btn:disabled{opacity:.55}
+.btn.sec{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn.chico{padding:8px 12px;font-size:14px}
+.btn.wa{background:var(--ok)}
+.lnk{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:14.5px;padding:6px}
+.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 6px 20px rgba(20,17,43,.06)}
+.card h2{font-size:21px;margin-bottom:4px}.card p.s{color:var(--muted);margin-bottom:12px}
+.pausa{background:#5a1c10;color:#fff;border-radius:16px;padding:16px;margin-bottom:14px}
+.pausa h2{font-size:19px;margin-bottom:4px}.pausa p{color:#ffd0c4;margin-bottom:10px}
+.drop{border:2px dashed var(--line);border-radius:16px;padding:22px 14px;text-align:center;background:#fffaf2;display:block;cursor:pointer}
+.drop b{display:block;font-size:17px;margin-top:6px}.drop span{color:var(--muted);font-size:14px}
+.minis{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.minis div{position:relative;width:74px;height:98px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.minis img{width:100%;height:100%;object-fit:cover}
+.minis button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(20,17,43,.8);color:#fff;font-size:12px}
+.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.leyendo{text-align:center;padding:30px 10px}
+.spin{width:46px;height:46px;border-radius:50%;border:5px solid var(--cream2);border-top-color:var(--coral);margin:0 auto 14px;animation:g 1s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+.cat{display:flex;align-items:center;gap:8px;margin:18px 2px 8px}
+.cat h3{font-size:17px;flex:1}
+.cat button{border:0;background:none;font-size:15px;color:var(--muted)}
+.it{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:center}
+.it .tx{flex:1;min-width:0;cursor:pointer}.it .n{font-weight:700}.it .d{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .p{font-size:13.5px;font-weight:700;margin-top:2px}.it .p em{font-style:normal;color:var(--muted);font-weight:500}
+.it.off .tx{opacity:.5}
+.sw{width:42px;height:24px;border-radius:12px;background:#c9c2b6;position:relative;border:0;flex:0 0 auto;transition:.2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--ok)}.sw.on::after{left:21px}
+label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:10px 0 4px}
+input[type=text],input[type=number],input[type=tel],textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;background:#fffdfa;outline:0}
+input:focus,textarea:focus{border-color:var(--coral)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.seg button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:10px 4px;font-weight:700}
+.seg button.act{border-color:var(--navy);background:var(--navy);color:#fff}
+.colores{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.colores button{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line)}
+.colores button.act{box-shadow:0 0 0 2.5px var(--navy)}
+.colores input{width:46px;height:38px;border:1.5px solid var(--line);border-radius:10px;padding:2px;background:#fff}
+.dis{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.tel{background:#101014;border-radius:30px;padding:8px;position:sticky;top:120px}
+.tel iframe{display:block;width:100%;height:600px;border:0;border-radius:23px;background:#fff}
+.logoP{width:84px;height:84px;border-radius:50%;border:1.5px solid var(--line);background:#fff;display:grid;place-items:center;overflow:hidden;font-size:30px;flex:0 0 auto}
+.logoP img{width:100%;height:100%;object-fit:contain}
+.qrbox{width:230px;max-width:100%;margin:0 auto;border:3px solid var(--navy);border-radius:16px;padding:10px;background:#fff}
+.qrbox svg{display:block;width:100%}
+.url{background:#fffaf2;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;word-break:break-all;margin:12px 0}
+.plan{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.plan .pr{font-family:"Space Grotesk";font-size:34px;font-weight:700;line-height:1}.plan .pr small{font-size:14px;color:var(--muted);font-weight:500}
+ul.ch{list-style:none;display:flex;flex-direction:column;gap:5px;margin:10px 0}
+ul.ch li::before{content:"✓";color:var(--coral);font-weight:700;margin-right:8px}
+.modal{position:fixed;inset:0;background:rgba(20,17,43,.55);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--cream);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:16px}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:22px}}
+.sheet .sh{display:flex;align-items:center;margin-bottom:6px}.sheet .sh h2{flex:1;font-size:20px}
+.sheet .x{width:34px;height:34px;border-radius:50%;border:0;background:#fff;font-size:17px}
+.pre{display:flex;gap:6px;margin-bottom:6px;align-items:center}.pre>*{flex:1}.pre button{flex:0 0 auto;width:38px;height:42px;border-radius:10px;border:1.5px solid var(--line);background:#fff}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,160%);background:var(--navy);color:#fff;border-radius:12px;padding:10px 16px;font-weight:700;font-size:14.5px;z-index:60;transition:transform .25s;max-width:90vw;text-align:center}
+#toast.on{transform:translate(-50%,0)}
+.hide{display:none!important}
+.vacio{text-align:center;color:var(--muted);padding:26px 10px}
+#hoja{display:none}
+@media(max-width:820px){.dis{grid-template-columns:minmax(0,1fr)}.tel{position:static;max-width:320px;margin:0 auto}.tel iframe{height:520px}}
+@media print{body{background:#fff}header,main,#toast,.modal{display:none!important}#hoja{display:grid;grid-template-columns:1fr 1fr;gap:8mm}
+  .qc{border:1.5px dashed #999;border-radius:6mm;padding:8mm 6mm;text-align:center;break-inside:avoid;display:flex;flex-direction:column;align-items:center;gap:3mm}
+  .qc img{width:22mm;height:22mm;object-fit:contain;border-radius:50%}.qc b{font-family:"Space Grotesk";font-size:17pt}.qc .q{width:52mm;border:1mm solid #111;border-radius:4mm;padding:2mm}.qc .q svg{display:block;width:100%}
+  .qc span{font-weight:700;font-size:12pt}.qc small{color:#666;font-size:9pt}@page{size:A4;margin:12mm}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><h1 id="tNom">Mi carta</h1><span class="chip" id="chip"></span><a id="verCarta" target="_blank" rel="noopener">Ver ↗</a><button class="l" id="bSalir">Salir</button></div>
+  <nav id="nav" class="hide"><button data-t="carta" class="act">Carta</button><button data-t="diseno">Diseño</button><button data-t="qr">QR</button><button data-t="plan">Mi plan</button></nav>
+</header>
+<main id="main"><div class="leyendo"><div class="spin"></div>Cargando…</div></main>
+<div id="hoja"></div>
+<div class="modal hide" id="modal"><div class="sheet"><div class="sh"><h2 id="mTit"></h2><button class="x" id="mX">✕</button></div><div id="mBody"></div></div></div>
+<script src="../qrcode.js"></script>
+<script src="../app.js"></script>
+<script>
+if (!ses) location.replace("../#entrar");
+let S = null, tab = "carta", fotos = [], paso = null, prod = null, borrar = false, dis = null;
+const main = $id("main");
+const SUG = ["#c8341f", "#e07b00", "#1f6f5c", "#1d4e89", "#6b2d8a", "#b0125b", "#222222"];
+function contraste(hex) { const n = parseInt(hex.slice(1), 16), r = n >> 16, g = n >> 8 & 255, b = n & 255; return (r * 299 + g * 587 + b * 114) / 1000 > 165 ? "#1d1d1f" : "#ffffff"; }
+
+async function cargar() {
+  try { S = await api("mio"); }
+  catch (e) { if (e.sesion === false) return salir("../#entrar"); main.innerHTML = `<div class="vacio">${esc(e.message)}<br><br><button class="btn" onclick="location.reload()">Reintentar</button></div>`; return false; }
+  if (!S.local) { main.innerHTML = `<div class="card"><h2>Esta cuenta no tiene una carta</h2><p class="s">${S.admin ? "Es una cuenta de administración." : "Escribinos y lo resolvemos."}</p>${S.admin ? '<a class="btn" href="../admin/">Ir al administrador</a>' : ""}</div>`; return false; }
+  cabecera(); return true;
+}
+function cabecera() {
+  const L = S.local, c = $id("chip");
+  $id("tNom").textContent = L.nombre; $id("verCarta").href = S.url;
+  c.className = "chip " + (L.tipo === "prueba" ? "pr" : L.tipo === "activo" ? "ok" : "mal");
+  c.textContent = L.tipo === "prueba" ? `Prueba gratis · ${L.dias === 1 ? "queda 1 día" : `quedan ${L.dias} días`}` : L.tipo === "activo" ? "Plan activo" : "Carta pausada";
+}
+const waActivar = () => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Quiero activar mi carta digital.\nLocal: ${S.local.nombre}\nCarta: ${S.url}`)}`;
+function pausaHtml() {
+  return S.local.activa ? "" : `<div class="pausa"><h2>Se terminó tu prueba gratis</h2><p>Tu carta está en pausa y el QR no la muestra. No se borró nada: activá tu plan y vuelve a funcionar al instante, con el mismo QR.</p><a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan · ${pesos(PRECIO)}/mes</a></div>`;
+}
+
+// ---------- Asistente de carga (primera vez) ----------
+function asistente() {
+  $id("nav").classList.add("hide");
+  if (paso === "leyendo") { main.innerHTML = `<div class="card leyendo"><div class="spin"></div><h2>Leyendo tu carta…</h2><p class="s" id="lMsg">Esto puede tardar hasta un minuto. No cierres la página.</p></div>`; return; }
+  if (paso === "logo") {
+    const n = S.items.length, c = new Set(S.items.map(i => i.categoria)).size;
+    main.innerHTML = `<div class="card"><h2>✅ Encontramos ${n} productos en ${c} ${c === 1 ? "sección" : "secciones"}</h2><p class="s">Ahora subí tu logo y la carta toma los colores de tu marca. Si no lo tenés a mano, lo sumás después.</p>
+      <div class="fila"><div class="logoP" id="lp">🏷️</div><label class="btn sec" style="margin:0;color:var(--navy);font-size:15.5px">Subir mi logo<input type="file" accept="image/*" id="fLogo" hidden></label></div>
+      <div id="lInfo" style="margin-top:10px;color:var(--muted);font-size:14px"></div>
+      <div class="fila" style="margin-top:16px"><button class="btn" id="lOk">Continuar →</button></div></div>`;
+    $id("fLogo").onchange = e => subirLogo(e.target.files[0], () => { $id("lp").innerHTML = `<img src="${esc(S.local.logo_url)}">`; $id("lInfo").innerHTML = `Color de tu marca: <b style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${esc(S.local.colores.primario)};vertical-align:-2px"></b> Lo podés cambiar después en "Diseño".`; });
+    $id("lOk").onclick = () => { paso = null; pintar(); toast("Revisá que los productos y precios estén bien 👀"); };
+    return;
+  }
+  main.innerHTML = `${pausaHtml()}<div class="card"><h2>📷 Subí la foto de tu carta</h2><p class="s">Una o varias fotos de la carta que ya tenés. La inteligencia artificial lee los productos y los precios. Mejor con buena luz, de frente y sin reflejos.</p>
+    <label class="drop"><span style="font-size:34px">📸</span><b>Tocá para sacar o elegir fotos</b><span>Hasta 6 fotos</span><input type="file" accept="image/*" multiple id="fCarta" hidden></label>
+    <div class="minis" id="minis"></div>
+    <div class="fila" style="margin-top:14px"><button class="btn" id="leer" disabled>✨ Leer mi carta</button></div>
+    <div style="margin-top:10px"><button class="lnk" id="ej">No tengo la foto a mano: probar con una carta de ejemplo</button><br><button class="lnk" id="mano">Prefiero cargar los productos a mano</button></div></div>`;
+  minis();
+  $id("fCarta").onchange = async e => { for (const f of [...e.target.files].slice(0, 6 - fotos.length)) { try { fotos.push(await achicar(f, 1700)); } catch (er) { toast(er.message); } } minis(); };
+  $id("leer").onclick = () => leer({ imagenes: fotos });
+  $id("ej").onclick = () => leer({ ejemplo: true });
+  $id("mano").onclick = () => { paso = "mano"; pintar(); abrirProd(0); };
+}
+function minis() {
+  const m = $id("minis"); if (!m) return;
+  m.innerHTML = fotos.map((f, i) => `<div><img src="${f}"><button data-i="${i}">✕</button></div>`).join("");
+  m.querySelectorAll("button").forEach(b => b.onclick = () => { fotos.splice(+b.dataset.i, 1); minis(); });
+  const l = $id("leer"); if (l) l.disabled = !fotos.length;
+}
+async function leer(datos, despues) {
+  const antes = paso; paso = "leyendo"; cerrarModal(); asistente();
+  const msgs = ["Leyendo los productos…", "Ordenando las secciones…", "Revisando los precios…", "Ya casi está…"]; let i = 0;
+  const t = setInterval(() => { const e = $id("lMsg"); if (e) e.textContent = msgs[i++ % msgs.length]; }, 6000);
+  try {
+    const r = await api("leer_carta", datos); fotos = [];
+    S = await api("mio"); cabecera();
+    if (despues) { paso = null; pintar(); toast(`✅ ${r.productos} productos cargados`); } else { paso = "logo"; asistente(); }
+  } catch (e) { paso = antes === "leyendo" ? null : antes; pintar(); toast(e.message); }
+  clearInterval(t);
+}
+async function subirLogo(file, listo) {
+  if (!file) return;
+  try {
+    toast("Subiendo logo…");
+    const img = await achicar(file, 420, "image/png"), col = await colorDeLogo(img);
+    const colores = col ? { ...S.local.colores, primario: col } : S.local.colores;
+    const r = await api("logo", { imagen: img, colores });
+    S.local.logo_url = r.logo_url; S.local.colores = colores; if (dis) dis.colores = { ...colores };
+    toast("✅ Logo cargado"); listo && listo();
+  } catch (e) { toast(e.message); }
+}
+
+// ---------- Pantalla principal ----------
+function pintar() {
+  if (paso === "leyendo" || paso === "logo" || (!S.items.length && paso !== "mano")) return asistente();
+  $id("nav").classList.remove("hide");
+  document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("act", b.dataset.t === tab));
+  ({ carta: tCarta, diseno: tDiseno, qr: tQR, plan: tPlan })[tab]();
+}
+$id("nav").onclick = e => { const b = e.target.closest("button"); if (!b) return; tab = b.dataset.t; dis = null; pintar(); scrollTo(0, 0); };
+
+function tCarta() {
+  const cats = [...new Set(S.items.map(i => i.categoria))];
+  main.innerHTML = `${pausaHtml()}<div class="fila" style="margin-bottom:6px"><button class="btn chico" id="nuevo">➕ Producto</button><button class="btn sec chico" id="otra">📷 Leer otra foto</button><span style="color:var(--muted);font-size:13.5px;margin-left:auto">${S.items.length} productos</span></div>
+    ${cats.map(c => `<div class="cat"><h3>${esc(c)}</h3><button data-ren="${esc(c)}" title="Cambiar nombre">✏️</button></div>` + S.items.filter(i => i.categoria === c).map(it => `<div class="it${it.disponible ? "" : " off"}"><div class="tx" data-ed="${it.id}"><div class="n">${esc(it.nombre)}</div>${it.descripcion ? `<div class="d">${esc(it.descripcion)}</div>` : ""}
+      <div class="p">${it.precios.map(p => `${p.nombre ? `<em>${esc(p.nombre)}</em> ` : ""}${pesos(p.precio)}`).join(" · ")}</div></div><button class="sw${it.disponible ? " on" : ""}" data-sw="${it.id}" title="Disponible / sin stock"></button></div>`).join("")).join("") || `<div class="vacio">Todavía no hay productos. Tocá "➕ Producto" o "📷 Leer otra foto".</div>`}
+    <p style="color:var(--muted);font-size:13.5px;margin-top:14px">Tocá un producto para editarlo. El interruptor lo marca como "sin stock" en la carta.</p>`;
+  $id("nuevo").onclick = () => abrirProd(0);
+  $id("otra").onclick = otraFoto;
+}
+main.addEventListener("click", async e => {
+  const sw = e.target.closest("[data-sw]"), ed = e.target.closest("[data-ed]"), ren = e.target.closest("[data-ren]");
+  if (sw) { const it = S.items.find(i => i.id == sw.dataset.sw); it.disponible = !it.disponible; tCarta(); try { await api("item_disponible", { id: it.id, disponible: it.disponible }); } catch (er) { toast(er.message); } }
+  else if (ed) abrirProd(+ed.dataset.ed);
+  else if (ren) renombrar(ren.dataset.ren);
+});
+
+function modal(tit, html) { $id("mTit").textContent = tit; $id("mBody").innerHTML = html; $id("modal").classList.remove("hide"); }
+function cerrarModal() { $id("modal").classList.add("hide"); }
+$id("mX").onclick = cerrarModal; $id("modal").onclick = e => { if (e.target.id === "modal") cerrarModal(); };
+
+function abrirProd(id) {
+  const it = id ? S.items.find(i => i.id == id) : null; borrar = false;
+  prod = it ? JSON.parse(JSON.stringify(it)) : { id: 0, nombre: "", descripcion: "", categoria: S.items.length ? S.items[S.items.length - 1].categoria : "", precios: [{ nombre: "", precio: "" }], disponible: true };
+  pProd();
+}
+function leerProd() {
+  prod.nombre = $id("pNom").value.trim(); prod.descripcion = $id("pDesc").value.trim(); prod.categoria = $id("pCat").value.trim();
+  prod.precios = [...document.querySelectorAll("#mBody .pre")].map(r => ({ nombre: r.querySelector(".a").value.trim(), precio: Math.round(+r.querySelector(".b").value || 0) }));
+}
+function pProd() {
+  const cats = [...new Set(S.items.map(i => i.categoria))], varios = prod.precios.length > 1;
+  modal(prod.id ? "Editar producto" : "Nuevo producto", `<label>Nombre</label><input type="text" id="pNom" maxlength="80" value="${esc(prod.nombre)}">
+    <label>Descripción (opcional)</label><input type="text" id="pDesc" maxlength="300" value="${esc(prod.descripcion)}">
+    <label>Sección</label><input type="text" id="pCat" list="pCats" maxlength="60" value="${esc(prod.categoria)}" placeholder="Ej: Pizzas, Bebidas…"><datalist id="pCats">${cats.map(c => `<option value="${esc(c)}">`).join("")}</datalist>
+    <label>${varios ? "Tamaños y precios" : "Precio"}</label>
+    ${prod.precios.map((p, i) => `<div class="pre"><input type="text" class="a ${varios ? "" : "hide"}" placeholder="Tamaño (ej: Grande)" maxlength="40" value="${esc(p.nombre)}"><input type="number" inputmode="numeric" class="b" placeholder="Precio" value="${p.precio || ""}">${varios ? `<button data-q="${i}">✕</button>` : ""}</div>`).join("")}
+    <button class="lnk" id="pMas">＋ Agregar otro tamaño con su precio</button>
+    <div class="fila" style="margin-top:12px"><button class="btn" id="pOk" style="flex:1">Guardar</button>${prod.id ? `<button class="btn sec" id="pDel">${borrar ? "¿Seguro? Tocá de nuevo" : "🗑️ Borrar"}</button>` : ""}</div>`);
+  $id("pMas").onclick = () => { leerProd(); prod.precios.push({ nombre: "", precio: "" }); pProd(); };
+  document.querySelectorAll("#mBody [data-q]").forEach(b => b.onclick = () => { leerProd(); prod.precios.splice(+b.dataset.q, 1); pProd(); });
+  $id("pOk").onclick = async e => {
+    leerProd(); const precios = prod.precios.filter(p => p.precio > 0);
+    if (!prod.nombre || !prod.categoria || !precios.length) return toast("Falta el nombre, la sección o el precio");
+    e.target.disabled = true;
+    try { await api("item_guardar", { ...prod, precios }); cerrarModal(); S = await api("mio"); paso = null; pintar(); toast("✅ Guardado"); } catch (er) { toast(er.message); e.target.disabled = false; }
+  };
+  const d = $id("pDel"); if (d) d.onclick = async () => {
+    if (!borrar) { leerProd(); borrar = true; return pProd(); }
+    try { await api("item_borrar", { id: prod.id }); cerrarModal(); S = await api("mio"); pintar(); toast("Producto borrado"); } catch (er) { toast(er.message); }
+  };
+}
+function renombrar(cat) {
+  modal("Sección", `<label>Nombre de la sección</label><input type="text" id="rN" maxlength="60" value="${esc(cat)}"><div class="fila" style="margin-top:12px"><button class="btn" id="rOk" style="flex:1">Guardar</button></div>`);
+  $id("rOk").onclick = async () => { const a = $id("rN").value.trim(); if (!a) return; try { await api("categoria_renombrar", { de: cat, a }); cerrarModal(); S = await api("mio"); pintar(); } catch (er) { toast(er.message); } };
+}
+function otraFoto() {
+  const r = S.local.lecturas_restantes; fotos = [];
+  modal("Leer otra foto", r ? `<p style="color:var(--muted);margin-bottom:10px">Te ${r === 1 ? "queda 1 lectura automática" : `quedan ${r} lecturas automáticas`}.</p>
+    <label class="drop"><span style="font-size:30px">📸</span><b>Elegir fotos</b><input type="file" accept="image/*" multiple id="fCarta" hidden></label><div class="minis" id="minis"></div>
+    <label>¿Qué hacemos con los productos que ya están?</label><div class="seg" id="rSeg"><button class="act" data-r="0">Sumar a la carta</button><button data-r="1">Reemplazar todo</button></div>
+    <div class="fila" style="margin-top:12px"><button class="btn" id="leer" style="flex:1" disabled>✨ Leer</button></div>` : `<p style="color:var(--muted)">Ya usaste las lecturas automáticas de tu cuenta. Podés seguir sumando productos a mano con "➕ Producto", o escribirnos si necesitás más.</p>`);
+  if (!r) return; let reemp = false;
+  $id("fCarta").onchange = async e => { for (const f of [...e.target.files].slice(0, 6 - fotos.length)) { try { fotos.push(await achicar(f, 1700)); } catch (er) { toast(er.message); } } minis(); };
+  $id("rSeg").onclick = e => { const b = e.target.closest("button"); if (!b) return; reemp = b.dataset.r === "1"; $id("rSeg").querySelectorAll("button").forEach(x => x.classList.toggle("act", x === b)); };
+  $id("leer").onclick = () => leer({ imagenes: fotos, reemplazar: reemp }, true);
+}
+
+// ---------- Diseño ----------
+function tDiseno() {
+  const L = S.local; dis = dis || { colores: { ...L.colores } };
+  const c = dis.colores, sug = [...new Set([L.colores.primario, ...SUG])];
+  main.innerHTML = `${pausaHtml()}<div class="dis"><div>
+    <div class="card"><h2>Tu marca</h2><p class="s">El logo y el color aparecen arriba de la carta.</p>
+      <div class="fila"><div class="logoP">${L.logo_url ? `<img src="${esc(L.logo_url)}">` : "🏷️"}</div><label class="btn sec chico" style="margin:0;color:var(--navy);font-size:14px">${L.logo_url ? "Cambiar logo" : "Subir logo"}<input type="file" accept="image/*" id="fLogo" hidden></label>${L.logo_url ? '<button class="lnk" id="qLogo">Quitar</button>' : ""}</div>
+      <label>Color principal</label><div class="colores" id="cols">${sug.map(h => `<button style="background:${h}" data-h="${h}" class="${h.toLowerCase() === c.primario.toLowerCase() ? "act" : ""}"></button>`).join("")}<input type="color" id="cPick" value="${esc(c.primario)}" title="Otro color"></div>
+      <label>Estilo</label><div class="seg" data-k="estilo"><button data-v="claro" class="${c.estilo === "claro" ? "act" : ""}">☀️ Claro</button><button data-v="oscuro" class="${c.estilo === "oscuro" ? "act" : ""}">🌙 Oscuro</button></div>
+      <label>Tipografía de los títulos</label><div class="seg" data-k="fuente"><button data-v="moderna" class="${c.fuente === "moderna" ? "act" : ""}">Moderna</button><button data-v="clasica" class="${c.fuente === "clasica" ? "act" : ""}" style="font-family:Georgia,serif">Clásica</button></div></div>
+    <div class="card"><h2>Datos del local</h2><p class="s">Lo que completes aparece en la carta. Todo es opcional menos el nombre.</p>
+      <label>Nombre</label><input type="text" id="dNom" maxlength="60" value="${esc(L.nombre)}">
+      <label>Dirección</label><input type="text" id="dDir" maxlength="200" value="${esc(L.direccion || "")}" placeholder="Ej: Av. Siempre Viva 742">
+      <label>Horarios</label><input type="text" id="dHor" maxlength="200" value="${esc(L.horarios || "")}" placeholder="Ej: Martes a domingo de 19 a 24 h">
+      <label>WhatsApp del local</label><input type="tel" id="dWa" maxlength="20" value="${esc(L.whatsapp || "")}" placeholder="Ej: 5491112345678">
+      <label>Instagram</label><input type="text" id="dIg" maxlength="40" value="${esc(L.instagram || "")}" placeholder="Ej: barlaesquina">
+      <label>Nota al pie</label><input type="text" id="dNota" maxlength="200" value="${esc(L.nota || "")}" placeholder="Ej: Precios en pesos. Cubierto $1.500.">
+    </div>
+    <button class="btn" id="dOk" style="width:100%">Guardar cambios</button></div>
+    <div class="tel"><iframe id="prev" src="${esc(S.url)}" title="Vista previa de la carta"></iframe></div></div>`;
+  const pone = () => { dis.nombre = $id("dNom").value; dis.direccion = $id("dDir").value; dis.horarios = $id("dHor").value; dis.whatsapp = $id("dWa").value; dis.instagram = $id("dIg").value; dis.nota = $id("dNota").value; };
+  const guardar = async (silencio) => { pone(); try { await api("guardar_local", dis); S = await api("mio"); cabecera(); const f = $id("prev"); if (f) f.src = S.url + "&t=" + Date.now(); if (!silencio) toast("✅ Guardado"); } catch (er) { toast(er.message); } };
+  $id("cols").onclick = e => { const b = e.target.closest("button"); if (!b) return; pone(); c.primario = b.dataset.h; guardar(true).then(tDiseno); };
+  $id("cPick").onchange = e => { pone(); c.primario = e.target.value; guardar(true).then(tDiseno); };
+  main.querySelectorAll(".seg[data-k]").forEach(s => s.onclick = e => { const b = e.target.closest("button"); if (!b) return; pone(); c[s.dataset.k] = b.dataset.v; guardar(true).then(tDiseno); });
+  $id("dOk").onclick = () => guardar();
+  $id("fLogo").onchange = e => subirLogo(e.target.files[0], async () => { S = await api("mio"); dis = null; tDiseno(); });
+  const q = $id("qLogo"); if (q) q.onclick = async () => { try { await api("guardar_local", { quitar_logo: true }); S = await api("mio"); tDiseno(); } catch (er) { toast(er.message); } };
+}
+
+// ---------- QR ----------
+function tQR() {
+  const L = S.local;
+  main.innerHTML = `${pausaHtml()}<div class="card" style="text-align:center"><h2>Tu QR</h2><p class="s">Es siempre el mismo, aunque cambies productos, precios o el diseño.</p>
+    <div class="qrbox">${svgQR(S.url)}</div><div class="url">${esc(S.url)}</div>
+    <div class="fila" style="justify-content:center"><button class="btn" id="imp">🖨️ Imprimir QR para las mesas</button><button class="btn sec" id="cop">Copiar link</button><button class="btn sec" id="des">Descargar QR</button></div>
+    <p style="color:var(--muted);font-size:13.5px;margin-top:12px">La hoja trae 4 tarjetas por página A4 con tu logo, para recortar y poner en las mesas. El link también sirve para la bio de Instagram.</p></div>`;
+  $id("hoja").innerHTML = Array(4).fill(`<div class="qc">${L.logo_url ? `<img src="${esc(L.logo_url)}">` : ""}<b>${esc(L.nombre)}</b><div class="q">${svgQR(S.url)}</div><span>Escaneá y mirá la carta</span><small>Abrí la cámara del celular y apuntá al código</small></div>`).join("");
+  $id("imp").onclick = () => print();
+  $id("cop").onclick = async () => { try { await navigator.clipboard.writeText(S.url); toast("Link copiado"); } catch { toast(S.url); } };
+  $id("des").onclick = () => {
+    const svg = svgQR(S.url).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" '), img = new Image();
+    img.onload = () => { const cv = document.createElement("canvas"); cv.width = cv.height = 1000; cv.getContext("2d").drawImage(img, 0, 0, 1000, 1000); const a = document.createElement("a"); a.download = `qr-${L.slug}.png`; a.href = cv.toDataURL("image/png"); a.click(); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  };
+}
+
+// ---------- Plan ----------
+function tPlan() {
+  const L = S.local, f = d => new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "long" });
+  const est = L.tipo === "prueba" ? `Estás en la <b>prueba gratis</b>: ${L.dias === 1 ? "te queda 1 día" : `te quedan ${L.dias} días`} (hasta el ${f(L.prueba_hasta)}). Cuando termine, la carta queda en pausa hasta que actives el plan.` : L.tipo === "activo" ? `Tu plan está <b>activo</b>${L.pago_hasta ? ` hasta el ${f(L.pago_hasta + "T12:00:00")}` : ""}.` : `Tu carta está <b>en pausa</b>. Activá el plan y vuelve a funcionar con el mismo QR.`;
+  const mas = t => `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent(`Hola! Tengo la carta digital de ${L.nombre} y quiero saber más sobre: ${t}`)}`;
+  main.innerHTML = `<div class="card"><h2>Plan Carta</h2><p class="s">${est}</p>
+      <div class="plan"><div class="pr">${pesos(PRECIO)} <small>por mes</small></div>${L.tipo === "activo" ? "" : `<a class="btn wa" href="${waActivar()}" target="_blank" rel="noopener">💬 Activar mi plan</a>`}</div>
+      <ul class="ch"><li>Carta con tu logo y tus colores</li><li>Productos y cambios ilimitados</li><li>QR fijo para las mesas</li><li>Sin instalación y sin permanencia</li></ul>
+      <p style="color:var(--muted);font-size:13.5px">El pago se coordina por WhatsApp. Apenas lo registramos, tu carta queda activa por 30 días.</p></div>
+    <div class="card"><h2>¿Querés ir un paso más?</h2><p class="s">Sobre tu misma carta se pueden sumar:</p>
+      <ul class="ch"><li><b>Pedidos desde la mesa:</b> el cliente pide desde el QR y llega a la cocina.</li><li><b>Comandas, salón y pantalla de cocina.</b></li><li><b>Asistente de WhatsApp</b> que toma pedidos y reservas solo.</li></ul>
+      <a class="btn sec" href="${mas("los planes con pedidos y asistente de WhatsApp")}" target="_blank" rel="noopener">Quiero saber más</a></div>
+    <div class="card"><h2>Tu cuenta</h2><p class="s">${esc(S.email)}</p><div class="fila"><a class="btn sec chico" href="https://wa.me/${WA_KIONDA}" target="_blank" rel="noopener">Ayuda por WhatsApp</a>${S.admin ? '<a class="btn sec chico" href="../admin/">Administrador</a>' : ""}</div></div>`;
+}
+
+$id("bSalir").onclick = () => salir("../#entrar");
+(async () => { if (ses && await cargar()) pintar(); })();
+</script>
+</body>
+</html>

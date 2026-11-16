@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carta digital con QR para tu local · kionda IA</title>
+<meta name="description" content="Sacale una foto a tu carta y en 2 minutos tenés tu carta digital con QR, con tu logo y tus colores. 15 días gratis.">
+<meta name="theme-color" content="#14112B">
+<meta property="og:title" content="Tu carta digital con QR en 2 minutos">
+<meta property="og:description" content="Sacale una foto a tu carta y la inteligencia artificial la arma por vos, con tu logo y tus colores. 15 días gratis.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M34 16H66A22 22 0 0 1 88 38V48A22 22 0 0 1 66 70H40L23 84Q18 87 20 81L25 67A22 22 0 0 1 12 48V38A22 22 0 0 1 34 16Z' fill='%23FF5A36'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#FFF4E6;--cream2:#FBE9D3;--navy:#14112B;--navy2:#1E1A3D;--coral:#FF5A36;--coral-d:#E8461F;--muted:#5B5670}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:"DM Sans",system-ui,sans-serif;background:var(--cream);color:var(--navy);line-height:1.5;font-size:16px}
+h1,h2,h3{font-family:"Space Grotesk",system-ui,sans-serif;letter-spacing:-.02em;line-height:1.08}
+a{color:inherit}
+button,input{font:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;gap:12px;padding:16px 0}
+nav .marca{font-family:"Space Grotesk";font-weight:700;font-size:19px;text-decoration:none;display:flex;align-items:center;gap:8px}
+nav .marca i{width:26px;height:26px;border-radius:8px;background:var(--coral);display:block}
+nav .der{margin-left:auto;display:flex;gap:8px}
+.btn{border:0;border-radius:12px;background:var(--coral);color:#fff;font-weight:700;padding:13px 18px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn:hover{background:var(--coral-d)}.btn:disabled{opacity:.6}
+.btn.sec{background:transparent;color:var(--navy);border:1.5px solid rgba(20,17,43,.2);padding:9px 14px}
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:36px;align-items:center;padding:26px 0 46px}
+.hero h1{font-size:clamp(34px,6vw,58px)}
+.hero h1 em{font-style:normal;color:var(--coral)}
+.hero p.b{font-size:18px;color:var(--muted);margin:16px 0 18px;max-width:520px}
+.checks{list-style:none;display:flex;flex-direction:column;gap:6px;font-weight:500}
+.checks li::before{content:"✓";color:var(--coral);font-weight:700;margin-right:8px}
+.card{background:#fff;border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(20,17,43,.12)}
+.card h2{font-size:23px}
+.card p.s{color:var(--muted);font-size:14.5px;margin:4px 0 14px}
+label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:10px 0 4px}
+input{width:100%;border:1.5px solid #e4d9c8;border-radius:12px;padding:12px 13px;background:#fffdfa;outline:0;color:var(--navy)}
+input:focus{border-color:var(--coral)}
+.card .btn{width:100%;margin-top:16px;font-size:17px;padding:15px}
+.err{color:#c62f12;font-size:14px;min-height:20px;margin-top:8px}
+.alt{text-align:center;font-size:14.5px;margin-top:10px;color:var(--muted)}
+.alt a{color:var(--navy);font-weight:700;cursor:pointer}
+section{padding:46px 0}
+section h2{font-size:clamp(26px,4.4vw,38px);margin-bottom:8px}
+section .sub{color:var(--muted);max-width:620px;margin-bottom:26px}
+.pasos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.paso{background:#fff;border-radius:18px;padding:20px}
+.paso b.n{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--navy);color:#fff;font-family:"Space Grotesk";margin-bottom:12px}
+.paso h3{font-size:19px;margin-bottom:4px}.paso p{color:var(--muted);font-size:15px}
+.banda{background:var(--navy);color:#fff;border-radius:26px;padding:32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:center}
+.banda h2{color:#fff}.banda .sub{color:#c9c5dc;margin-bottom:0}
+.precio{background:var(--navy2);border-radius:20px;padding:22px}
+.precio .p{font-family:"Space Grotesk";font-size:44px;font-weight:700;line-height:1}
+.precio .p small{font-size:16px;font-weight:500;color:#c9c5dc}
+.precio ul{list-style:none;margin:14px 0;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.precio li::before{content:"✓";color:var(--coral);font-weight:700;margin-right:8px}
+.faq{display:grid;gap:10px;max-width:760px}
+.faq details{background:#fff;border-radius:14px;padding:14px 16px}
+.faq summary{font-weight:700;cursor:pointer}
+.faq p{color:var(--muted);margin-top:8px;font-size:15px}
+footer{padding:26px 0 40px;color:var(--muted);font-size:14px;text-align:center}
+.demo-tel{background:#101014;border-radius:34px;padding:9px;max-width:300px;margin:0 auto;box-shadow:0 24px 60px rgba(20,17,43,.25)}
+.demo-tel iframe{display:block;width:100%;height:520px;border:0;border-radius:26px;background:#fff}
+.hide{display:none!important}
+@media(max-width:820px){.hero{grid-template-columns:minmax(0,1fr);gap:24px;padding-top:10px}.pasos{grid-template-columns:minmax(0,1fr)}.banda{grid-template-columns:minmax(0,1fr);padding:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a class="marca" href="/"><i></i>kionda IA</a><div class="der"><a class="btn sec" id="navEntrar" href="#cuenta">Entrar</a></div></nav>
+
+  <div class="hero">
+    <div>
+      <h1>Sacale una foto a tu carta. <em>Listo: ya es digital.</em></h1>
+      <p class="b">La inteligencia artificial lee tu carta, la arma con tu logo y tus colores, y te da el QR para las mesas. En unos 2 minutos, desde el celular.</p>
+      <ul class="checks"><li>15 días gratis, sin tarjeta</li><li>Cambiás un precio y se actualiza al instante</li><li>Tus clientes la abren con la cámara, sin instalar nada</li></ul>
+    </div>
+    <div class="card" id="cuenta">
+      <div id="fAlta">
+        <h2>Creá tu carta gratis</h2><p class="s">Probala 15 días. Después, $15.000 por mes.</p>
+        <label for="aNom">Nombre de tu local</label><input id="aNom" maxlength="60" placeholder="Ej: Bar La Esquina" autocomplete="organization">
+        <label for="aMail">Tu email</label><input id="aMail" type="email" placeholder="vos@email.com" autocomplete="email">
+        <label for="aClave">Elegí una contraseña</label><input id="aClave" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+        <button class="btn" id="aOk">Crear mi carta →</button>
+        <div class="err" id="aErr"></div>
+        <div class="alt">¿Ya tenés cuenta? <a id="irEntrar">Entrar</a></div>
+      </div>
+      <div id="fEntrar" class="hide">
+        <h2>Entrar a mi carta</h2><p class="s">Con el email y la contraseña que elegiste.</p>
+        <label for="eMail">Email</label><input id="eMail" type="email" autocomplete="email">
+        <label for="eClave">Contraseña</label><input id="eClave" type="password" autocomplete="current-password">
+        <button class="btn" id="eOk">Entrar</button>
+        <div class="err" id="eErr"></div>
+        <div class="alt">¿Olvidaste la contraseña? <a id="olvido" target="_blank" rel="noopener">Escribinos</a> · <a id="irAlta">Crear cuenta</a></div>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Cómo funciona</h2><p class="sub">No hay que cargar producto por producto ni saber de diseño.</p>
+    <div class="pasos">
+      <div class="paso"><b class="n">1</b><h3>Subís la foto de tu carta</h3><p>Una o varias fotos de la carta que ya tenés impresa. La IA lee los productos, las secciones y los precios.</p></div>
+      <div class="paso"><b class="n">2</b><h3>Subís tu logo</h3><p>La carta toma los colores de tu marca. Elegís estilo claro u oscuro y revisás que esté todo bien.</p></div>
+      <div class="paso"><b class="n">3</b><h3>Imprimís el QR</h3><p>Queda listo para poner en las mesas. Cuando cambia un precio, lo editás desde el celular y el QR sigue siendo el mismo.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="banda">
+      <div><h2>Un precio, todo incluido</h2><p class="sub">Sin costo de instalación y sin permanencia. Si no te sirve, no pagás nada.</p></div>
+      <div class="precio"><div class="p">$15.000 <small>por mes</small></div>
+        <ul><li>Carta con tu logo y tus colores</li><li>Productos y cambios ilimitados</li><li>QR listo para imprimir</li><li>Marcar "sin stock" con un toque</li><li>Buscador para tus clientes</li></ul>
+        <a class="btn" href="#cuenta" style="width:100%">Probar 15 días gratis</a></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Preguntas frecuentes</h2><p class="sub"></p>
+    <div class="faq">
+      <details><summary>¿Y si la IA lee mal un precio?</summary><p>Antes de publicar ves todo cargado y corregís lo que haga falta. Con fotos nítidas y derechas casi no hay que tocar nada.</p></details>
+      <details><summary>¿Qué pasa cuando terminan los 15 días?</summary><p>La carta queda en pausa hasta que actives el plan. No se borra nada: al activarla vuelve a funcionar con el mismo QR.</p></details>
+      <details><summary>¿Mis clientes tienen que bajar una app?</summary><p>No. Apuntan con la cámara al QR y se abre la carta en el navegador.</p></details>
+      <details><summary>¿Se puede pedir desde la mesa?</summary><p>Este plan es la carta para mirar. Pedir desde la mesa, las comandas y el asistente de WhatsApp son planes superiores: escribinos y te contamos.</p></details>
+    </div>
+  </section>
+  <footer>Carta digital de <a href="/">kionda IA</a> · Buenos Aires</footer>
+</div>
+<script src="app.js"></script>
+<script>
+if (ses) location.replace("panel/");
+const ver = (alta) => { $id("fAlta").classList.toggle("hide", !alta); $id("fEntrar").classList.toggle("hide", alta); $id("navEntrar").textContent = alta ? "Entrar" : "Crear cuenta"; };
+let modoAlta = location.hash !== "#entrar"; ver(modoAlta);
+$id("irEntrar").onclick = () => ver(modoAlta = false);
+$id("irAlta").onclick = () => ver(modoAlta = true);
+$id("navEntrar").onclick = () => ver(modoAlta = !modoAlta);
+$id("olvido").href = `https://wa.me/${WA_KIONDA}?text=${encodeURIComponent("Hola, olvidé la contraseña de mi carta digital. Mi email es: ")}`;
+async function conBoton(btn, err, txt, fn) {
+  err.textContent = ""; btn.disabled = true; const t = btn.textContent; btn.textContent = txt;
+  try { await fn(); } catch (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = t; }
+}
+$id("aOk").onclick = () => conBoton($id("aOk"), $id("aErr"), "Creando tu carta…", async () => {
+  const email = $id("aMail").value.trim(), clave = $id("aClave").value, nombre = $id("aNom").value.trim();
+  await api("registrar", { email, clave, nombre }); await entrar(email, clave); location.href = "panel/";
+});
+$id("eOk").onclick = () => conBoton($id("eOk"), $id("eErr"), "Entrando…", async () => { await entrar($id("eMail").value.trim(), $id("eClave").value); location.href = "panel/"; });
+$id("aClave").onkeydown = (e) => { if (e.key === "Enter") $id("aOk").click(); };
+$id("eClave").onkeydown = (e) => { if (e.key === "Enter") $id("eOk").click(); };
+</script>
+</body>
+</html>
