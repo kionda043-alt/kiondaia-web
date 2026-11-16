@@ -482,6 +482,52 @@ footer .wrap{position:relative;z-index:2}
 .nav-demo{color:var(--coral)!important;font-weight:700}
 .demo-band{padding:20px 0 50px}.db-in{background:var(--navy);color:var(--cream);border-radius:28px;padding:30px 24px;display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between}
 .db-in h3{font:700 clamp(24px,4vw,34px)/1.1 'Space Grotesk';letter-spacing:-.02em;margin-bottom:8px}.db-in p{color:#B9B4CC}.db-in .btn{width:auto}
+/* ===== Carta QR (sección de la home) ===== */
+.cq{background:var(--cream2)}
+.cq-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.cq h2{max-width:620px}
+.cq-steps{list-style:none;display:grid;gap:12px;margin:30px 0 26px}
+.cq-steps li{display:flex;gap:14px;align-items:flex-start;background:var(--cream);border-radius:18px;padding:14px 16px}
+.cq-steps b{flex:none;width:34px;height:34px;border-radius:50%;background:var(--navy);color:var(--cream);display:grid;place-items:center;font:700 15px 'Space Grotesk'}
+.cq-steps strong{display:block;font:500 17px 'Space Grotesk';letter-spacing:-.01em}
+.cq-steps span{display:block;font-size:15px;color:var(--muted);line-height:1.45}
+.cq-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-bottom:22px}
+.cq-price .p1{font:700 clamp(22px,3vw,28px) 'Space Grotesk';letter-spacing:-.02em;color:var(--coral)}
+.cq-price .p2{font:700 clamp(22px,3vw,28px) 'Space Grotesk';letter-spacing:-.02em}
+.cq-price small{flex-basis:100%;font-size:15px;color:var(--muted)}
+.cq-cta{display:flex;flex-wrap:wrap;gap:12px}
+.cq-phones{display:flex;justify-content:center;align-items:flex-start;gap:4%;padding:10px 0 30px}
+.cq-phones .pf{width:31%;border-radius:20px}
+.cq-phones .pf:hover{transform:translateY(calc(var(--y) - 4%)) rotate(0) scale(1.04)}
+.cq-ups{margin-top:70px}
+.cq-ups h3{font:700 clamp(24px,3.4vw,34px)/1.1 'Space Grotesk';letter-spacing:-.02em;margin-bottom:8px}
+.cq-ups > p{color:var(--muted);margin-bottom:26px;max-width:640px}
+.cq-ups-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.cq-up{background:var(--cream);border-radius:24px;padding:26px 24px;position:relative;border:2px solid transparent;transition:transform .3s}
+.cq-up:hover{transform:translateY(-5px)}
+.cq-up.on{border-color:var(--coral)}
+.cq-up .n{width:38px;height:38px;border-radius:50%;background:var(--navy);color:var(--cream);display:grid;place-items:center;font:700 16px 'Space Grotesk'}
+.cq-up.on .n{background:var(--coral)}
+.cq-up .tag{position:absolute;top:26px;right:22px;font:500 11px 'Space Grotesk';letter-spacing:.07em;text-transform:uppercase;padding:5px 10px;border-radius:99px;background:rgba(20,17,43,.08)}
+.cq-up.on .tag{background:var(--lime);color:var(--navy)}
+.cq-up h4{font:700 21px 'Space Grotesk';letter-spacing:-.01em;margin:16px 0 6px}
+.cq-up p{color:var(--muted);font-size:15.5px;line-height:1.5}
+.cq-more{display:inline-flex;margin-top:22px;font:500 16px 'Space Grotesk';color:var(--coral);border-bottom:1.5px solid currentColor}
+/* tarjeta ancha de Proyectos con tres celulares */
+.ph-row.three .pf{width:15%}
+.work-grid.filtered .ph-row.three .pf{width:21%}
+.card-link{display:inline-block;margin-top:16px;font:500 15px 'Space Grotesk';color:var(--coral)}
+@media(max-width:900px){
+ .cq-grid{grid-template-columns:1fr;gap:10px}
+ .cq-phones{order:-1;padding:0 0 10px}
+ .cq-phones .pf{border-radius:14px;border-width:3px}
+ .cq-ups{margin-top:50px}
+ .cq-ups-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;margin:0 -20px;padding:6px 20px 12px;scrollbar-width:none}
+ .cq-ups-grid::-webkit-scrollbar{display:none}
+ .cq-up{flex:0 0 80%;scroll-snap-align:center}
+ .cq-cta .btn{flex:1 1 100%}
+ .ph-row.three .pf{width:21%}
+}
 </style>
 </head>
 <body class="locked">
@@ -529,6 +575,7 @@ footer .wrap{position:relative;z-index:2}
   <div class="secnav" id="secnav">
     <a href="/probar/" class="hot" data-es="Probar demo" data-en="Try the demo">Probar demo</a>
     <a href="#contacto" class="hot" data-es="Pedir presupuesto" data-en="Get a quote">Pedir presupuesto</a>
+    <a href="#carta" data-es="Carta QR" data-en="QR menu">Carta QR</a>
     <a href="#proyectos" data-es="Proyectos" data-en="Work">Proyectos</a>
     <a href="#por-que" data-es="Por qué ahora" data-en="Why now">Por qué ahora</a>
     <a href="#servicios" data-es="Servicios" data-en="Services">Servicios</a>
@@ -565,6 +612,51 @@ footer .wrap{position:relative;z-index:2}
   <div class="waves" aria-hidden="true">
     <svg class="w1" viewBox="0 0 2400 220" preserveAspectRatio="none"><path d="M0 120 C150 40 300 200 450 120 S750 40 900 120 S1200 200 1200 120 C1350 40 1500 200 1650 120 S1950 40 2100 120 S2400 200 2400 120" stroke="#FF5A36" stroke-width="10" fill="none"/></svg>
     <svg class="w2" viewBox="0 0 2400 220" preserveAspectRatio="none"><path d="M0 150 C200 90 400 210 600 150 S1000 90 1200 150 C1400 90 1600 210 1800 150 S2200 90 2400 150" stroke="#14112B" stroke-width="6" fill="none"/></svg>
+  </div>
+</section>
+
+<!-- ================= CARTA QR ================= -->
+<section class="block cq" id="carta">
+  <div class="wrap">
+    <div class="kicker reveal" data-es="Nuevo · Carta QR para bares y restaurantes" data-en="New · QR menu for bars and restaurants">Nuevo · Carta QR para bares y restaurantes</div>
+    <h2 class="split" data-es="Una foto de tu carta. En 2 minutos, ya es digital." data-en="One photo of your menu. In 2 minutes, it's digital.">Una foto de tu carta. En 2 minutos, ya es digital.</h2>
+    <p class="lead reveal" data-es="La inteligencia artificial lee tu carta impresa, la arma con tu logo y tus colores y te entrega el QR para las mesas. Lo haces tú solo, desde el celular, sin instalar nada." data-en="Artificial intelligence reads your printed menu, builds it with your logo and colors and hands you the QR code for your tables. You do it yourself, from your phone, with nothing to install.">La inteligencia artificial lee tu carta impresa, la arma con tu logo y tus colores y te entrega el QR para las mesas. Lo haces tú solo, desde el celular, sin instalar nada.</p>
+
+    <div class="cq-grid">
+      <div>
+        <ol class="cq-steps reveal">
+          <li><b>1</b><div><strong data-es="Sácale una foto a tu carta" data-en="Take a photo of your menu">Sácale una foto a tu carta</strong><span data-es="Hasta 6 fotos. La IA detecta productos, secciones, tamaños y precios en menos de un minuto." data-en="Up to 6 photos. The AI picks up items, sections, sizes and prices in under a minute.">Hasta 6 fotos. La IA detecta productos, secciones, tamaños y precios en menos de un minuto.</span></div></li>
+          <li><b>2</b><div><strong data-es="Sube tu logo" data-en="Upload your logo">Sube tu logo</strong><span data-es="La carta toma sola el color de tu marca. Eliges estilo claro u oscuro." data-en="The menu takes on your brand color by itself. Pick a light or dark style.">La carta toma sola el color de tu marca. Eliges estilo claro u oscuro.</span></div></li>
+          <li><b>3</b><div><strong data-es="Revisa y listo" data-en="Review and you're done">Revisa y listo</strong><span data-es="Corriges lo que haga falta y ya tienes tu QR, con hoja lista para imprimir. Cambias un precio y se ve al instante." data-en="Fix anything you need and your QR code is ready, with a print-ready sheet. Change a price and it updates instantly.">Corriges lo que haga falta y ya tienes tu QR, con hoja lista para imprimir. Cambias un precio y se ve al instante.</span></div></li>
+        </ol>
+        <div class="cq-price reveal">
+          <span class="p1" data-es="15 días gratis." data-en="15 days free.">15 días gratis.</span>
+          <span class="p2" data-es="Después, $15.000 por mes." data-en="Then ARS 15,000 per month.">Después, $15.000 por mes.</span>
+          <small data-es="Sin tarjeta para probar, sin costo de instalación y sin permanencia." data-en="No card needed to try it, no setup fee and no commitment.">Sin tarjeta para probar, sin costo de instalación y sin permanencia.</small>
+        </div>
+        <div class="cq-cta reveal">
+          <a class="btn btn-coral btn-big" href="/carta/"><span aria-hidden="true">📷</span> <span data-es="Crear mi carta gratis" data-en="Create my menu for free">Crear mi carta gratis</span></a>
+          <a class="btn btn-line" href="/carta/ver/?l=la-esquina" target="_blank" rel="noopener" data-es="Ver ejemplo en vivo" data-en="See a live example">Ver ejemplo en vivo</a>
+        </div>
+      </div>
+
+      <div class="cq-phones reveal">
+        <div class="pf" style="--r:-6deg;--y:12%"><img src="img/carta/foto.webp" alt="Subir la foto de la carta" loading="lazy"></div>
+        <div class="pf" style="--r:0deg;--y:0%"><img src="img/carta/carta.webp" alt="Carta digital terminada" loading="lazy"></div>
+        <div class="pf" style="--r:6deg;--y:12%"><img src="img/carta/qr.webp" alt="QR para las mesas" loading="lazy"></div>
+      </div>
+    </div>
+
+    <div class="cq-ups">
+      <h3 class="reveal" data-es="Un sistema que crece con tu local" data-en="A system that grows with your venue">Un sistema que crece con tu local</h3>
+      <p class="reveal" data-es="Empiezas con la carta y sumas escalones cuando lo necesites, siempre con el mismo QR." data-en="Start with the menu and add steps whenever you need them, always with the same QR code.">Empiezas con la carta y sumas escalones cuando lo necesites, siempre con el mismo QR.</p>
+      <div class="cq-ups-grid">
+        <div class="cq-up on reveal"><span class="n">1</span><span class="tag" data-es="Disponible hoy" data-en="Available now">Disponible hoy</span><h4 data-es="Carta QR" data-en="QR menu">Carta QR</h4><p data-es="La carta para mirar, con la marca de tu local. Te das de alta solo y la pruebas 15 días gratis." data-en="A menu to browse, with your venue's branding. Sign up on your own and try it free for 15 days.">La carta para mirar, con la marca de tu local. Te das de alta solo y la pruebas 15 días gratis.</p></div>
+        <div class="cq-up reveal"><span class="n">2</span><span class="tag" data-es="A medida" data-en="Custom">A medida</span><h4 data-es="Pedidos en la mesa" data-en="Table ordering">Pedidos en la mesa</h4><p data-es="El cliente pide desde el QR. Comandas, salón y pantalla de cocina." data-en="Guests order straight from the QR code. Order tickets, floor view and kitchen display.">El cliente pide desde el QR. Comandas, salón y pantalla de cocina.</p></div>
+        <div class="cq-up reveal"><span class="n">3</span><span class="tag" data-es="Plan completo" data-en="Full plan">Plan completo</span><h4 data-es="Asistente de WhatsApp" data-en="WhatsApp assistant">Asistente de WhatsApp</h4><p data-es="Un bot con IA que toma pedidos de delivery y reservas solo, las 24 horas." data-en="An AI bot that takes delivery orders and reservations on its own, 24/7.">Un bot con IA que toma pedidos de delivery y reservas solo, las 24 horas.</p></div>
+      </div>
+      <a class="cq-more reveal" href="#contacto" data-es="¿Quieres los escalones 2 y 3? Pide tu presupuesto →" data-en="Want steps 2 and 3? Get a quote →">¿Quieres los escalones 2 y 3? Pide tu presupuesto →</a>
+    </div>
   </div>
 </section>
 
@@ -621,6 +713,23 @@ footer .wrap{position:relative;z-index:2}
           </div>
         </div>
       </article>
+
+      <article class="card wide reveal" data-cat="apps">
+        <div class="media phones">
+          <span class="badge" data-es="Nuevo · Carta QR" data-en="New · QR menu">Nuevo · Carta QR</span>
+          <div class="ph-row three"><div class="pf" style="--r:-5deg;--y:10%"><img src="img/carta/foto.webp" alt="Subir la foto de la carta" loading="lazy"></div><div class="pf" style="--r:-1deg;--y:4%"><img src="img/carta/carta.webp" alt="Carta digital, estilo claro" loading="lazy"></div><div class="pf" style="--r:2deg;--y:4%"><img src="img/carta/oscura.webp" alt="Carta digital, estilo oscuro" loading="lazy"></div><div class="pf" style="--r:5deg;--y:10%"><img src="img/carta/panel.webp" alt="Panel del dueño" loading="lazy"></div></div>
+        </div>
+        <div class="card-body">
+          <div class="cat" data-es="Gastronomía · App con IA" data-en="Food &amp; drink · AI app">Gastronomía · App con IA</div>
+          <h3 data-es="Carta digital con QR" data-en="Digital QR menu">Carta digital con QR</h3>
+          <div class="ps">
+            <div><i data-es="Problema" data-en="Problem">Problema</i><span data-es="Cartas impresas que hay que reimprimir cada vez que cambia un precio, y armar una carta digital lleva horas." data-en="Printed menus that need reprinting every time a price changes, and building a digital menu takes hours.">Cartas impresas que hay que reimprimir cada vez que cambia un precio, y armar una carta digital lleva horas.</span></div>
+            <div><i data-es="Solución" data-en="Solution">Solución</i><span data-es="Una app en la que el dueño sube una foto de su carta y la IA la arma con su logo y colores, con QR para las mesas. Alta automática y 15 días gratis." data-en="An app where owners upload a photo of their menu and AI builds it with their logo and colors, plus a QR code for the tables. Self sign-up and 15 days free.">Una app en la que el dueño sube una foto de su carta y la IA la arma con su logo y colores, con QR para las mesas. Alta automática y 15 días gratis.</span></div>
+          </div>
+          <a class="card-link" href="#carta" data-es="Ver cómo funciona →" data-en="See how it works →">Ver cómo funciona →</a>
+        </div>
+      </article>
+
 
 
       <article class="card reveal" data-cat="apps">
