@@ -19,6 +19,33 @@ const hex = (v: unknown, def: string) => (/^#[0-9a-fA-F]{6}$/.test(String(v ?? "
 const iso = (min: number) => new Date(Date.now() + min * 60_000).toISOString();
 
 type Local = Record<string, any>;
+// Avisos a kionda por WhatsApp. Por ahora salen por la línea de la demo de restaurantes (Green API) al celular de avisos cargado ahí.
+async function avisar(texto: string) {
+  try {
+    const { data } = await db.from("resto_negocios").select("config").eq("id", "unapizza").maybeSingle();
+    const c = data?.config ?? {}, tk = Deno.env.get(c.green_token_secret ?? "") ?? "", cel = String(c.celular_reclamos ?? "").replace(/\D/g, "");
+    if (!tk || !cel || !c.green_url) return "sin configurar";
+    const r = await fetch(`${c.green_url}/waInstance${c.green_id}/sendMessage/${tk}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ chatId: `${cel}@c.us`, message: texto }) });
+    return `${r.status} ${(await r.text()).slice(0, 120)}`;
+  } catch (e) { console.error("avisar", e); return "error"; }
+}
+// Una vez por día: qué pruebas vencen pronto y cuáles vencieron ayer
+async function resumenDiario() {
+  const { data: ls } = await db.from("carta_locales").select("nombre,slug,prueba_hasta,estado,pago_hasta").in("estado", ["prueba", "activo"]);
+  const ahora = Date.now(), dia = 86_400_000, pronto: string[] = [], vencidas: string[] = [];
+  for (const l of ls ?? []) {
+    const fin = l.estado === "prueba" ? new Date(l.prueba_hasta).getTime() : l.pago_hasta ? new Date(l.pago_hasta + "T23:59:59-03:00").getTime() : null;
+    if (fin === null) continue;
+    const que = l.estado === "prueba" ? "prueba" : "abono";
+    if (fin > ahora && fin - ahora <= 3 * dia) pronto.push(`• ${l.nombre} (${que}, ${Math.ceil((fin - ahora) / dia)} día/s)`);
+    else if (fin <= ahora && ahora - fin < dia) vencidas.push(`• ${l.nombre} (${que})`);
+  }
+  if (!pronto.length && !vencidas.length) return "nada";
+  let t = "📋 *Cartas · resumen del día*";
+  if (pronto.length) t += `\n\n⏳ Vencen pronto:\n${pronto.join("\n")}`;
+  if (vencidas.length) t += `\n\n⏸️ Se pausaron hoy:\n${vencidas.join("\n")}`;
+  return avisar(`${t}\n\n${SITIO}/admin/`);
+}
 // Una carta está activa si está en prueba vigente o si tiene el abono al día
 function activa(l: Local) {
   if (l.estado === "prueba") return new Date(l.prueba_hasta).getTime() > Date.now();
@@ -112,6 +139,8 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
     }
     const { error: e2 } = await db.from("carta_locales").insert({ owner: u.user.id, slug, nombre, ip, prueba_hasta: iso(DIAS_PRUEBA * 24 * 60) });
     if (e2) { console.error("alta local", e2); await db.auth.admin.deleteUser(u.user.id); return [{ error: "No pudimos crear tu carta. Probá de nuevo." }, 500]; }
+    // @ts-ignore EdgeRuntime existe en Supabase
+    EdgeRuntime.waitUntil(avisar(`🆕 *Carta nueva* · ${nombre}\n${email}\n${SITIO}/ver/?l=${slug}\n\nEmpieza su prueba de ${DIAS_PRUEBA} días. Administrador: ${SITIO}/admin/`).then((r) => console.log("aviso alta", r)));
     return [{ ok: true }];
   }
 
@@ -248,7 +277,15 @@ async function accion(req: Request, b: any): Promise<[unknown, number?]> {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (req.method !== "POST") return json({ ok: true, servicio: "carta" });
+  if (req.method !== "POST") {
+    const u = new URL(req.url);
+    if (u.searchParams.get("tareas")) { // lo llama el cron diario, con la misma clave que usa el webhook de la demo
+      const { data } = await db.from("resto_negocios").select("config").eq("id", "unapizza").maybeSingle();
+      if (u.searchParams.get("k") !== data?.config?.webhook_key) return json({ error: "no" }, 403);
+      return json({ ok: true, resultado: await resumenDiario() });
+    }
+    return json({ ok: true, servicio: "carta" });
+  }
   let b: any = {}; try { b = await req.json(); } catch { /* vacío */ }
   try {
     const [r, status] = await accion(req, b);
